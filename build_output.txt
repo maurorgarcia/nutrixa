@@ -1,0 +1,42 @@
+
+> my-app@0.0.0 build
+> tsc -b && vite build
+
+src/pages/FollowUps.tsx(6,29): error TS6133: 'CardHeader' is declared but its value is never read.
+src/pages/FollowUps.tsx(6,41): error TS6133: 'CardTitle' is declared but its value is never read.
+src/pages/FollowUps.tsx(34,3): error TS6133: 'ChevronRight' is declared but its value is never read.
+src/pages/Landing.tsx(5,3): error TS6133: 'BarChart3' is declared but its value is never read.
+src/pages/MealPlanForm.tsx(69,45): error TS6133: 'updateMealPlan' is declared but its value is never read.
+src/pages/MealPlanForm.tsx(131,15): error TS2304: Cannot find name 'updateRecipe'.
+src/pages/MealPlans.tsx(32,3): error TS6133: 'Users' is declared but its value is never read.
+src/pages/PatientDetail.tsx(16,3): error TS6133: 'Calendar' is declared but its value is never read.
+src/pages/Patients.tsx(39,1): error TS6133: 'calculateAge' is declared but its value is never read.
+src/pages/Patients.tsx(45,11): error TS6133: 'patients' is declared but its value is never read.
+src/pages/RecipeForm.tsx(10,1): error TS6133: 'Badge' is declared but its value is never read.
+src/pages/RecipeForm.tsx(11,50): error TS6133: 'X' is declared but its value is never read.
+src/pages/Recipes.tsx(59,11): error TS6133: 'recipes' is declared but its value is never read.
+src/pages/Settings.tsx(2,29): error TS6133: 'CardDescription' is declared but its value is never read.
+src/pages/Settings.tsx(2,46): error TS6133: 'CardHeader' is declared but its value is never read.
+src/pages/Settings.tsx(2,58): error TS6133: 'CardTitle' is declared but its value is never read.
+src/stores/anamnesisStore.ts(127,17): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(values: never, options?: { count?: "exact" | "planned" | "estimated" | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "anamnesis", never, "POST">', gave the following error.
+    Argument of type '{ patient_id: string; user_id: string; physical_activity: { level: "moderate" | "sedentary" | "light" | "active" | "very_active"; activities: string[]; frequency: string; duration: string; } | null; ... 7 more ...; lab_results: { ...; }[]; }' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(values: never[], options?: { count?: "exact" | "planned" | "estimated" | undefined; defaultToNull?: boolean | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "anamnesis", never, "POST">', gave the following error.
+    Argument of type '{ patient_id: string; user_id: string; physical_activity: { level: "moderate" | "sedentary" | "light" | "active" | "very_active"; activities: string[]; frequency: string; duration: string; } | null; ... 7 more ...; lab_results: { ...; }[]; }' is not assignable to parameter of type 'never[]'.
+      Type '{ patient_id: string; user_id: string; physical_activity: { level: "moderate" | "sedentary" | "light" | "active" | "very_active"; activities: string[]; frequency: string; duration: string; } | null; ... 7 more ...; lab_results: { ...; }[]; }' is missing the following properties from type 'never[]': length, pop, push, concat, and 29 more.
+src/stores/anamnesisStore.ts(190,17): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+src/stores/followUpStore.ts(147,17): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(values: never, options?: { count?: "exact" | "planned" | "estimated" | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "follow_ups", never, "POST">', gave the following error.
+    Argument of type '{ patient_id: string; user_id: string; date: string; weight: number; notes: string | null; adherence: "excellent" | "good" | "fair" | "poor" | null; symptoms: string[]; concerns: string[]; next_appointment: string | null; }' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(values: never[], options?: { count?: "exact" | "planned" | "estimated" | undefined; defaultToNull?: boolean | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "follow_ups", never, "POST">', gave the following error.
+    Argument of type '{ patient_id: string; user_id: string; date: string; weight: number; notes: string | null; adherence: "excellent" | "good" | "fair" | "poor" | null; symptoms: string[]; concerns: string[]; next_appointment: string | null; }' is not assignable to parameter of type 'never[]'.
+      Type '{ patient_id: string; user_id: string; date: string; weight: number; notes: string | null; adherence: "excellent" | "good" | "fair" | "poor" | null; symptoms: string[]; concerns: string[]; next_appointment: string | null; }' is missing the following properties from type 'never[]': length, pop, push, concat, and 29 more.
+src/stores/followUpStore.ts(187,17): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+src/stores/mealPlanStore.ts(31,7): error TS6133: 'defaultDays' is declared but its value is never read.
+src/stores/mealPlanStore.ts(184,22): error TS2339: Property 'id' does not exist on type 'MealFormData'.
+src/stores/mealPlanStore.ts(190,30): error TS2339: Property 'recipe_name' does not exist on type '{ recipe_id: string; quantity: string; }'.
+src/stores/mealPlanStore.ts(192,23): error TS2339: Property 'unit' does not exist on type '{ recipe_id: string; quantity: string; }'.
+src/stores/mealPlanStore.ts(193,27): error TS2339: Property 'calories' does not exist on type '{ recipe_id: string; quantity: string; }'.
+src/stores/mealPlanStore.ts(266,17): error TS2345: Argument of type '{ is_active: boolean; }' is not assignable to parameter of type 'never'.
+src/stores/mealPlanStore.ts(273,17): error TS2345: Argument of type '{ is_active: boolean; }' is not assignable to parameter of type 'never'.
+src/utils/pdfExport.ts(3,24): error TS6133: 'calculateBMI' is declared but its value is never read.

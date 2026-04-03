@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ArrowLeft, Loader2, Plus, Save, Trash2, X } from 'lucide-react';
+import { ArrowLeft, Loader2, Plus, Save, X } from 'lucide-react';
 
 interface FollowUpFormData {
   patient_id: string;
@@ -159,7 +159,7 @@ export function FollowUpForm() {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-nutri-forest">
             {isEditing ? 'Editar Control' : 'Nuevo Control'}
           </h1>
           <p className="text-gray-500 mt-1">
@@ -318,7 +318,7 @@ export function FollowUpForm() {
                 </div>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {formData.concerns.map((concern, index) => (
-                    <div key={index} className="flex items-center gap-1 bg-yellow-50 text-yellow-700 rounded-full px-3 py-1">
+                    <div key={index} className="flex items-center gap-1 bg-yellow-50 text-nutri-orangeAlt rounded-full px-3 py-1">
                       <span className="text-sm">{concern}</span>
                       <button
                         type="button"
@@ -361,7 +361,7 @@ export function FollowUpForm() {
           </Button>
           <Button
             type="submit"
-            className="bg-black hover:bg-gray-800"
+            className="bg-nutri-forest hover:bg-nutri-emerald"
             disabled={saving || (!isEditing && !formData.patient_id) || !formData.weight}
           >
             {saving ? (

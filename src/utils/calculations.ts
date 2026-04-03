@@ -23,7 +23,7 @@ export const getBMICategory = (bmi: number): { label: string; color: string } =>
   if (bmi <= 0) return { label: 'No calculable', color: 'text-gray-500' };
   if (bmi < 18.5) return { label: 'Bajo peso', color: 'text-blue-500' };
   if (bmi < 25) return { label: 'Peso normal', color: 'text-green-500' };
-  if (bmi < 30) return { label: 'Sobrepeso', color: 'text-yellow-500' };
+  if (bmi < 30) return { label: 'Sobrepeso', color: 'text-nutri-orange' };
   return { label: 'Obesidad', color: 'text-red-500' };
 };
 

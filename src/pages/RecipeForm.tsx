@@ -189,7 +189,7 @@ export function RecipeForm() {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-nutri-forest">
             {isEditing ? 'Editar Receta' : 'Nueva Receta'}
           </h1>
           <p className="text-gray-500 mt-1">
@@ -452,7 +452,7 @@ export function RecipeForm() {
             <div className="flex flex-col gap-3">
               <Button
                 type="submit"
-                className="w-full bg-black hover:bg-gray-800"
+                className="w-full bg-nutri-forest hover:bg-nutri-emerald"
                 disabled={saving}
               >
                 {saving ? (

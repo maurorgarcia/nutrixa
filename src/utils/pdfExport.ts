@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf';
 import type { Patient, Anamnesis, MealPlan, FollowUp } from '@/types';
-import { calculateAge, calculateBMI, getBMICategory } from './calculations';
+import { calculateAge, getBMICategory } from './calculations';
 
 // ============================================
 // EXPORTACIÓN A PDF
@@ -457,5 +457,116 @@ export const exportFollowUpToPDF = (
   addFooter(doc, pageNumber);
   
   const defaultFilename = `seguimiento_${patient.last_name}_${patient.first_name}_${new Date().toISOString().split('T')[0]}.pdf`;
+  doc.save(filename || defaultFilename);
+};
+
+// ============================================
+// EXPORTAR RECETA A PDF
+// ============================================
+
+export const exportRecipeToPDF = (
+  recipe: any,
+  filename?: string
+): void => {
+  const doc = new jsPDF();
+  let y = 35;
+  let pageNumber = 1;
+  
+  addHeader(doc, 'Detalle de Receta');
+  
+  // Recipe header
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  const titleLines = doc.splitTextToSize(recipe.name, 170);
+  titleLines.forEach((line: string) => {
+    doc.text(line, 15, y);
+    y += 8;
+  });
+  
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(100, 100, 100);
+  if (recipe.description) {
+    const descLines = doc.splitTextToSize(recipe.description, 175);
+    descLines.forEach((line: string) => {
+      if (y > 270) {
+        addFooter(doc, pageNumber);
+        doc.addPage();
+        pageNumber++;
+        y = 35;
+      }
+      doc.text(line, 15, y);
+      y += 6;
+    });
+  }
+  
+  y += 6;
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Información Nutricional (por porción):', 15, y);
+  y += 7;
+  
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.text(`Calorías: ${recipe.calories_per_serving} kcal | Porciones: ${recipe.servings} | Tiempo: ${recipe.prep_time + recipe.cook_time} min`, 15, y);
+  y += 12;
+
+  // Ingredients
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Ingredientes', 15, y);
+  y += 8;
+  
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  recipe.ingredients.forEach((ing: any) => {
+    if (y > 270) {
+      addFooter(doc, pageNumber);
+      doc.addPage();
+      pageNumber++;
+      y = 35;
+    }
+    doc.text(`• ${ing.name}: ${ing.quantity} ${ing.unit}`, 20, y);
+    y += 6;
+  });
+  
+  y += 10;
+
+  // Instructions
+  if (y > 250) {
+    addFooter(doc, pageNumber);
+    doc.addPage();
+    pageNumber++;
+    y = 35;
+  }
+
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Preparación', 15, y);
+  y += 8;
+  
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  recipe.instructions.forEach((step: string, index: number) => {
+    const stepTxt = `${index + 1}. ${step}`;
+    const stepLines = doc.splitTextToSize(stepTxt, 170);
+    
+    stepLines.forEach((line: string) => {
+      if (y > 270) {
+        addFooter(doc, pageNumber);
+        doc.addPage();
+        pageNumber++;
+        y = 35;
+      }
+      doc.text(line, 15, y);
+      y += 6;
+    });
+    y += 4;
+  });
+  
+  addFooter(doc, pageNumber);
+  
+  const defaultFilename = `receta_${recipe.name.replace(/\s+/g, '_').toLowerCase()}.pdf`;
   doc.save(filename || defaultFilename);
 };

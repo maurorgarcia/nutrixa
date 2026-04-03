@@ -1,37 +1,42 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
   :root {
     --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+    --foreground: 155 75% 22.4%;
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card-foreground: 155 75% 22.4%;
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
+    --popover-foreground: 155 75% 22.4%;
+    --primary: 152 83.6% 33.5%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 76 58.2% 95%;
+    --secondary-foreground: 155 75% 22.4%;
+    --muted: 76 20% 95%;
+    --muted-foreground: 155 20% 46.1%;
+    --accent: 33 90% 95%;
+    --accent-foreground: 33 90% 40%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 5.9% 10%;
+    --border: 152 20% 90%;
+    --input: 152 20% 90%;
+    --ring: 152 83.6% 33.5%;
     --radius: 0.625rem;
     --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-foreground: 155 60% 30%;
+    --sidebar-primary: 155 75% 22.4%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 76 50% 95%;
+    --sidebar-accent-foreground: 155 75% 22.4%;
+    --sidebar-border: 152 30% 91%;
+    --sidebar-ring: 152 83.6% 33.5%;
   }
 
   .dark {
@@ -76,10 +81,10 @@
   }
 }
 
-/* Custom scrollbar */
+/* Custom scrollbar — thin and elegant */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
@@ -87,12 +92,12 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 4px;
+  background: #e4e4e7;
+  border-radius: 99px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
+  background: #a1a1aa;
 }
 
 /* Smooth transitions */

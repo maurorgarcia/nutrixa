@@ -101,7 +101,7 @@ export function PatientDetail() {
               </AvatarFallback>
             </Avatar>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
+              <h1 className="text-3xl font-bold text-nutri-forest">
                 {selectedPatient.first_name} {selectedPatient.last_name}
               </h1>
               <div className="flex items-center gap-3 mt-1">
@@ -144,7 +144,7 @@ export function PatientDetail() {
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Email</p>
-                      <p className="font-medium text-gray-900">{selectedPatient.email}</p>
+                      <p className="font-medium text-nutri-forest">{selectedPatient.email}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -159,7 +159,7 @@ export function PatientDetail() {
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Teléfono</p>
-                      <p className="font-medium text-gray-900">{selectedPatient.phone}</p>
+                      <p className="font-medium text-nutri-forest">{selectedPatient.phone}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -174,7 +174,7 @@ export function PatientDetail() {
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Ocupación</p>
-                      <p className="font-medium text-gray-900">{selectedPatient.occupation}</p>
+                      <p className="font-medium text-nutri-forest">{selectedPatient.occupation}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -189,7 +189,7 @@ export function PatientDetail() {
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Horario</p>
-                      <p className="font-medium text-gray-900">{selectedPatient.work_schedule}</p>
+                      <p className="font-medium text-nutri-forest">{selectedPatient.work_schedule}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -444,7 +444,7 @@ export function PatientDetail() {
               ) : (
                 <div className="text-center py-12">
                   <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No hay anamnesis registrada</h3>
+                  <h3 className="text-lg font-medium text-nutri-forest mb-2">No hay anamnesis registrada</h3>
                   <p className="text-gray-500 mb-4">Crea una anamnesis para comenzar el seguimiento nutricional</p>
                   <Button onClick={() => navigate(`/patients/${id}/anamnesis/new`)}>
                     <Plus className="h-4 w-4 mr-2" />
@@ -470,7 +470,7 @@ export function PatientDetail() {
               {mealPlans.length === 0 ? (
                 <div className="text-center py-12">
                   <Utensils className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No hay planes registrados</h3>
+                  <h3 className="text-lg font-medium text-nutri-forest mb-2">No hay planes registrados</h3>
                   <p className="text-gray-500 mb-4">Crea un plan de alimentación personalizado</p>
                   <Button onClick={() => navigate(`/patients/${id}/meal-plans/new`)}>
                     <Plus className="h-4 w-4 mr-2" />
@@ -519,7 +519,7 @@ export function PatientDetail() {
               {followUps.length === 0 ? (
                 <div className="text-center py-12">
                   <Activity className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No hay controles registrados</h3>
+                  <h3 className="text-lg font-medium text-nutri-forest mb-2">No hay controles registrados</h3>
                   <p className="text-gray-500 mb-4">Registra el progreso de tu paciente</p>
                   <Button onClick={() => navigate(`/patients/${id}/follow-ups/new`)}>
                     <Plus className="h-4 w-4 mr-2" />

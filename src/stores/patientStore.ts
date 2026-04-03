@@ -43,7 +43,12 @@ export const usePatientStore = create<PatientState>((set, get) => ({
   setSearchQuery: (query) => set({ searchQuery: query }),
 
   fetchPatients: async (userId) => {
-    set({ loading: true, error: null });
+    const { patients } = get();
+    // Only show global loading spinner if we don't have data yet
+    if (patients.length === 0) {
+      set({ loading: true, error: null });
+    }
+    
     try {
       const data = await supabaseRestGet('patients', `user_id=eq.${userId}&select=*&order=created_at.desc`);
 

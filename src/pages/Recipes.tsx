@@ -47,7 +47,7 @@ const recipeTags: { value: RecipeTag; label: string; color: string }[] = [
   { value: 'low-carb', label: 'Bajo en Carbohidratos', color: 'bg-orange-100 text-orange-800' },
   { value: 'high-protein', label: 'Alto en Proteínas', color: 'bg-red-100 text-red-800' },
   { value: 'breakfast', label: 'Desayuno', color: 'bg-pink-100 text-pink-800' },
-  { value: 'lunch', label: 'Almuerzo', color: 'bg-emerald-100 text-emerald-800' },
+  { value: 'lunch', label: 'Almuerzo', color: 'bg-emerald-100 text-nutri-forest' },
   { value: 'dinner', label: 'Cena', color: 'bg-teal-100 text-teal-800' },
   { value: 'snack', label: 'Snack', color: 'bg-cyan-100 text-cyan-800' },
   { value: 'dessert', label: 'Postre', color: 'bg-rose-100 text-rose-800' },
@@ -112,10 +112,10 @@ export function Recipes() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Recetario</h1>
+          <h1 className="text-3xl font-bold text-nutri-forest">Recetario</h1>
           <p className="text-gray-500 mt-1">Gestiona tus recetas y crea nuevas</p>
         </div>
-        <Button onClick={() => navigate('/recipes/new')} className="bg-black hover:bg-gray-800">
+        <Button onClick={() => navigate('/recipes/new')} className="bg-nutri-forest hover:bg-nutri-emerald">
           <Plus className="h-4 w-4 mr-2" />
           Nueva Receta
         </Button>
@@ -195,7 +195,7 @@ export function Recipes() {
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Search className="h-8 w-8 text-gray-400" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-1">
+            <h3 className="text-lg font-medium text-nutri-forest mb-1">
               {searchValue || localSelectedTags.length > 0 ? 'No se encontraron recetas' : 'No hay recetas registradas'}
             </h3>
             <p className="text-gray-500 mb-4">
@@ -204,7 +204,7 @@ export function Recipes() {
                 : 'Comienza agregando tu primera receta'}
             </p>
             {!searchValue && localSelectedTags.length === 0 && (
-              <Button onClick={() => navigate('/recipes/new')} className="bg-black hover:bg-gray-800">
+              <Button onClick={() => navigate('/recipes/new')} className="bg-nutri-forest hover:bg-nutri-emerald">
                 <Plus className="h-4 w-4 mr-2" />
                 Agregar Receta
               </Button>

@@ -38,7 +38,10 @@ export const useAnamnesisStore = create<AnamnesisState>((set, get) => ({
   setError: (error) => set({ error }),
 
   fetchAnamnesisByPatient: async (patientId) => {
-    set({ loading: true, error: null });
+    const { anamnesisList } = get();
+    if (anamnesisList.length === 0) {
+      set({ loading: true, error: null });
+    }
     try {
       const { data, error } = await supabase
         .from('anamnesis')
@@ -122,7 +125,7 @@ export const useAnamnesisStore = create<AnamnesisState>((set, get) => ({
         lab_results: data.lab_results.filter(lr => lr.test_name.trim() !== ''),
       };
 
-      const { data: newAnamnesis, error } = await supabase
+      const { data: newAnamnesis, error } = await (supabase as any)
         .from('anamnesis')
         .insert(anamnesisData)
         .select()
@@ -185,7 +188,7 @@ export const useAnamnesisStore = create<AnamnesisState>((set, get) => ({
       if (data.recall_24h) updateData.recall_24h = data.recall_24h;
       if (data.lab_results) updateData.lab_results = data.lab_results.filter(lr => lr.test_name.trim() !== '');
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('anamnesis')
         .update(updateData)
         .eq('id', id);

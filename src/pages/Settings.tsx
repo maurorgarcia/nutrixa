@@ -100,7 +100,7 @@ export function Settings() {
         return;
       }
 
-      let cleanSlug = (formData.slug || '')
+      const cleanSlug = (formData.slug || '')
         .toLowerCase()
         .trim()
         .replace(/[^\w\s-]/g, '')
@@ -148,10 +148,10 @@ export function Settings() {
     <div className="space-y-10 max-w-6xl mx-auto animate-in fade-in duration-700">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pb-2 border-b border-zinc-100">
         <div className="space-y-1.5">
-          <h1 className="text-4xl font-extrabold text-zinc-900 tracking-tight">Configuración</h1>
+          <h1 className="text-4xl font-extrabold text-nutri-forest tracking-tight">Configuración</h1>
           <p className="text-zinc-500 text-lg font-medium">Administra tu disponibilidad y los servicios de tu Turnera Pública</p>
         </div>
-        <Button onClick={handleSave} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700 hover:-translate-y-0.5 hover:shadow-lg text-white shadow-md transition-all duration-300 px-6 h-12 rounded-xl text-base shrink-0">
+        <Button onClick={handleSave} disabled={saving} className="bg-nutri-emerald hover:bg-nutri-forest hover:-translate-y-0.5 hover:shadow-lg text-white shadow-md transition-all duration-300 px-6 h-12 rounded-xl text-base shrink-0">
           {saving ? <Loader2 className="h-5 w-5 mr-2 animate-spin" /> : <Save className="h-5 w-5 mr-2" />}
           Guardar Integración
         </Button>
@@ -163,10 +163,10 @@ export function Settings() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 pt-8">
           <div className="md:col-span-1 space-y-4">
             <div className="p-3 bg-emerald-50 rounded-2xl w-fit">
-              <Globe className="h-6 w-6 text-emerald-600" />
+              <Globe className="h-6 w-6 text-nutri-emerald" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-zinc-900 tracking-tight">Tu Turnera Pública</h3>
+              <h3 className="text-xl font-bold text-nutri-forest tracking-tight">Tu Turnera Pública</h3>
               <p className="text-sm font-medium text-zinc-500 mt-2 leading-relaxed">
                 Define el identificador digital donde tus pacientes podrán agendar consultas directamente vía online.
               </p>
@@ -183,7 +183,7 @@ export function Settings() {
                     value={formData.slug} 
                     onChange={e => setFormData({...formData, slug: e.target.value})}
                     placeholder="ej-lic-maria-perez" 
-                    className="h-12 border-zinc-200 focus:ring-emerald-600 focus:border-emerald-600 rounded-xl shadow-sm transition-all duration-200"
+                    className="h-12 border-zinc-200 focus:ring-nutri-emerald focus:border-nutri-emerald rounded-xl shadow-sm transition-all duration-200"
                   />
                 </div>
                 
@@ -194,10 +194,10 @@ export function Settings() {
                       href={`${domainUrl}/book/${formData.slug}`} 
                       target="_blank" 
                       rel="noreferrer"
-                      className="flex items-center justify-between bg-white px-4 py-3 rounded-xl border border-zinc-200 text-sm font-bold text-emerald-700 hover:text-emerald-800 hover:border-emerald-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 group cursor-pointer shadow-sm"
+                      className="flex items-center justify-between bg-white px-4 py-3 rounded-xl border border-zinc-200 text-sm font-bold text-nutri-forest hover:text-nutri-forest hover:border-emerald-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 group cursor-pointer shadow-sm"
                     >
                       <span className="truncate">{domainUrl}/book/{formData.slug}</span>
-                      <ExternalLink className="h-4 w-4 ml-2 flex-shrink-0 text-emerald-500 opacity-50 group-hover:opacity-100 transition-opacity" />
+                      <ExternalLink className="h-4 w-4 ml-2 flex-shrink-0 text-nutri-green opacity-50 group-hover:opacity-100 transition-opacity" />
                     </a>
                     <Button 
                       variant="outline" 
@@ -227,7 +227,7 @@ export function Settings() {
               <Clock className="h-6 w-6 text-zinc-700" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-zinc-900 tracking-tight">Horarios Disponibles</h3>
+              <h3 className="text-xl font-bold text-nutri-forest tracking-tight">Horarios Disponibles</h3>
               <p className="text-sm font-medium text-zinc-500 mt-2 leading-relaxed">
                 Establece la franja horaria y los días específicos en los que aceptarás nuevas reservas automáticas.
               </p>
@@ -242,7 +242,7 @@ export function Settings() {
                   <Input 
                     id="start_time" 
                     type="time" 
-                    className="h-14 bg-zinc-50 border-zinc-200 focus:ring-emerald-600 focus:border-emerald-600 rounded-xl shadow-sm hover:bg-white transition-all duration-200 text-base"
+                    className="h-14 bg-zinc-50 border-zinc-200 focus:ring-nutri-emerald focus:border-nutri-emerald rounded-xl shadow-sm hover:bg-white transition-all duration-200 text-base"
                     value={formData.working_hours_start}
                     onChange={e => setFormData({...formData, working_hours_start: e.target.value})}
                   />
@@ -252,7 +252,7 @@ export function Settings() {
                   <Input 
                     id="end_time" 
                     type="time" 
-                    className="h-14 bg-zinc-50 border-zinc-200 focus:ring-emerald-600 focus:border-emerald-600 rounded-xl shadow-sm hover:bg-white transition-all duration-200 text-base"
+                    className="h-14 bg-zinc-50 border-zinc-200 focus:ring-nutri-emerald focus:border-nutri-emerald rounded-xl shadow-sm hover:bg-white transition-all duration-200 text-base"
                     value={formData.working_hours_end}
                     onChange={e => setFormData({...formData, working_hours_end: e.target.value})}
                   />
@@ -273,7 +273,7 @@ export function Settings() {
                         onClick={() => toggleDay(day.value)}
                         className={`px-4 py-2.5 text-sm font-bold rounded-xl transition-all duration-300 border ${
                           isActive
-                            ? 'bg-emerald-600 text-white border-emerald-700 shadow-md hover:-translate-y-0.5'
+                            ? 'bg-nutri-emerald text-white border-nutri-forest shadow-md hover:-translate-y-0.5'
                             : 'bg-white text-zinc-600 border-zinc-200 hover:bg-zinc-50 hover:border-zinc-300 hover:-translate-y-0.5 shadow-sm'
                         }`}
                       >
@@ -294,12 +294,12 @@ export function Settings() {
               <List className="h-6 w-6 text-zinc-700" />
             </div>
             <div>
-               <h3 className="text-xl font-bold text-zinc-900 tracking-tight">Catálogo de Servicios</h3>
+               <h3 className="text-xl font-bold text-nutri-forest tracking-tight">Catálogo de Servicios</h3>
                <p className="text-sm font-medium text-zinc-500 mt-2 leading-relaxed">
                  Ofrece el detalle de lo que cobras. Los pacientes tendrán que seleccionar un servicio para poder finalizar su reserva.
                </p>
             </div>
-            <Button onClick={addService} variant="outline" className="w-full mt-4 border-emerald-200 text-emerald-700 hover:bg-emerald-50 font-bold rounded-xl h-12 shadow-sm hover:-translate-y-0.5 transition-all">
+            <Button onClick={addService} variant="outline" className="w-full mt-4 border-emerald-200 text-nutri-forest hover:bg-emerald-50 font-bold rounded-xl h-12 shadow-sm hover:-translate-y-0.5 transition-all">
               <Plus className="h-5 w-5 mr-2" />
               Añadir Nuevo Servicio
             </Button>
@@ -313,7 +313,7 @@ export function Settings() {
                     <div className="h-16 w-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-sm border border-zinc-100">
                       <List className="h-8 w-8 text-zinc-300" />
                     </div>
-                    <h3 className="text-xl font-black text-zinc-900 mb-2 tracking-tight">Tu catálogo está vacío</h3>
+                    <h3 className="text-xl font-black text-nutri-forest mb-2 tracking-tight">Tu catálogo está vacío</h3>
                     <p className="text-sm font-medium text-zinc-500 max-w-sm mx-auto">
                       Los pacientes no podrán reservar turnos hasta que agregues al menos un servicio con su precio y duración.
                     </p>
@@ -329,7 +329,7 @@ export function Settings() {
                             placeholder="Ej. Consulta Primera Vez..."
                             value={service.name}
                             onChange={e => updateService(service.id, 'name', e.target.value)}
-                            className="h-12 text-base font-bold text-zinc-900 bg-zinc-50/50 focus:bg-white focus:ring-emerald-600 focus:border-emerald-600 rounded-xl"
+                            className="h-12 text-base font-bold text-nutri-forest bg-zinc-50/50 focus:bg-white focus:ring-nutri-emerald focus:border-nutri-emerald rounded-xl"
                           />
                         </div>
                         
@@ -343,7 +343,7 @@ export function Settings() {
                               step="1000"
                               value={service.price === 0 ? '' : service.price}
                               onChange={e => updateService(service.id, 'price', e.target.value ? Number(e.target.value) : 0)}
-                              className="h-12 pl-8 text-base font-bold text-emerald-700 bg-zinc-50/50 focus:bg-white focus:ring-emerald-600 focus:border-emerald-600 rounded-xl"
+                              className="h-12 pl-8 text-base font-bold text-nutri-forest bg-zinc-50/50 focus:bg-white focus:ring-nutri-emerald focus:border-nutri-emerald rounded-xl"
                             />
                           </div>
                         </div>
@@ -357,7 +357,7 @@ export function Settings() {
                               step="15"
                               value={service.duration || ''}
                               onChange={e => updateService(service.id, 'duration', e.target.value ? Number(e.target.value) : 0)}
-                              className="h-12 pr-12 text-base font-bold text-zinc-900 bg-zinc-50/50 focus:bg-white focus:ring-emerald-600 focus:border-emerald-600 rounded-xl"
+                              className="h-12 pr-12 text-base font-bold text-nutri-forest bg-zinc-50/50 focus:bg-white focus:ring-nutri-emerald focus:border-nutri-emerald rounded-xl"
                             />
                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 text-sm font-bold">min</span>
                           </div>

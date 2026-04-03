@@ -131,13 +131,13 @@ export const useAuthStore = create<AuthState>()(
       },
 
       signOut: async () => {
-        set({ loading: true });
+        // Don't set loading:true — that triggers the full splash screen
+        // Just clear local state immediately so the UI reacts instantly
+        set({ user: null, session: null, error: null });
         try {
           await supabase.auth.signOut();
         } catch (err) {
           console.error('Error signing out:', err);
-        } finally {
-          set({ user: null, session: null, loading: false, error: null });
         }
       },
 
@@ -307,10 +307,11 @@ export const useAuthStore = create<AuthState>()(
 
               set({ 
                 user: (profile as unknown as User) || null, 
-                session 
+                session,
+                loading: false
               });
             } else {
-              set({ user: null, session: null });
+              set({ user: null, session: null, loading: false });
             }
           });
         } catch (err) {

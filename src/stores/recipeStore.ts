@@ -47,7 +47,10 @@ export const useRecipeStore = create<RecipeState>((set, get) => ({
   setSelectedTags: (tags) => set({ selectedTags: tags }),
 
   fetchRecipes: async (userId) => {
-    set({ loading: true, error: null });
+    const { recipes } = get();
+    if (recipes.length === 0) {
+      set({ loading: true, error: null });
+    }
     try {
       const data = await supabaseRestGet('recipes', `select=*&or=(user_id.eq.${userId},is_template.eq.true)&order=created_at.desc`);
       set({ recipes: data || [], loading: false });

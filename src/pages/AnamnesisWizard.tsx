@@ -620,7 +620,7 @@ export function AnamnesisWizard() {
               </div>
               <div className="flex flex-wrap gap-2 mt-2">
                 {formData.eating_habits.intolerances.map((intolerance, index) => (
-                  <div key={index} className="flex items-center gap-1 bg-yellow-50 text-yellow-700 rounded-full px-3 py-1">
+                  <div key={index} className="flex items-center gap-1 bg-yellow-50 text-nutri-orangeAlt rounded-full px-3 py-1">
                     <span className="text-sm">{intolerance}</span>
                     <button
                       type="button"
@@ -768,7 +768,7 @@ export function AnamnesisWizard() {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Anamnesis Nutricional</h1>
+          <h1 className="text-3xl font-bold text-nutri-forest">Anamnesis Nutricional</h1>
           <p className="text-gray-500 mt-1">Completa la información paso a paso</p>
         </div>
       </div>
@@ -822,7 +822,7 @@ export function AnamnesisWizard() {
           <Button
             onClick={handleSubmit}
             disabled={saving}
-            className="bg-black hover:bg-gray-800"
+            className="bg-nutri-forest hover:bg-nutri-emerald"
           >
             {saving ? (
               <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -834,7 +834,7 @@ export function AnamnesisWizard() {
         ) : (
           <Button
             onClick={handleNext}
-            className="bg-black hover:bg-gray-800"
+            className="bg-nutri-forest hover:bg-nutri-emerald"
           >
             Siguiente
             <ArrowRight className="h-4 w-4 ml-2" />

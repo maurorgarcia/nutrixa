@@ -1,31 +1,66 @@
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const srcDir = path.join(process.cwd(), 'src');
 
-function walkDir(dir, callback) {
-    fs.readdirSync(dir).forEach(f => {
-        let dirPath = path.join(dir, f);
-        let isDirectory = fs.statSync(dirPath).isDirectory();
-        isDirectory ? walkDir(dirPath, callback) : callback(path.join(dir, f));
-    });
+const walkSync = (dir, filelist = []) => {
+  const files = fs.readdirSync(dir);
+  for (const file of files) {
+    const dirFile = path.join(dir, file);
+    const dirent = fs.statSync(dirFile);
+    if (dirent.isDirectory()) {
+      filelist = walkSync(dirFile, filelist);
+    } else {
+      if (/\.(tsx|ts|jsx|js|html)$/.test(dirFile)) {
+        filelist.push(dirFile);
+      }
+    }
+  }
+  return filelist;
+};
+
+const mapColors = (content) => {
+  let newContent = content;
+  // Deep Greens
+  newContent = newContent.replace(/emerald-900/g, 'nutri-forest');
+  newContent = newContent.replace(/emerald-800/g, 'nutri-forest');
+  newContent = newContent.replace(/emerald-700/g, 'nutri-forest');
+  
+  // Mid Greens
+  newContent = newContent.replace(/emerald-600/g, 'nutri-emerald');
+  newContent = newContent.replace(/emerald-500/g, 'nutri-green');
+  
+  // Light Greens
+  newContent = newContent.replace(/emerald-400/g, 'nutri-lime');
+  
+  // Let's also use Orange somewhere. E.g. replacing some secondary actions or yellow/amber badges
+  newContent = newContent.replace(/amber-600/g, 'nutri-orange');
+  newContent = newContent.replace(/amber-500/g, 'nutri-orange');
+  newContent = newContent.replace(/amber-700/g, 'nutri-orangeAlt');
+  newContent = newContent.replace(/yellow-600/g, 'nutri-orange');
+  newContent = newContent.replace(/yellow-500/g, 'nutri-orange');
+  newContent = newContent.replace(/yellow-700/g, 'nutri-orangeAlt');
+
+  // Any primary specific usage? Primary buttons often use bg-black or bg-emerald
+  // The user says "TODA la pagina deberia variarse con estos colores"
+  // Let's replace 'bg-black' on Buttons and headers with 'bg-nutri-forest' or 'bg-nutri-emerald' to introduce brand color!
+  newContent = newContent.replace(/bg-black hover:bg-gray-800/g, 'bg-nutri-forest hover:bg-nutri-emerald');
+  newContent = newContent.replace(/text-gray-900/g, 'text-nutri-forest');
+  newContent = newContent.replace(/text-zinc-900/g, 'text-nutri-forest');
+
+  return newContent;
+};
+
+const files = walkSync(srcDir);
+let changedCount = 0;
+
+for (const file of files) {
+  const content = fs.readFileSync(file, 'utf8');
+  const newContent = mapColors(content);
+  if (content !== newContent) {
+    fs.writeFileSync(file, newContent, 'utf8');
+    changedCount++;
+  }
 }
 
-walkDir(path.join(__dirname, 'src'), function(filePath) {
-    if (filePath.endsWith('.tsx') || filePath.endsWith('.ts')) {
-        let content = fs.readFileSync(filePath, 'utf8');
-        let original = content;
-        
-        // Replace colors
-        content = content.replace(/indigo/g, 'emerald');
-        content = content.replace(/#4F46E5/ig, '#059669'); // emerald-600
-        content = content.replace(/#4338CA/ig, '#047857'); // emerald-700
-        
-        if (content !== original) {
-            fs.writeFileSync(filePath, content, 'utf8');
-            console.log('Updated: ' + filePath);
-        }
-    }
-});
+console.log(`Replaced colors in ${changedCount} files.`);

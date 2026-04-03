@@ -1,0 +1,267 @@
+Files with lint issues: 34
+
+C:\Users\Mauro\Desktop\Inventos\nutrixa\src\App.tsx
+  Line 30: React Hook useEffect has a missing dependency: 'initializeAuth'. Either include it or remove the dependency array. (react-hooks/exhaustive-deps)
+
+C:\Users\Mauro\Desktop\Inventos\nutrixa\src\components\layout\Sidebar.tsx
+  Line 9: 'Utensils' is defined but never used. (@typescript-eslint/no-unused-vars)
+
+C:\Users\Mauro\Desktop\Inventos\nutrixa\src\components\ui\badge.tsx
+  Line 46: Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components. (react-refresh/only-export-components)
+
+C:\Users\Mauro\Desktop\Inventos\nutrixa\src\components\ui\button-group.tsx
+  Line 82: Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components. (react-refresh/only-export-components)
+
+C:\Users\Mauro\Desktop\Inventos\nutrixa\src\components\ui\button.tsx
+  Line 62: Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components. (react-refresh/only-export-components)
+
+C:\Users\Mauro\Desktop\Inventos\nutrixa\src\components\ui\form.tsx
+  Line 159: Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components. (react-refresh/only-export-components)
+
+C:\Users\Mauro\Desktop\Inventos\nutrixa\src\components\ui\navigation-menu.tsx
+  Line 167: Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components. (react-refresh/only-export-components)
+
+C:\Users\Mauro\Desktop\Inventos\nutrixa\src\components\ui\sidebar.tsx
+  Line 611: Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+C:\Users\Mauro\Desktop\Inventos\nutrixa\src\components\ui\sidebar.tsx:611:26
+  609 |   // Random width between 50 to 90%.
+  610 |   const width = React.useMemo(() => {
+> 611 |     return `${Math.floor(Math.random() * 40) + 50}%`
+      |                          ^^^^^^^^^^^^^ Cannot call impure function
+  612 |   }, [])
+  613 |
+  614 |   return ( (react-hooks/purity)
+  Line 725: Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components. (react-refresh/only-export-components)
+
+C:\Users\Mauro\Desktop\Inventos\nutrixa\src\components\ui\toggle.tsx
+  Line 45: Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components. (react-refresh/only-export-components)
+
+C:\Users\Mauro\Desktop\Inventos\nutrixa\src\lib\supabase\client.ts
+  Line 18: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 57: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+
+C:\Users\Mauro\Desktop\Inventos\nutrixa\src\lib\supabase\database.types.ts
+  Line 13: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 14: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 15: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 18: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 19: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 20: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 23: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 24: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 25: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 28: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 29: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 30: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 33: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 34: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 35: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 38: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 39: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 40: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+
+C:\Users\Mauro\Desktop\Inventos\nutrixa\src\pages\AnamnesisWizard.tsx
+  Line 126: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 130: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 142: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 146: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 163: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 171: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+
+C:\Users\Mauro\Desktop\Inventos\nutrixa\src\pages\Dashboard.tsx
+  Line 39: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 61: React Hook useEffect has missing dependencies: 'fetchFollowUps', 'fetchMealPlans', and 'fetchPatients'. Either include them or remove the dependency array. (react-hooks/exhaustive-deps)
+  Line 65: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 73: 'err' is defined but never used. (@typescript-eslint/no-unused-vars)
+
+C:\Users\Mauro\Desktop\Inventos\nutrixa\src\pages\FollowUpForm.tsx
+  Line 18: 'Trash2' is defined but never used. (@typescript-eslint/no-unused-vars)
+  Line 59: React Hook useEffect has a missing dependency: 'fetchPatients'. Either include it or remove the dependency array. (react-hooks/exhaustive-deps)
+  Line 65: React Hook useEffect has a missing dependency: 'getFollowUpById'. Either include it or remove the dependency array. (react-hooks/exhaustive-deps)
+
+C:\Users\Mauro\Desktop\Inventos\nutrixa\src\pages\FollowUps.tsx
+  Line 6: 'CardHeader' is defined but never used. (@typescript-eslint/no-unused-vars)
+  Line 6: 'CardTitle' is defined but never used. (@typescript-eslint/no-unused-vars)
+  Line 34: 'ChevronRight' is defined but never used. (@typescript-eslint/no-unused-vars)
+  Line 63: React Hook useEffect has a missing dependency: 'fetchFollowUps'. Either include it or remove the dependency array. (react-hooks/exhaustive-deps)
+
+C:\Users\Mauro\Desktop\Inventos\nutrixa\src\pages\Landing.tsx
+  Line 5: 'BarChart3' is defined but never used. (@typescript-eslint/no-unused-vars)
+
+C:\Users\Mauro\Desktop\Inventos\nutrixa\src\pages\Login.tsx
+  Line 24: Error: Cannot access variable before it is declared
+
+`setIsSignUp` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Users\Mauro\Desktop\Inventos\nutrixa\src\pages\Login.tsx:24:7
+  22 |   useEffect(() => {
+  23 |     if (searchParams.get('signup') === 'true') {
+> 24 |       setIsSignUp(true);
+     |       ^^^^^^^^^^^ `setIsSignUp` accessed before it is declared
+  25 |     }
+  26 |   }, [searchParams]);
+  27 |   
+
+C:\Users\Mauro\Desktop\Inventos\nutrixa\src\pages\Login.tsx:28:20
+  26 |   }, [searchParams]);
+  27 |   
+> 28 |   const [isSignUp, setIsSignUp] = useState(false);
+     |                    ^^^^^^^^^^^ `setIsSignUp` is declared here
+  29 |   const [showPassword, setShowPassword] = useState(false);
+  30 |   const [error, setError] = useState<string | null>(null);
+  31 |    (react-hooks/immutability)
+
+C:\Users\Mauro\Desktop\Inventos\nutrixa\src\pages\MealPlanForm.tsx
+  Line 69: 'updateMealPlan' is assigned a value but never used. (@typescript-eslint/no-unused-vars)
+  Line 84: React Hook useEffect has missing dependencies: 'fetchPatients' and 'fetchRecipes'. Either include them or remove the dependency array. (react-hooks/exhaustive-deps)
+  Line 90: React Hook useEffect has a missing dependency: 'getMealPlanById'. Either include it or remove the dependency array. (react-hooks/exhaustive-deps)
+  Line 162: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+
+C:\Users\Mauro\Desktop\Inventos\nutrixa\src\pages\MealPlans.tsx
+  Line 32: 'Users' is defined but never used. (@typescript-eslint/no-unused-vars)
+  Line 56: React Hook useEffect has a missing dependency: 'fetchMealPlans'. Either include it or remove the dependency array. (react-hooks/exhaustive-deps)
+
+C:\Users\Mauro\Desktop\Inventos\nutrixa\src\pages\PatientDetail.tsx
+  Line 16: 'Calendar' is defined but never used. (@typescript-eslint/no-unused-vars)
+  Line 50: React Hook useEffect has missing dependencies: 'fetchAnamnesisByPatient', 'fetchFollowUpsByPatient', 'fetchMealPlansByPatient', and 'getPatientById'. Either include them or remove the dependency array. (react-hooks/exhaustive-deps)
+
+C:\Users\Mauro\Desktop\Inventos\nutrixa\src\pages\PatientForm.tsx
+  Line 46: React Hook useEffect has a missing dependency: 'getPatientById'. Either include it or remove the dependency array. (react-hooks/exhaustive-deps)
+
+C:\Users\Mauro\Desktop\Inventos\nutrixa\src\pages\Patients.tsx
+  Line 39: 'calculateAge' is defined but never used. (@typescript-eslint/no-unused-vars)
+  Line 45: 'patients' is assigned a value but never used. (@typescript-eslint/no-unused-vars)
+  Line 55: React Hook useEffect has a missing dependency: 'fetchPatients'. Either include it or remove the dependency array. (react-hooks/exhaustive-deps)
+  Line 62: React Hook useEffect has a missing dependency: 'setSearchQuery'. Either include it or remove the dependency array. (react-hooks/exhaustive-deps)
+
+C:\Users\Mauro\Desktop\Inventos\nutrixa\src\pages\Profile.tsx
+  Line 2: 'CardDescription' is defined but never used. (@typescript-eslint/no-unused-vars)
+  Line 2: 'CardHeader' is defined but never used. (@typescript-eslint/no-unused-vars)
+  Line 2: 'CardTitle' is defined but never used. (@typescript-eslint/no-unused-vars)
+  Line 30: Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\Mauro\Desktop\Inventos\nutrixa\src\pages\Profile.tsx:30:7
+  28 |       }
+  29 |
+> 30 |       setFormData({
+     |       ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  31 |         title: possibleTitle,
+  32 |         full_name: restOfName,
+  33 |       }); (react-hooks/set-state-in-effect)
+  Line 47: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+
+C:\Users\Mauro\Desktop\Inventos\nutrixa\src\pages\PublicBooking.tsx
+  Line 48: 'err' is defined but never used. (@typescript-eslint/no-unused-vars)
+  Line 48: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 75: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 103: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 146: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 164: 'err' is defined but never used. (@typescript-eslint/no-unused-vars)
+  Line 164: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+
+C:\Users\Mauro\Desktop\Inventos\nutrixa\src\pages\RecipeForm.tsx
+  Line 10: 'Badge' is defined but never used. (@typescript-eslint/no-unused-vars)
+  Line 11: 'X' is defined but never used. (@typescript-eslint/no-unused-vars)
+  Line 66: React Hook useEffect has a missing dependency: 'getRecipeById'. Either include it or remove the dependency array. (react-hooks/exhaustive-deps)
+  Line 114: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 125: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+
+C:\Users\Mauro\Desktop\Inventos\nutrixa\src\pages\Recipes.tsx
+  Line 59: 'recipes' is assigned a value but never used. (@typescript-eslint/no-unused-vars)
+  Line 71: React Hook useEffect has a missing dependency: 'fetchRecipes'. Either include it or remove the dependency array. (react-hooks/exhaustive-deps)
+  Line 78: React Hook useEffect has a missing dependency: 'setSearchQuery'. Either include it or remove the dependency array. (react-hooks/exhaustive-deps)
+  Line 82: React Hook useEffect has a missing dependency: 'setSelectedTags'. Either include it or remove the dependency array. (react-hooks/exhaustive-deps)
+
+C:\Users\Mauro\Desktop\Inventos\nutrixa\src\pages\Settings.tsx
+  Line 2: 'CardDescription' is defined but never used. (@typescript-eslint/no-unused-vars)
+  Line 2: 'CardHeader' is defined but never used. (@typescript-eslint/no-unused-vars)
+  Line 2: 'CardTitle' is defined but never used. (@typescript-eslint/no-unused-vars)
+  Line 70: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 120: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 136: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+
+C:\Users\Mauro\Desktop\Inventos\nutrixa\src\stores\anamnesisStore.ts
+  Line 55: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 75: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 142: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 151: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 210: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 236: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+
+C:\Users\Mauro\Desktop\Inventos\nutrixa\src\stores\authStore.ts
+  Line 10: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 16: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 58: 'profileError' is never reassigned. Use 'const' instead. (prefer-const)
+  Line 73: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 96: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 127: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 158: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 214: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 229: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 245: 'error' is never reassigned. Use 'const' instead. (prefer-const)
+  Line 260: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 285: 'error' is never reassigned. Use 'const' instead. (prefer-const)
+  Line 299: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 316: 'err' is defined but never used. (@typescript-eslint/no-unused-vars)
+
+C:\Users\Mauro\Desktop\Inventos\nutrixa\src\stores\followUpStore.ts
+  Line 84: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 104: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 124: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 166: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 175: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 211: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 238: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+
+C:\Users\Mauro\Desktop\Inventos\nutrixa\src\stores\mealPlanStore.ts
+  Line 31: 'defaultDays' is assigned a value but never used. (@typescript-eslint/no-unused-vars)
+  Line 65: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 75: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 95: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 140: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 142: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 157: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 166: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 200: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 222: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 231: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 248: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 295: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+
+C:\Users\Mauro\Desktop\Inventos\nutrixa\src\stores\patientStore.ts
+  Line 50: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 56: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 75: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 76: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 81: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 105: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 115: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 116: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 125: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 139: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 161: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 170: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 187: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+
+C:\Users\Mauro\Desktop\Inventos\nutrixa\src\stores\recipeStore.ts
+  Line 54: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 74: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 98: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 115: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 124: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 132: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 154: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 163: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+  Line 180: Unexpected any. Specify a different type. (@typescript-eslint/no-explicit-any)
+
+C:\Users\Mauro\Desktop\Inventos\nutrixa\src\utils\pdfExport.ts
+  Line 3: 'calculateBMI' is defined but never used. (@typescript-eslint/no-unused-vars)

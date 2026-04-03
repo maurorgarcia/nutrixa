@@ -1,0 +1,19 @@
+
+> my-app@0.0.0 build
+> tsc -b && vite build
+
+src/pages/FollowUps.tsx(6,29): error TS6133: 'CardHeader' is declared but its value is never read.
+src/pages/FollowUps.tsx(6,41): error TS6133: 'CardTitle' is declared but its value is never read.
+src/pages/FollowUps.tsx(34,3): error TS6133: 'ChevronRight' is declared but its value is never read.
+src/pages/Landing.tsx(5,3): error TS6133: 'BarChart3' is declared but its value is never read.
+src/pages/MealPlans.tsx(32,3): error TS6133: 'Users' is declared but its value is never read.
+src/pages/PatientDetail.tsx(16,3): error TS6133: 'Calendar' is declared but its value is never read.
+src/pages/Patients.tsx(39,1): error TS6133: 'calculateAge' is declared but its value is never read.
+src/pages/Patients.tsx(45,11): error TS6133: 'patients' is declared but its value is never read.
+src/pages/RecipeForm.tsx(10,1): error TS6133: 'Badge' is declared but its value is never read.
+src/pages/RecipeForm.tsx(11,50): error TS6133: 'X' is declared but its value is never read.
+src/pages/Recipes.tsx(59,11): error TS6133: 'recipes' is declared but its value is never read.
+src/pages/Settings.tsx(2,29): error TS6133: 'CardDescription' is declared but its value is never read.
+src/pages/Settings.tsx(2,46): error TS6133: 'CardHeader' is declared but its value is never read.
+src/pages/Settings.tsx(2,58): error TS6133: 'CardTitle' is declared but its value is never read.
+src/utils/pdfExport.ts(3,24): error TS6133: 'calculateBMI' is declared but its value is never read.

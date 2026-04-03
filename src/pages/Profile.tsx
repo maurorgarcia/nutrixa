@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -58,10 +58,10 @@ export function Profile() {
     <div className="space-y-10 max-w-5xl mx-auto animate-in fade-in duration-700">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pb-2 border-b border-zinc-100">
         <div className="space-y-1.5">
-          <h1 className="text-4xl font-extrabold text-zinc-900 tracking-tight">Mi Perfil</h1>
+          <h1 className="text-4xl font-extrabold text-nutri-forest tracking-tight">Mi Perfil</h1>
           <p className="text-zinc-500 text-lg font-medium">Administra tu información personal y credenciales de acceso a la plataforma</p>
         </div>
-        <Button onClick={handleSave} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700 hover:-translate-y-0.5 hover:shadow-lg text-white shadow-md transition-all duration-300 px-6 h-12 rounded-xl text-base">
+        <Button onClick={handleSave} disabled={saving} className="bg-nutri-emerald hover:bg-nutri-forest hover:-translate-y-0.5 hover:shadow-lg text-white shadow-md transition-all duration-300 px-6 h-12 rounded-xl text-base">
           {saving ? <Loader2 className="h-5 w-5 mr-2 animate-spin" /> : <Save className="h-5 w-5 mr-2" />}
           Guardar Cambios
         </Button>
@@ -73,10 +73,10 @@ export function Profile() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 pt-8">
           <div className="md:col-span-1 space-y-4">
             <div className="p-3 bg-emerald-50 rounded-2xl w-fit">
-              <User className="h-6 w-6 text-emerald-600" />
+              <User className="h-6 w-6 text-nutri-emerald" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-zinc-900 tracking-tight">Perfil e Identidad</h3>
+              <h3 className="text-xl font-bold text-nutri-forest tracking-tight">Perfil e Identidad</h3>
               <p className="text-sm font-medium text-zinc-500 mt-2 leading-relaxed">
                 Información pública que se mostrará en los comunicados a tus pacientes y en tu catálogo público.
               </p>
@@ -90,11 +90,11 @@ export function Profile() {
                 <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
                   <div className="flex-shrink-0 relative">
                     <div className="w-28 h-28 bg-emerald-50 rounded-full flex items-center justify-center border border-emerald-100 shadow-inner">
-                      <span className="text-4xl font-extrabold text-emerald-600 tracking-tighter">
+                      <span className="text-4xl font-extrabold text-nutri-emerald tracking-tighter">
                         {user?.full_name?.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) || 'U'}
                       </span>
                     </div>
-                    <div className="absolute -bottom-2 -right-2 bg-emerald-100 text-emerald-700 p-1.5 rounded-full border-2 border-white shadow-sm" title="Profesional Verificado">
+                    <div className="absolute -bottom-2 -right-2 bg-emerald-100 text-nutri-forest p-1.5 rounded-full border-2 border-white shadow-sm" title="Profesional Verificado">
                       <ShieldCheck className="h-5 w-5" />
                     </div>
                   </div>
@@ -107,7 +107,7 @@ export function Profile() {
                           id="title"
                           value={formData.title}
                           onChange={e => setFormData({...formData, title: e.target.value})}
-                          className="h-14 w-full border border-zinc-200 focus:ring-emerald-600 focus:border-emerald-600 rounded-xl shadow-sm transition-all duration-200 text-base px-3 bg-white"
+                          className="h-14 w-full border border-zinc-200 focus:ring-nutri-emerald focus:border-nutri-emerald rounded-xl shadow-sm transition-all duration-200 text-base px-3 bg-white"
                         >
                           <option value="">Sin título</option>
                           <option value="Lic.">Licenciada/o</option>
@@ -123,11 +123,11 @@ export function Profile() {
                           value={formData.full_name} 
                           onChange={e => setFormData({...formData, full_name: e.target.value})}
                           placeholder="María Pérez" 
-                          className="h-14 w-full border-zinc-200 focus:ring-emerald-600 focus:border-emerald-600 rounded-xl shadow-sm transition-all duration-200 text-base"
+                          className="h-14 w-full border-zinc-200 focus:ring-nutri-emerald focus:border-nutri-emerald rounded-xl shadow-sm transition-all duration-200 text-base"
                         />
                       </div>
                     </div>
-                    <p className="text-xs font-bold text-emerald-700 flex items-center justify-center sm:justify-start gap-1.5 mt-2">
+                    <p className="text-xs font-bold text-nutri-forest flex items-center justify-center sm:justify-start gap-1.5 mt-2">
                       Tus datos biográficos han sido verificados satisfactoriamente.
                     </p>
                   </div>
@@ -144,7 +144,7 @@ export function Profile() {
               <Mail className="h-6 w-6 text-zinc-700" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-zinc-900 tracking-tight">Acceso y Seguridad</h3>
+              <h3 className="text-xl font-bold text-nutri-forest tracking-tight">Acceso y Seguridad</h3>
               <p className="text-sm font-medium text-zinc-500 mt-2 leading-relaxed">
                 Credenciales exclusivas que utilizas para el inicio de sesión autorizado en Nutrixa.
               </p>

@@ -157,10 +157,10 @@ export function Dashboard() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pb-2 border-b border-zinc-100">
         <div className="space-y-1.5">
-          <h1 className="text-4xl font-extrabold tracking-tight text-zinc-900">Bienvenido, {user?.full_name?.split(' ')[0]}</h1>
+          <h1 className="text-4xl font-extrabold tracking-tight text-nutri-forest">Bienvenido, {user?.full_name?.split(' ')[0]}</h1>
           <p className="text-zinc-500 text-lg font-medium">Este es el resumen de tu consultorio al día de hoy.</p>
         </div>
-        <Button onClick={() => navigate('/patients/new')} className="bg-emerald-600 hover:bg-emerald-700 hover:-translate-y-0.5 hover:shadow-lg text-white shadow-md transition-all duration-300 px-6 h-12 rounded-xl text-base">
+        <Button onClick={() => navigate('/patients/new')} className="bg-nutri-emerald hover:bg-nutri-forest hover:-translate-y-0.5 hover:shadow-lg text-white shadow-md transition-all duration-300 px-6 h-12 rounded-xl text-base">
           <Plus className="h-5 w-5 mr-2" />
           Añadir Paciente
         </Button>
@@ -179,11 +179,11 @@ export function Dashboard() {
                 {stat.title}
               </CardTitle>
               <div className="h-12 w-12 bg-emerald-50 flex items-center justify-center rounded-2xl">
-                <stat.icon className="h-6 w-6 text-emerald-600" />
+                <stat.icon className="h-6 w-6 text-nutri-emerald" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-4xl font-black text-zinc-900 tracking-tighter">{stat.value}</div>
+              <div className="text-4xl font-black text-nutri-forest tracking-tighter">{stat.value}</div>
               <p className="text-xs font-bold text-zinc-400 mt-2 uppercase tracking-widest">{stat.trend}</p>
             </CardContent>
           </Card>
@@ -195,8 +195,8 @@ export function Dashboard() {
         {/* Recent Patients */}
         <Card className="border-zinc-100 rounded-2xl shadow-sm hover:shadow-md transition-all">
           <CardHeader className="flex flex-row items-center justify-between border-b border-zinc-50 pb-5">
-            <CardTitle className="text-xl font-extrabold tracking-tight text-zinc-900">Pacientes Recientes</CardTitle>
-            <Button variant="ghost" size="sm" onClick={() => navigate('/patients')} className="text-emerald-700 font-semibold hover:text-emerald-800 hover:bg-emerald-50 rounded-xl">
+            <CardTitle className="text-xl font-extrabold tracking-tight text-nutri-forest">Pacientes Recientes</CardTitle>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/patients')} className="text-nutri-forest font-semibold hover:text-nutri-forest hover:bg-emerald-50 rounded-xl">
               Ver todos
               <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
@@ -225,12 +225,12 @@ export function Dashboard() {
                   >
                     <div className="flex items-center gap-4">
                       <Avatar className="h-11 w-11 shadow-sm border border-zinc-100">
-                        <AvatarFallback className="bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-800 font-bold text-sm">
+                        <AvatarFallback className="bg-gradient-to-br from-emerald-100 to-emerald-50 text-nutri-forest font-bold text-sm">
                           {getInitials(patient.first_name, patient.last_name)}
                         </AvatarFallback>
                       </Avatar>
                       <div className="space-y-0.5">
-                        <p className="font-bold text-zinc-900">
+                        <p className="font-bold text-nutri-forest">
                           {patient.first_name} {patient.last_name}
                         </p>
                         <p className="text-sm font-medium text-zinc-500">
@@ -249,8 +249,8 @@ export function Dashboard() {
         {/* Upcoming Follow Ups */}
         <Card className="border-zinc-100 rounded-2xl shadow-sm hover:shadow-md transition-all block lg:min-h-[400px]">
           <CardHeader className="flex flex-row items-center justify-between border-b border-zinc-50 pb-5">
-            <CardTitle className="text-xl font-extrabold tracking-tight text-zinc-900">Controles Agendados</CardTitle>
-            <Button variant="ghost" size="sm" onClick={() => navigate('/follow-ups')} className="text-emerald-700 font-semibold hover:text-emerald-800 hover:bg-emerald-50 rounded-xl">
+            <CardTitle className="text-xl font-extrabold tracking-tight text-nutri-forest">Controles Agendados</CardTitle>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/follow-ups')} className="text-nutri-forest font-semibold hover:text-nutri-forest hover:bg-emerald-50 rounded-xl">
               Ver calendario
               <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
@@ -269,14 +269,14 @@ export function Dashboard() {
                     className="flex items-center justify-between p-3.5 rounded-xl hover:bg-zinc-50 hover:-translate-y-0.5 cursor-pointer transition-all duration-200"
                   >
                     <div className="flex items-center gap-4">
-                      <div className={`w-11 h-11 rounded-xl shadow-sm flex items-center justify-center ${appt.type === 'booking' ? 'bg-emerald-600' : 'bg-zinc-900'}`}>
+                      <div className={`w-11 h-11 rounded-xl shadow-sm flex items-center justify-center ${appt.type === 'booking' ? 'bg-nutri-emerald' : 'bg-zinc-900'}`}>
                         {appt.type === 'booking' ? <CalendarCheck className="h-5 w-5 text-white" /> : <Activity className="h-5 w-5 text-white" />}
                       </div>
                       <div className="space-y-0.5">
-                        <p className="font-bold text-zinc-900">
+                        <p className="font-bold text-nutri-forest">
                           {appt.patientName}
                         </p>
-                        <p className="text-sm font-medium text-emerald-700">
+                        <p className="text-sm font-medium text-nutri-forest">
                           {format(appt.date, "d 'de' MMMM", { locale: es })} <span className="text-zinc-400 mx-1">•</span> <span className="text-zinc-500">{appt.subtitle}</span>
                         </p>
                       </div>
@@ -296,11 +296,11 @@ export function Dashboard() {
 
       {/* Public Turnera Appointments list */}
       <Card className="border-emerald-100 shadow-sm relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500 rounded-l-xl"></div>
+        <div className="absolute top-0 left-0 w-1 h-full bg-nutri-green rounded-l-xl"></div>
         <CardHeader className="flex flex-row items-center justify-between border-b pb-4">
           <div>
             <CardTitle className="flex items-center gap-2">
-              <CalendarCheck className="h-5 w-5 text-emerald-600" />
+              <CalendarCheck className="h-5 w-5 text-nutri-emerald" />
               Reservas de la Turnera Pública
             </CardTitle>
             <CardDescription>Pacientes que reservaron mediante tu enlace: <span className="text-xs bg-gray-100 px-2 py-1 rounded select-all font-mono">nutrixa.com/book/{user?.slug || 'tu-enlace'}</span></CardDescription>
@@ -325,15 +325,15 @@ export function Dashboard() {
                       <span className="block text-xs uppercase font-bold text-gray-500">
                         {format(new Date(appt.date), 'MMM', { locale: es })}
                       </span>
-                      <span className="block text-2xl font-black text-gray-900">
+                      <span className="block text-2xl font-black text-nutri-forest">
                         {format(new Date(appt.date), 'd')}
                       </span>
-                      <span className="block text-xs text-emerald-600 font-medium">{appt.start_time}</span>
+                      <span className="block text-xs text-nutri-emerald font-medium">{appt.start_time}</span>
                     </div>
 
                     {/* Details Block */}
                     <div className="flex flex-col justify-center">
-                      <p className="font-bold text-gray-900 text-lg">{appt.guest_name}</p>
+                      <p className="font-bold text-nutri-forest text-lg">{appt.guest_name}</p>
                       <p className="text-sm text-gray-600 flex items-center gap-1">
                         <Activity className="h-3 w-3" />
                         {appt.service_name} — {appt.service_duration} min
@@ -391,13 +391,13 @@ export function Dashboard() {
       {/* Quick Actions */}
       <Card className="border-gray-100 shadow-sm">
         <CardHeader className="border-b border-gray-50 pb-4">
-          <CardTitle className="text-lg font-bold text-gray-900">Acceso Rápido</CardTitle>
+          <CardTitle className="text-lg font-bold text-nutri-forest">Acceso Rápido</CardTitle>
         </CardHeader>
         <CardContent className="pt-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <Button 
               variant="outline" 
-              className="h-28 flex flex-col items-center justify-center gap-3 border-gray-200 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition-all rounded-xl shadow-sm"
+              className="h-28 flex flex-col items-center justify-center gap-3 border-gray-200 hover:bg-emerald-50 hover:text-nutri-forest hover:border-emerald-200 transition-all rounded-xl shadow-sm"
               onClick={() => navigate('/patients/new')}
             >
               <div className="p-2 bg-white rounded-lg shadow-sm">
@@ -408,7 +408,7 @@ export function Dashboard() {
             
             <Button 
               variant="outline" 
-              className="h-28 flex flex-col items-center justify-center gap-3 border-gray-200 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition-all rounded-xl shadow-sm"
+              className="h-28 flex flex-col items-center justify-center gap-3 border-gray-200 hover:bg-emerald-50 hover:text-nutri-forest hover:border-emerald-200 transition-all rounded-xl shadow-sm"
               onClick={() => navigate('/recipes')}
             >
               <div className="p-2 bg-white rounded-lg shadow-sm">
@@ -419,7 +419,7 @@ export function Dashboard() {
 
             <Button 
               variant="outline" 
-              className="h-28 flex flex-col items-center justify-center gap-3 border-gray-200 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition-all rounded-xl shadow-sm"
+              className="h-28 flex flex-col items-center justify-center gap-3 border-gray-200 hover:bg-emerald-50 hover:text-nutri-forest hover:border-emerald-200 transition-all rounded-xl shadow-sm"
               onClick={() => navigate('/meal-plans')}
             >
               <div className="p-2 bg-white rounded-lg shadow-sm">
@@ -430,7 +430,7 @@ export function Dashboard() {
 
             <Button 
               variant="outline" 
-              className="h-28 flex flex-col items-center justify-center gap-3 border-gray-200 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition-all rounded-xl shadow-sm"
+              className="h-28 flex flex-col items-center justify-center gap-3 border-gray-200 hover:bg-emerald-50 hover:text-nutri-forest hover:border-emerald-200 transition-all rounded-xl shadow-sm"
               onClick={() => navigate('/follow-ups')}
             >
               <div className="p-2 bg-white rounded-lg shadow-sm">

@@ -29,7 +29,6 @@ import {
   Trash2, 
   Calendar,
   Flame,
-  Users,
   Check,
   Loader2,
   ChevronRight,
@@ -80,10 +79,10 @@ export function MealPlans() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Planes de Alimentación</h1>
+          <h1 className="text-3xl font-bold text-nutri-forest">Planes de Alimentación</h1>
           <p className="text-gray-500 mt-1">Gestiona los planes nutricionales de tus pacientes</p>
         </div>
-        <Button onClick={() => navigate('/meal-plans/new')} className="bg-black hover:bg-gray-800">
+        <Button onClick={() => navigate('/meal-plans/new')} className="bg-nutri-forest hover:bg-nutri-emerald">
           <Plus className="h-4 w-4 mr-2" />
           Nuevo Plan
         </Button>
@@ -100,9 +99,9 @@ export function MealPlans() {
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Calendar className="h-8 w-8 text-gray-400" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-1">No hay planes registrados</h3>
+            <h3 className="text-lg font-medium text-nutri-forest mb-1">No hay planes registrados</h3>
             <p className="text-gray-500 mb-4">Crea tu primer plan de alimentación</p>
-            <Button onClick={() => navigate('/meal-plans/new')} className="bg-black hover:bg-gray-800">
+            <Button onClick={() => navigate('/meal-plans/new')} className="bg-nutri-forest hover:bg-nutri-emerald">
               <Plus className="h-4 w-4 mr-2" />
               Crear Plan
             </Button>

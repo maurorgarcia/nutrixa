@@ -28,15 +28,7 @@ interface MealPlanState {
   getMealPlansByPatient: (patientId: string) => MealPlan[];
 }
 
-const defaultDays = [
-  { day_of_week: 1, meals: [] },
-  { day_of_week: 2, meals: [] },
-  { day_of_week: 3, meals: [] },
-  { day_of_week: 4, meals: [] },
-  { day_of_week: 5, meals: [] },
-  { day_of_week: 6, meals: [] },
-  { day_of_week: 7, meals: [] },
-];
+
 
 const defaultMeals: { type: MealType; name: string; time: string }[] = [
   { type: 'breakfast', name: 'Desayuno', time: '08:00' },
@@ -58,7 +50,10 @@ export const useMealPlanStore = create<MealPlanState>((set, get) => ({
   setError: (error) => set({ error }),
 
   fetchMealPlans: async (userId) => {
-    set({ loading: true, error: null });
+    const { mealPlans } = get();
+    if (mealPlans.length === 0) {
+      set({ loading: true, error: null });
+    }
     try {
       const data = await supabaseRestGet('meal_plans', `user_id=eq.${userId}&select=*&order=created_at.desc`);
       set({ mealPlans: data as MealPlan[] || [], loading: false });
@@ -181,11 +176,11 @@ export const useMealPlanStore = create<MealPlanState>((set, get) => ({
         updateData.days = data.days.map((day, index) => ({
           day_of_week: day.day_of_week || index + 1,
           meals: day.meals.map(meal => ({
-            id: meal.id || crypto.randomUUID(),
+            id: (meal as any).id || crypto.randomUUID(),
             type: meal.type,
             name: meal.name,
             time: meal.time,
-            recipes: meal.recipes.map(r => ({
+            recipes: meal.recipes.map((r: any) => ({
               recipe_id: r.recipe_id,
               recipe_name: r.recipe_name || '',
               quantity: parseFloat(r.quantity as string) || r.quantity || 1,
@@ -261,14 +256,14 @@ export const useMealPlanStore = create<MealPlanState>((set, get) => ({
       }
 
       // Deactivate other plans
-      await supabase
+      await (supabase as any)
         .from('meal_plans')
         .update({ is_active: false })
         .eq('patient_id', plan.patient_id)
         .neq('id', id);
 
       // Activate this plan
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('meal_plans')
         .update({ is_active: true })
         .eq('id', id);

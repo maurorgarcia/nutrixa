@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
-import { Loader2 } from 'lucide-react';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -12,26 +11,33 @@ interface MainLayoutProps {
 export function MainLayout({ children }: MainLayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
   const { user, loading } = useAuthStore();
 
   useEffect(() => {
-    if (!loading && !user && location.pathname !== '/login') {
-      navigate('/login');
+    // Only redirect once auth is fully resolved (not while still loading)
+    if (!loading && !user) {
+      navigate('/login', { replace: true });
     }
-  }, [user, loading, navigate, location.pathname]);
+  }, [user, loading, navigate]);
 
+  // While loading: show minimal inline indicator, not a fullscreen takeover
+  // (App.tsx already handles the initial full-page load)
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-black" />
-          <p className="text-sm text-gray-500">Cargando...</p>
+      <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA]">
+        <div className="flex flex-col items-center gap-5">
+          <img src="/logoNutrixa.png" alt="Nutrixa" className="h-12 w-auto opacity-70" />
+          <div className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-nutri-emerald animate-bounce" style={{ animationDelay: '0ms' }} />
+            <div className="w-1.5 h-1.5 rounded-full bg-nutri-emerald animate-bounce" style={{ animationDelay: '150ms' }} />
+            <div className="w-1.5 h-1.5 rounded-full bg-nutri-emerald animate-bounce" style={{ animationDelay: '300ms' }} />
+          </div>
         </div>
       </div>
     );
   }
 
+  // Not logged in yet — don't flash the layout, let the redirect take effect
   if (!user) {
     return null;
   }

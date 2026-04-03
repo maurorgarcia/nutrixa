@@ -95,10 +95,10 @@ export function Patients() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Pacientes</h1>
+          <h1 className="text-3xl font-bold text-nutri-forest">Pacientes</h1>
           <p className="text-gray-500 mt-1">Gestiona tus pacientes y su información</p>
         </div>
-        <Button onClick={() => navigate('/patients/new')} className="bg-black hover:bg-gray-800">
+        <Button onClick={() => navigate('/patients/new')} className="bg-nutri-forest hover:bg-nutri-emerald">
           <Plus className="h-4 w-4 mr-2" />
           Nuevo Paciente
         </Button>
@@ -136,7 +136,7 @@ export function Patients() {
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Search className="h-8 w-8 text-gray-400" />
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-1">
+              <h3 className="text-lg font-medium text-nutri-forest mb-1">
                 {searchValue ? 'No se encontraron pacientes' : 'No hay pacientes registrados'}
               </h3>
               <p className="text-gray-500 mb-4">
@@ -145,7 +145,7 @@ export function Patients() {
                   : 'Comienza agregando tu primer paciente'}
               </p>
               {!searchValue && (
-                <Button onClick={() => navigate('/patients/new')} className="bg-black hover:bg-gray-800">
+                <Button onClick={() => navigate('/patients/new')} className="bg-nutri-forest hover:bg-nutri-emerald">
                   <Plus className="h-4 w-4 mr-2" />
                   Agregar Paciente
                 </Button>
@@ -169,7 +169,7 @@ export function Patients() {
                     </Avatar>
                     <div className="flex-1">
                       <div className="flex items-center gap-3">
-                        <h3 className="font-semibold text-gray-900">
+                        <h3 className="font-semibold text-nutri-forest">
                           {patient.first_name} {patient.last_name}
                         </h3>
                         {getStressLevelBadge(patient.stress_level)}

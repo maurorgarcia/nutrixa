@@ -60,7 +60,10 @@ export const useFollowUpStore = create<FollowUpState>((set, get) => ({
   setError: (error) => set({ error }),
 
   fetchFollowUps: async (userId) => {
-    set({ loading: true, error: null });
+    const { followUps } = get();
+    if (followUps.length === 0) {
+      set({ loading: true, error: null });
+    }
     try {
       const { data, error } = await supabase
         .from('follow_ups')
@@ -77,8 +80,8 @@ export const useFollowUpStore = create<FollowUpState>((set, get) => ({
       }
 
       set({ 
-        followUps: data as FollowUp[] || [],
-        followUpsWithPatient: data as FollowUpWithPatient[] || [],
+        followUps: data as any[] || [], 
+        followUpsWithPatient: data as any[] || [],
         loading: false 
       });
     } catch (err: any) {
@@ -142,7 +145,7 @@ export const useFollowUpStore = create<FollowUpState>((set, get) => ({
         next_appointment: data.next_appointment || null,
       };
 
-      const { data: newFollowUp, error } = await supabase
+      const { data: newFollowUp, error } = await (supabase as any)
         .from('follow_ups')
         .insert(followUpData)
         .select(`
@@ -182,7 +185,7 @@ export const useFollowUpStore = create<FollowUpState>((set, get) => ({
       if (data.concerns) updateData.concerns = data.concerns;
       if (data.next_appointment !== undefined) updateData.next_appointment = data.next_appointment || null;
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('follow_ups')
         .update(updateData)
         .eq('id', id);

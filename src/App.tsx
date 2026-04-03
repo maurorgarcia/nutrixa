@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useAuthStore } from '@/stores/authStore';
 import { MainLayout } from '@/components/layout/MainLayout';
@@ -10,6 +10,7 @@ import { PatientDetail } from '@/pages/PatientDetail';
 import { AnamnesisWizard } from '@/pages/AnamnesisWizard';
 import { Recipes } from '@/pages/Recipes';
 import { RecipeForm } from '@/pages/RecipeForm';
+import { RecipeDetail } from '@/pages/RecipeDetail';
 import { MealPlans } from '@/pages/MealPlans';
 import { MealPlanForm } from '@/pages/MealPlanForm';
 import { FollowUps } from '@/pages/FollowUps';
@@ -22,6 +23,176 @@ import { Privacy } from '@/pages/Privacy';
 import { Terms } from '@/pages/Terms';
 import { Toaster } from '@/components/ui/sonner';
 
+// ── ROUTE GUARDS ────────────────────────────────────────────────────────────
+
+/**
+ * ProtectedRoute: redirects to /login if no active session.
+ * Renders null (no flash) while auth is still initializing.
+ */
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuthStore();
+  if (loading) return null; // wait silently — App.tsx shows the splash
+  if (!user) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+}
+
+/**
+ * PublicOnlyRoute: redirects authenticated users away from login/landing.
+ * Prevents the flash of login form for already-logged-in users.
+ */
+function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuthStore();
+  if (loading) return null;
+  if (user) return <Navigate to="/dashboard" replace />;
+  return <>{children}</>;
+}
+
+// ── ANIMATED ROUTES ─────────────────────────────────────────────────────────
+
+/**
+ * Applies a fade-in on top-level section changes only.
+ * Uses the first two path segments as key so internal subroutes
+ * (e.g. /patients/123/edit) animate only at the section level, not every click.
+ */
+function AnimatedRoutes({ user }: { user: any }) {
+  const location = useLocation();
+
+  // Key on first segment group: /patients/123/edit → "patients"
+  // This prevents an animation flash on every sub-page navigation
+  const sectionKey = '/' + (location.pathname.split('/')[1] || '');
+
+  return (
+    <div key={sectionKey} className="animate-in fade-in duration-200 fill-mode-both">
+      <Routes location={location}>
+
+        {/* ── PUBLIC ── */}
+        <Route path="/" element={
+          <PublicOnlyRoute><Landing /></PublicOnlyRoute>
+        } />
+        <Route path="/login" element={
+          <PublicOnlyRoute><Login /></PublicOnlyRoute>
+        } />
+        <Route path="/book/:slug" element={<PublicBooking />} />
+        <Route path="/privacy"    element={<Privacy />} />
+        <Route path="/terms"      element={<Terms />} />
+
+        {/* ── PROTECTED ── */}
+        <Route path="/dashboard" element={
+          <ProtectedRoute><MainLayout><Dashboard /></MainLayout></ProtectedRoute>
+        } />
+
+        {/* Patients */}
+        <Route path="/patients" element={
+          <ProtectedRoute><MainLayout><Patients /></MainLayout></ProtectedRoute>
+        } />
+        <Route path="/patients/new" element={
+          <ProtectedRoute><MainLayout><PatientForm /></MainLayout></ProtectedRoute>
+        } />
+        <Route path="/patients/:id" element={
+          <ProtectedRoute><MainLayout><PatientDetail /></MainLayout></ProtectedRoute>
+        } />
+        <Route path="/patients/:id/edit" element={
+          <ProtectedRoute><MainLayout><PatientForm /></MainLayout></ProtectedRoute>
+        } />
+
+        {/* Anamnesis */}
+        <Route path="/patients/:patientId/anamnesis" element={
+          <ProtectedRoute><MainLayout><PatientDetail /></MainLayout></ProtectedRoute>
+        } />
+        <Route path="/patients/:patientId/anamnesis/new" element={
+          <ProtectedRoute><MainLayout><AnamnesisWizard /></MainLayout></ProtectedRoute>
+        } />
+
+        {/* Recipes */}
+        <Route path="/recipes" element={
+          <ProtectedRoute><MainLayout><Recipes /></MainLayout></ProtectedRoute>
+        } />
+        <Route path="/recipes/new" element={
+          <ProtectedRoute><MainLayout><RecipeForm /></MainLayout></ProtectedRoute>
+        } />
+        <Route path="/recipes/:id" element={
+          <ProtectedRoute><MainLayout><RecipeDetail /></MainLayout></ProtectedRoute>
+        } />
+        <Route path="/recipes/:id/edit" element={
+          <ProtectedRoute><MainLayout><RecipeForm /></MainLayout></ProtectedRoute>
+        } />
+
+        {/* Meal Plans */}
+        <Route path="/meal-plans" element={
+          <ProtectedRoute><MainLayout><MealPlans /></MainLayout></ProtectedRoute>
+        } />
+        <Route path="/meal-plans/new" element={
+          <ProtectedRoute><MainLayout><MealPlanForm /></MainLayout></ProtectedRoute>
+        } />
+        <Route path="/meal-plans/:id" element={
+          <ProtectedRoute><MainLayout><MealPlanForm /></MainLayout></ProtectedRoute>
+        } />
+        <Route path="/meal-plans/:id/edit" element={
+          <ProtectedRoute><MainLayout><MealPlanForm /></MainLayout></ProtectedRoute>
+        } />
+
+        {/* Patient-specific Meal Plans */}
+        <Route path="/patients/:patientId/meal-plans" element={
+          <ProtectedRoute><MainLayout><MealPlans /></MainLayout></ProtectedRoute>
+        } />
+        <Route path="/patients/:patientId/meal-plans/new" element={
+          <ProtectedRoute><MainLayout><MealPlanForm /></MainLayout></ProtectedRoute>
+        } />
+        <Route path="/patients/:patientId/meal-plans/:id" element={
+          <ProtectedRoute><MainLayout><MealPlanForm /></MainLayout></ProtectedRoute>
+        } />
+        <Route path="/patients/:patientId/meal-plans/:id/edit" element={
+          <ProtectedRoute><MainLayout><MealPlanForm /></MainLayout></ProtectedRoute>
+        } />
+
+        {/* Follow Ups */}
+        <Route path="/follow-ups" element={
+          <ProtectedRoute><MainLayout><FollowUps /></MainLayout></ProtectedRoute>
+        } />
+        <Route path="/follow-ups/new" element={
+          <ProtectedRoute><MainLayout><FollowUpForm /></MainLayout></ProtectedRoute>
+        } />
+        <Route path="/follow-ups/:id" element={
+          <ProtectedRoute><MainLayout><FollowUpForm /></MainLayout></ProtectedRoute>
+        } />
+        <Route path="/follow-ups/:id/edit" element={
+          <ProtectedRoute><MainLayout><FollowUpForm /></MainLayout></ProtectedRoute>
+        } />
+
+        {/* Patient-specific Follow Ups */}
+        <Route path="/patients/:patientId/follow-ups" element={
+          <ProtectedRoute><MainLayout><FollowUps /></MainLayout></ProtectedRoute>
+        } />
+        <Route path="/patients/:patientId/follow-ups/new" element={
+          <ProtectedRoute><MainLayout><FollowUpForm /></MainLayout></ProtectedRoute>
+        } />
+        <Route path="/patients/:patientId/follow-ups/:id" element={
+          <ProtectedRoute><MainLayout><FollowUpForm /></MainLayout></ProtectedRoute>
+        } />
+        <Route path="/patients/:patientId/follow-ups/:id/edit" element={
+          <ProtectedRoute><MainLayout><FollowUpForm /></MainLayout></ProtectedRoute>
+        } />
+
+        {/* Profile & Settings */}
+        <Route path="/profile" element={
+          <ProtectedRoute><MainLayout><Profile /></MainLayout></ProtectedRoute>
+        } />
+        <Route path="/settings" element={
+          <ProtectedRoute><MainLayout><Settings /></MainLayout></ProtectedRoute>
+        } />
+
+        {/* Catch-all → intelligent: send logged users to dashboard, others to landing */}
+        <Route path="*" element={
+          user ? <Navigate to="/dashboard" replace /> : <Navigate to="/" replace />
+        } />
+
+      </Routes>
+    </div>
+  );
+}
+
+// ── APP ─────────────────────────────────────────────────────────────────────
+
 function App() {
   const { initializeAuth, loading, user } = useAuthStore();
 
@@ -31,10 +202,14 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-8 h-8 border-4 border-black border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-gray-500">Cargando...</p>
+      <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA]">
+        <div className="flex flex-col items-center gap-5 animate-in fade-in duration-500">
+          <img src="/logoNutrixa.png" alt="Nutrixa" className="h-14 w-auto opacity-80" />
+          <div className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-nutri-emerald animate-bounce" style={{ animationDelay: '0ms' }} />
+            <div className="w-1.5 h-1.5 rounded-full bg-nutri-emerald animate-bounce" style={{ animationDelay: '150ms' }} />
+            <div className="w-1.5 h-1.5 rounded-full bg-nutri-emerald animate-bounce" style={{ animationDelay: '300ms' }} />
+          </div>
         </div>
       </div>
     );
@@ -42,64 +217,7 @@ function App() {
 
   return (
     <BrowserRouter>
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Landing />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/book/:slug" element={<PublicBooking />} />
-        <Route path="/privacy" element={<Privacy />} />
-        <Route path="/terms" element={<Terms />} />
-
-        {/* Protected Routes */}
-        <Route path="/dashboard" element={<MainLayout><Dashboard /></MainLayout>} />
-        
-        {/* Patients */}
-        <Route path="/patients" element={<MainLayout><Patients /></MainLayout>} />
-        <Route path="/patients/new" element={<MainLayout><PatientForm /></MainLayout>} />
-        <Route path="/patients/:id" element={<MainLayout><PatientDetail /></MainLayout>} />
-        <Route path="/patients/:id/edit" element={<MainLayout><PatientForm /></MainLayout>} />
-        
-        {/* Anamnesis */}
-        <Route path="/patients/:patientId/anamnesis" element={<MainLayout><PatientDetail /></MainLayout>} />
-        <Route path="/patients/:patientId/anamnesis/new" element={<MainLayout><AnamnesisWizard /></MainLayout>} />
-        
-        {/* Recipes */}
-        <Route path="/recipes" element={<MainLayout><Recipes /></MainLayout>} />
-        <Route path="/recipes/new" element={<MainLayout><RecipeForm /></MainLayout>} />
-        <Route path="/recipes/:id" element={<MainLayout><Recipes /></MainLayout>} />
-        <Route path="/recipes/:id/edit" element={<MainLayout><RecipeForm /></MainLayout>} />
-        
-        {/* Meal Plans */}
-        <Route path="/meal-plans" element={<MainLayout><MealPlans /></MainLayout>} />
-        <Route path="/meal-plans/new" element={<MainLayout><MealPlanForm /></MainLayout>} />
-        <Route path="/meal-plans/:id" element={<MainLayout><MealPlanForm /></MainLayout>} />
-        <Route path="/meal-plans/:id/edit" element={<MainLayout><MealPlanForm /></MainLayout>} />
-        
-        {/* Patient-specific Meal Plans */}
-        <Route path="/patients/:patientId/meal-plans" element={<MainLayout><MealPlans /></MainLayout>} />
-        <Route path="/patients/:patientId/meal-plans/new" element={<MainLayout><MealPlanForm /></MainLayout>} />
-        <Route path="/patients/:patientId/meal-plans/:id" element={<MainLayout><MealPlanForm /></MainLayout>} />
-        <Route path="/patients/:patientId/meal-plans/:id/edit" element={<MainLayout><MealPlanForm /></MainLayout>} />
-        
-        {/* Follow Ups */}
-        <Route path="/follow-ups" element={<MainLayout><FollowUps /></MainLayout>} />
-        <Route path="/follow-ups/new" element={<MainLayout><FollowUpForm /></MainLayout>} />
-        <Route path="/follow-ups/:id" element={<MainLayout><FollowUpForm /></MainLayout>} />
-        <Route path="/follow-ups/:id/edit" element={<MainLayout><FollowUpForm /></MainLayout>} />
-        
-        {/* Patient-specific Follow Ups */}
-        <Route path="/patients/:patientId/follow-ups" element={<MainLayout><FollowUps /></MainLayout>} />
-        <Route path="/patients/:patientId/follow-ups/new" element={<MainLayout><FollowUpForm /></MainLayout>} />
-        <Route path="/patients/:patientId/follow-ups/:id" element={<MainLayout><FollowUpForm /></MainLayout>} />
-        <Route path="/patients/:patientId/follow-ups/:id/edit" element={<MainLayout><FollowUpForm /></MainLayout>} />
-
-        {/* Profile & Settings */}
-        <Route path="/profile" element={<MainLayout><Profile /></MainLayout>} />
-        <Route path="/settings" element={<MainLayout><Settings /></MainLayout>} />
-
-        {/* Catch all */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <AnimatedRoutes user={user} />
       <Toaster />
     </BrowserRouter>
   );
