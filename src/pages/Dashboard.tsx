@@ -1,54 +1,43 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { usePatientStore } from '@/stores/patientStore';
 import { useFollowUpStore } from '@/stores/followUpStore';
 import { useMealPlanStore } from '@/stores/mealPlanStore';
+import { usePaymentStore } from '@/stores/paymentStore';
 import { supabase } from '@/lib/supabase/client';
 import type { Appointment } from '@/types';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { 
-  Users, 
-  Calendar, 
-  TrendingUp, 
-  Plus, 
-  ChevronRight,
-  Utensils,
-  Activity,
-  CalendarCheck,
-  Check,
-  X
+  Users, Calendar, Plus, ChevronRight,
+  CalendarCheck, Check, X, AlertTriangle,
+  DollarSign, ArrowUpRight, Clock, BarChart3, Zap,
+  Target,
+  ArrowRight
 } from 'lucide-react';
-import { format, addDays, isBefore } from 'date-fns';
+import { format, isBefore, subDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 export function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const { patients, fetchPatients } = usePatientStore();
   const { followUpsWithPatient, fetchFollowUps } = useFollowUpStore();
-  const { mealPlans, fetchMealPlans } = useMealPlanStore();
-
+  const { fetchMealPlans } = useMealPlanStore();
+  const { payments, fetchPayments } = usePaymentStore();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
 
   const fetchAppointments = async (userId: string) => {
     try {
       const { data, error } = await (supabase as any)
-        .from('appointments')
-        .select('*')
-        .eq('nutritionist_id', userId)
-        .order('date', { ascending: true })
-        .order('start_time', { ascending: true });
-        
-      if (!error && data) {
-        setAppointments(data as Appointment[]);
-      }
-    } catch (err) {
-      console.error(err);
-    }
+        .from('appointments').select('*').eq('nutritionist_id', userId)
+        .order('date', { ascending: true }).order('start_time', { ascending: true });
+      if (!error && data) setAppointments(data as Appointment[]);
+    } catch (err) { console.error(err); }
   };
 
   useEffect(() => {
@@ -57,390 +46,215 @@ export function Dashboard() {
       fetchFollowUps(user.id);
       fetchMealPlans(user.id);
       fetchAppointments(user.id);
+      fetchPayments(user.id);
     }
   }, [user]);
 
   const respondToAppointment = async (id: string, status: 'confirmed' | 'cancelled') => {
     try {
-      const { error } = await (supabase as any)
-        .from('appointments')
-        .update({ status })
-        .eq('id', id);
-
+      const { error } = await (supabase as any).from('appointments').update({ status }).eq('id', id);
       if (error) throw error;
       toast.success(status === 'confirmed' ? 'Turno confirmado' : 'Turno rechazado');
       if (user) fetchAppointments(user.id);
-    } catch (err) {
-      toast.error('Ocurrió un error al procesar el turno');
-    }
+    } catch { toast.error('Ocurrió un error al procesar el turno'); }
   };
 
-  const stats = [
-    {
-      title: 'Total Pacientes',
-      value: patients.length,
-      icon: Users,
-      trend: `+${patients.filter(p => {
-        const created = new Date(p.created_at);
-        const thisMonth = new Date();
-        return created.getMonth() === thisMonth.getMonth() && 
-               created.getFullYear() === thisMonth.getFullYear();
-      }).length} este mes`,
-      onClick: () => navigate('/patients'),
-    },
-    {
-      title: 'Planes Activos',
-      value: mealPlans.filter(mp => mp.is_active).length,
-      icon: Utensils,
-      trend: 'Activos',
-      onClick: () => navigate('/meal-plans'),
-    },
-    {
-      title: 'Citas Próximas',
-      value: [...followUpsWithPatient.filter(fu => fu.next_appointment), ...appointments.filter(a => a.status === 'confirmed')].filter(item => {
-        let date;
-        if ('next_appointment' in item) {
-          date = new Date(item.next_appointment!);
-        } else {
-          date = new Date(`${item.date}T${item.start_time}`);
-        }
-        const today = new Date();
-        const nextWeek = addDays(today, 7);
-        return isBefore(date, nextWeek) && isBefore(today, date);
-      }).length,
-      icon: Calendar,
-      trend: 'Esta semana',
-      onClick: () => navigate('/follow-ups'),
-    },
-    {
-      title: 'Seguimientos',
-      value: followUpsWithPatient.length,
-      icon: TrendingUp,
-      trend: 'Total',
-      onClick: () => navigate('/follow-ups'),
-    },
-  ];
-
-  const recentPatients = patients.slice(0, 5);
-  
-  const allUpcomingAppointments = [
+  // ── COMPUTED ──
+  const todayStr = format(new Date(), 'yyyy-MM-dd');
+  const todayAppointments = useMemo(() => [
     ...followUpsWithPatient
-      .filter(fu => fu.next_appointment && new Date(fu.next_appointment) >= new Date(new Date().setHours(0,0,0,0)))
+      .filter(fu => fu.next_appointment && format(new Date(fu.next_appointment), 'yyyy-MM-dd') === todayStr)
       .map(fu => ({
-        id: fu.id,
-        type: 'follow_up',
+        id: fu.id, type: 'follow_up' as const,
         date: new Date(fu.next_appointment!),
-        patientName: fu.patient ? `${fu.patient.first_name} ${fu.patient.last_name}` : 'Paciente',
+        name: fu.patient ? `${fu.patient.first_name} ${fu.patient.last_name}` : 'Paciente',
+        subtitle: 'Control Programado',
         patientId: fu.patient_id,
-        subtitle: 'Control Automático'
       })),
     ...appointments
-      .filter(a => a.status === 'confirmed' && new Date(`${a.date}T${a.start_time}`) >= new Date(new Date().setHours(0,0,0,0)))
+      .filter(a => a.status === 'confirmed' && a.date === todayStr)
       .map(a => ({
-        id: a.id,
-        type: 'booking',
+        id: a.id, type: 'booking' as const,
         date: new Date(`${a.date}T${a.start_time}`),
-        patientName: a.guest_name || 'Paciente Nuevo',
+        name: a.guest_name || 'Paciente Nuevo',
+        subtitle: `${a.service_name} • ${a.start_time.substring(0, 5)}hs`,
         patientId: null,
-        subtitle: `${a.service_name} • ${a.start_time.substring(0, 5)}`
-      }))
-  ].sort((a, b) => a.date.getTime() - b.date.getTime());
+      })),
+  ].sort((a, b) => a.date.getTime() - b.date.getTime()), [followUpsWithPatient, appointments, todayStr]);
 
-  const upcomingAppointments = allUpcomingAppointments.slice(0, 5);
+  const inactivePatients = useMemo(() => {
+    const threshold = subDays(new Date(), 90);
+    return patients.filter(p => {
+      const lastFollowUp = followUpsWithPatient
+        .filter(fu => fu.patient_id === p.id)
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+      const lastAppt = appointments
+        .filter(a => a.guest_email === p.email && a.status === 'confirmed')
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+      const lastDate = lastFollowUp ? new Date(lastFollowUp.date) : lastAppt ? new Date(lastAppt.date) : new Date(p.created_at);
+      return isBefore(lastDate, threshold);
+    }).slice(0, 4);
+  }, [patients, followUpsWithPatient, appointments]);
 
-  const getInitials = (firstName: string, lastName: string) => {
-    return `${firstName[0]}${lastName[0]}`.toUpperCase();
-  };
+  const monthlyPayments = useMemo(() => {
+    const now = new Date();
+    return payments.filter(p => {
+      const d = new Date(p.created_at);
+      return p.status === 'paid' && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    }).reduce((acc, p) => acc + p.amount, 0);
+  }, [payments]);
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-700">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pb-2 border-b border-zinc-100">
-        <div className="space-y-1.5">
-          <h1 className="text-4xl font-extrabold tracking-tight text-nutri-forest">Bienvenido, {user?.full_name?.split(' ')[0]}</h1>
-          <p className="text-zinc-500 text-lg font-medium">Este es el resumen de tu consultorio al día de hoy.</p>
+    <div className="space-y-12 animate-in fade-in duration-700">
+      
+      {/* ── BOUTIQUE HEADER (Editorial layout) ── */}
+      <div className="flex flex-col md:flex-row md:items-start justify-between gap-10">
+        <div className="space-y-4 max-w-2xl">
+           <div className="flex items-center gap-2">
+              <div className="h-[1px] w-6 bg-primary/30" />
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">{format(new Date(), "EEEE dd, MMMM", { locale: es })}</p>
+           </div>
+           <h1 className="text-6xl font-black text-primary leading-[0.9] tracking-[-0.06em]">
+              {user?.full_name?.split(' ')[0]}.
+           </h1>
+           <p className="text-foreground/80 font-medium text-lg max-w-md leading-relaxed">
+             {todayAppointments.length > 0 
+                ? `Hay actividad prevista para hoy: ${todayAppointments.length} citas registradas en tu consultorio comercial.` 
+                : 'Hoy no se registran turnos confirmados. Es un buen momento para gestionar el catálogo de recetas.'}
+           </p>
         </div>
-        <Button onClick={() => navigate('/patients/new')} className="bg-nutri-emerald hover:bg-nutri-forest hover:-translate-y-0.5 hover:shadow-lg text-white shadow-md transition-all duration-300 px-6 h-12 rounded-xl text-base">
-          <Plus className="h-5 w-5 mr-2" />
-          Añadir Paciente
-        </Button>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => (
-          <Card 
-            key={index} 
-            className="cursor-pointer border-zinc-100 rounded-2xl shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:-translate-y-1 transition-all duration-300"
-            onClick={stat.onClick}
-          >
-            <CardHeader className="flex flex-row items-center justify-between pb-3">
-              <CardTitle className="text-sm font-semibold text-zinc-500 tracking-wide">
-                {stat.title}
-              </CardTitle>
-              <div className="h-12 w-12 bg-emerald-50 flex items-center justify-center rounded-2xl">
-                <stat.icon className="h-6 w-6 text-nutri-emerald" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-4xl font-black text-nutri-forest tracking-tighter">{stat.value}</div>
-              <p className="text-xs font-bold text-zinc-400 mt-2 uppercase tracking-widest">{stat.trend}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Recent Patients */}
-        <Card className="border-zinc-100 rounded-2xl shadow-sm hover:shadow-md transition-all">
-          <CardHeader className="flex flex-row items-center justify-between border-b border-zinc-50 pb-5">
-            <CardTitle className="text-xl font-extrabold tracking-tight text-nutri-forest">Pacientes Recientes</CardTitle>
-            <Button variant="ghost" size="sm" onClick={() => navigate('/patients')} className="text-nutri-forest font-semibold hover:text-nutri-forest hover:bg-emerald-50 rounded-xl">
-              Ver todos
-              <ChevronRight className="h-4 w-4 ml-1" />
-            </Button>
-          </CardHeader>
-          <CardContent className="pt-5">
-            {recentPatients.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <Users className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                <p>No hay pacientes registrados</p>
-                <Button 
-                  variant="outline" 
-                  className="mt-4"
-                  onClick={() => navigate('/patients/new')}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Agregar paciente
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {recentPatients.map((patient) => (
-                  <div 
-                    key={patient.id}
-                    className="flex items-center justify-between p-3.5 rounded-xl hover:bg-zinc-50 hover:-translate-y-0.5 cursor-pointer transition-all duration-200"
-                    onClick={() => navigate(`/patients/${patient.id}`)}
-                  >
-                    <div className="flex items-center gap-4">
-                      <Avatar className="h-11 w-11 shadow-sm border border-zinc-100">
-                        <AvatarFallback className="bg-gradient-to-br from-emerald-100 to-emerald-50 text-nutri-forest font-bold text-sm">
-                          {getInitials(patient.first_name, patient.last_name)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="space-y-0.5">
-                        <p className="font-bold text-nutri-forest">
-                          {patient.first_name} {patient.last_name}
-                        </p>
-                        <p className="text-sm font-medium text-zinc-500">
-                          {patient.age} años • {patient.gender === 'male' ? 'Masculino' : patient.gender === 'female' ? 'Femenino' : 'Otro'}
-                        </p>
-                      </div>
-                    </div>
-                    <ChevronRight className="h-5 w-5 text-zinc-300" />
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Upcoming Follow Ups */}
-        <Card className="border-zinc-100 rounded-2xl shadow-sm hover:shadow-md transition-all block lg:min-h-[400px]">
-          <CardHeader className="flex flex-row items-center justify-between border-b border-zinc-50 pb-5">
-            <CardTitle className="text-xl font-extrabold tracking-tight text-nutri-forest">Controles Agendados</CardTitle>
-            <Button variant="ghost" size="sm" onClick={() => navigate('/follow-ups')} className="text-nutri-forest font-semibold hover:text-nutri-forest hover:bg-emerald-50 rounded-xl">
-              Ver calendario
-              <ChevronRight className="h-4 w-4 ml-1" />
-            </Button>
-          </CardHeader>
-          <CardContent className="pt-5">
-            {upcomingAppointments.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <Calendar className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                <p>No hay citas programadas</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {upcomingAppointments.map((appt) => (
-                  <div 
-                    key={appt.id}
-                    className="flex items-center justify-between p-3.5 rounded-xl hover:bg-zinc-50 hover:-translate-y-0.5 cursor-pointer transition-all duration-200"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className={`w-11 h-11 rounded-xl shadow-sm flex items-center justify-center ${appt.type === 'booking' ? 'bg-nutri-emerald' : 'bg-zinc-900'}`}>
-                        {appt.type === 'booking' ? <CalendarCheck className="h-5 w-5 text-white" /> : <Activity className="h-5 w-5 text-white" />}
-                      </div>
-                      <div className="space-y-0.5">
-                        <p className="font-bold text-nutri-forest">
-                          {appt.patientName}
-                        </p>
-                        <p className="text-sm font-medium text-nutri-forest">
-                          {format(appt.date, "d 'de' MMMM", { locale: es })} <span className="text-zinc-400 mx-1">•</span> <span className="text-zinc-500">{appt.subtitle}</span>
-                        </p>
-                      </div>
-                    </div>
-                    {appt.patientId && (
-                      <Button variant="ghost" size="icon" className="rounded-xl hover:bg-zinc-100" onClick={() => navigate(`/patients/${appt.patientId}`)}>
-                        <ChevronRight className="h-5 w-5 text-zinc-400" />
-                      </Button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Public Turnera Appointments list */}
-      <Card className="border-emerald-100 shadow-sm relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-1 h-full bg-nutri-green rounded-l-xl"></div>
-        <CardHeader className="flex flex-row items-center justify-between border-b pb-4">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <CalendarCheck className="h-5 w-5 text-nutri-emerald" />
-              Reservas de la Turnera Pública
-            </CardTitle>
-            <CardDescription>Pacientes que reservaron mediante tu enlace: <span className="text-xs bg-gray-100 px-2 py-1 rounded select-all font-mono">nutrixa.com/book/{user?.slug || 'tu-enlace'}</span></CardDescription>
-          </div>
-          <Button variant="outline" size="sm" onClick={() => user && fetchAppointments(user.id)}>
-            Actualizar
+        <div className="flex flex-col gap-3 shrink-0">
+          <Button onClick={() => navigate('/patients')} className="h-14 px-10 rounded-full bg-primary text-white font-black uppercase tracking-widest text-[10px] shadow-2xl hover:scale-105 transition-transform active:scale-95 flex items-center gap-3">
+             Registrar Paciente <ArrowRight className="h-4 w-4" />
           </Button>
-        </CardHeader>
-        <CardContent className="pt-6">
-          {appointments.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <Calendar className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-              <p>Aún no tienes nuevas reservas online</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {appointments.map((appt) => (
-                <div key={appt.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-gray-100 hover:shadow-md transition-shadow rounded-xl gap-4">
-                  <div className="flex gap-4">
-                    {/* Date Block */}
-                    <div className="bg-gray-50 px-4 py-2 rounded-lg border text-center flex-shrink-0 min-w-[5rem]">
-                      <span className="block text-xs uppercase font-bold text-gray-500">
-                        {format(new Date(appt.date), 'MMM', { locale: es })}
-                      </span>
-                      <span className="block text-2xl font-black text-nutri-forest">
-                        {format(new Date(appt.date), 'd')}
-                      </span>
-                      <span className="block text-xs text-nutri-emerald font-medium">{appt.start_time}</span>
-                    </div>
-
-                    {/* Details Block */}
-                    <div className="flex flex-col justify-center">
-                      <p className="font-bold text-nutri-forest text-lg">{appt.guest_name}</p>
-                      <p className="text-sm text-gray-600 flex items-center gap-1">
-                        <Activity className="h-3 w-3" />
-                        {appt.service_name} — {appt.service_duration} min
-                      </p>
-                      <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
-                        <span>{appt.guest_phone}</span>
-                        <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
-                        <span className="font-medium text-green-700">${appt.service_price.toLocaleString('es-AR')}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Actions Block */}
-                  <div className="flex items-center gap-2">
-                     {appt.status === 'pending' && (
-                      <>
-                        <Button 
-                          variant="default" 
-                          className="bg-green-600 hover:bg-green-700 text-white" 
-                          size="sm"
-                          onClick={() => respondToAppointment(appt.id, 'confirmed')}
-                        >
-                          <Check className="h-4 w-4 mr-1"/> Confirmar
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          className="hover:bg-red-50 hover:text-red-600"
-                          size="sm"
-                          onClick={() => respondToAppointment(appt.id, 'cancelled')}
-                        >
-                          <X className="h-4 w-4"/>
-                        </Button>
-                      </>
-                    )}
-                    
-                    {appt.status === 'confirmed' && (
-                      <div className="px-3 py-1.5 bg-green-50 text-green-700 border border-green-200 font-semibold text-sm rounded-full flex items-center gap-1 shadow-sm">
-                        <Check className="h-4 w-4" /> Confirmado
-                      </div>
-                    )}
-
-                    {appt.status === 'cancelled' && (
-                      <div className="px-3 py-1.5 bg-red-50 text-red-700 border border-red-200 font-semibold text-sm rounded-full flex items-center gap-1 shadow-sm">
-                        <X className="h-4 w-4" /> Cancelado
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Quick Actions */}
-      <Card className="border-gray-100 shadow-sm">
-        <CardHeader className="border-b border-gray-50 pb-4">
-          <CardTitle className="text-lg font-bold text-nutri-forest">Acceso Rápido</CardTitle>
-        </CardHeader>
-        <CardContent className="pt-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <Button 
-              variant="outline" 
-              className="h-28 flex flex-col items-center justify-center gap-3 border-gray-200 hover:bg-emerald-50 hover:text-nutri-forest hover:border-emerald-200 transition-all rounded-xl shadow-sm"
-              onClick={() => navigate('/patients/new')}
-            >
-              <div className="p-2 bg-white rounded-lg shadow-sm">
-                <Users className="h-5 w-5" />
-              </div>
-              <span className="font-semibold text-sm">Nuevo<br/>Paciente</span>
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              className="h-28 flex flex-col items-center justify-center gap-3 border-gray-200 hover:bg-emerald-50 hover:text-nutri-forest hover:border-emerald-200 transition-all rounded-xl shadow-sm"
-              onClick={() => navigate('/recipes')}
-            >
-              <div className="p-2 bg-white rounded-lg shadow-sm">
-                <Utensils className="h-5 w-5" />
-              </div>
-              <span className="font-semibold text-sm">Crear<br/>Receta</span>
-            </Button>
-
-            <Button 
-              variant="outline" 
-              className="h-28 flex flex-col items-center justify-center gap-3 border-gray-200 hover:bg-emerald-50 hover:text-nutri-forest hover:border-emerald-200 transition-all rounded-xl shadow-sm"
-              onClick={() => navigate('/meal-plans')}
-            >
-              <div className="p-2 bg-white rounded-lg shadow-sm">
-                <Activity className="h-5 w-5" />
-              </div>
-              <span className="font-semibold text-sm">Armar<br/>Plan</span>
-            </Button>
-
-            <Button 
-              variant="outline" 
-              className="h-28 flex flex-col items-center justify-center gap-3 border-gray-200 hover:bg-emerald-50 hover:text-nutri-forest hover:border-emerald-200 transition-all rounded-xl shadow-sm"
-              onClick={() => navigate('/follow-ups')}
-            >
-              <div className="p-2 bg-white rounded-lg shadow-sm">
-                <Calendar className="h-5 w-5" />
-              </div>
-              <span className="font-semibold text-sm">Registrar<br/>Control</span>
-            </Button>
+          <div className="flex justify-end pr-2">
+             <Badge variant="outline" className="rounded-full border-primary/20 text-primary/60 bg-transparent h-7 px-4 text-[9px] font-bold tracking-widest">LICENCIA PROFESIONAL</Badge>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
+
+      {/* ── METRIC STRIP (Asymmetric look) ── */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 pt-4">
+         {[
+           { label: 'Facturación Mensual', value: `$${monthlyPayments.toLocaleString('es-AR')}`, icon: DollarSign, color: 'emerald' },
+           { label: 'Fichas Médicas', value: patients.length, icon: Users, color: 'primary' },
+           { label: 'Actividad Diaria', value: todayAppointments.length, icon: CalendarCheck, color: 'blue' },
+           { label: 'Alertas', value: appointments.filter(a => a.status === 'pending').length, icon: Zap, color: 'amber' },
+         ].map((kpi, i) => (
+           <div key={i} className={cn(
+             "p-6 rounded-[2rem] border border-primary/5 bg-white shadow-sm flex flex-col justify-between h-40",
+             i === 0 && "md:col-span-1",
+             i === 1 && "md:col-span-1",
+           )}>
+              <div className="flex items-center justify-between">
+                 <p className="text-[10px] font-black uppercase tracking-widest text-foreground/40">{kpi.label}</p>
+                 <kpi.icon className="h-4 w-4 text-primary/20" />
+              </div>
+              <p className="text-4xl font-black text-primary tracking-tighter">{kpi.value}</p>
+           </div>
+         ))}
+      </div>
+
+      {/* ── CONTENT AREA (Editorial layout) ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+         
+         {/* AGENDA HOY (Left focused) */}
+         <div className="lg:col-span-4 flex flex-col gap-6">
+            <h2 className="text-xs font-black uppercase tracking-[0.2em] text-primary/40 pl-6 border-l-2 border-primary/10">Cronograma Diario</h2>
+            <Card className="border-none shadow-none bg-transparent overflow-hidden flex-1">
+               <CardContent className="p-0">
+                  {todayAppointments.length === 0 ? (
+                    <div className="py-10">
+                       <p className="text-foreground/30 text-[10px] font-bold uppercase tracking-widest">Sin compromisos para hoy</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                       {todayAppointments.map(appt => (
+                         <div key={appt.id} className="p-6 bg-white rounded-[1.5rem] border border-primary/5 hover:border-primary/20 transition-all flex items-center gap-6 group cursor-pointer" onClick={() => appt.patientId && navigate(`/patients/${appt.patientId}`)}>
+                            <p className="text-[11px] font-black text-primary/40 group-hover:text-primary transition-colors underline underline-offset-8 decoration-primary/20">{format(appt.date, 'HH:mm')}</p>
+                            <div className="min-w-0 flex-1">
+                               <p className="text-sm font-black text-primary truncate uppercase tracking-tight">{appt.name}</p>
+                               <p className="text-[10px] text-foreground/40 font-bold uppercase tracking-tighter mt-0.5">{appt.subtitle}</p>
+                            </div>
+                            <ChevronRight className="h-4 w-4 text-primary/20 group-hover:text-primary" />
+                         </div>
+                       ))}
+                    </div>
+                  )}
+               </CardContent>
+            </Card>
+
+            <div className="p-8 rounded-[2.5rem] bg-accent/30 border border-accent flex flex-col gap-6">
+               <div className="flex items-center gap-3">
+                  <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+                  <p className="text-[10px] font-black uppercase tracking-widest text-accent-foreground">Notificación de Retención</p>
+               </div>
+               <p className="text-2xl font-black text-primary tracking-tight leading-none">Tienes {inactivePatients.length} pacientes ausentes.</p>
+               <Button className="w-fit h-10 px-6 bg-primary text-white font-black uppercase tracking-widest text-[9px] rounded-full hover:scale-105 active:scale-95 transition-all">
+                  Generar Estrategia
+               </Button>
+            </div>
+         </div>
+
+         {/* SOLICITUDES (Right focused) */}
+         <div className="lg:col-span-8 space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xs font-black uppercase tracking-[0.2em] text-primary/40 pl-6 border-l-2 border-primary/10">Bandeja de Entrada</h2>
+              <p className="text-[10px] font-black text-primary/60 uppercase tracking-widest">{appointments.length} SOLICITUDES</p>
+            </div>
+            
+            <Card className="border-none shadow-none bg-transparent overflow-hidden">
+               <CardContent className="p-0">
+                  {appointments.length === 0 ? (
+                    <div className="py-20 text-center bg-white/50 rounded-[3rem] border-2 border-dashed border-primary/5">
+                       <p className="text-foreground/40 text-[10px] font-bold uppercase tracking-widest">No hay nuevas peticiones web</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                       {appointments.map(appt => (
+                         <div key={appt.id} className={cn(
+                           "p-8 rounded-[2rem] border bg-white flex flex-col justify-between gap-8 group transition-all",
+                           appt.status === 'pending' ? "border-primary/20 shadow-xl shadow-primary/5" : "border-primary/5 opacity-60"
+                         )}>
+                            <div className="flex items-start justify-between">
+                               <div className="space-y-4">
+                                  <div className="flex items-center gap-3">
+                                     <div className="h-10 w-10 bg-primary/5 rounded-full border border-primary/10 flex items-center justify-center">
+                                        <p className="text-[10px] font-black text-primary">{format(new Date(appt.date), 'dd')}</p>
+                                     </div>
+                                     <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest">{format(new Date(appt.date), 'MMMM', { locale: es })}</p>
+                                  </div>
+                                  <div>
+                                     <p className="text-xl font-black text-primary tracking-tighter uppercase leading-none mb-2">{appt.guest_name}</p>
+                                     <div className="flex items-center gap-2">
+                                        <Badge variant="secondary" className="rounded-full h-5 text-[8px] font-black uppercase tracking-widest bg-primary/5 text-primary border-none">{appt.service_name}</Badge>
+                                        <p className="text-[9px] font-black text-foreground/40 uppercase tracking-widest">{appt.start_time.substring(0,5)}hs</p>
+                                     </div>
+                                  </div>
+                               </div>
+                               {appt.status !== 'pending' && (
+                                 <div className={cn("h-6 w-6 rounded-full flex items-center justify-center", appt.status === 'confirmed' ? "bg-emerald-500 text-white" : "bg-red-500 text-white")}>
+                                    {appt.status === 'confirmed' ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                                 </div>
+                               )}
+                            </div>
+                            
+                            {appt.status === 'pending' && (
+                              <div className="flex items-center gap-2 pt-4 border-t border-primary/5">
+                                 <Button onClick={() => respondToAppointment(appt.id, 'confirmed')} className="flex-1 h-12 rounded-full bg-primary text-white font-black uppercase text-[10px] tracking-widest hover:scale-105 transition-all">Aprobar</Button>
+                                 <Button onClick={() => respondToAppointment(appt.id, 'cancelled')} variant="ghost" className="h-12 w-12 rounded-full text-foreground/20 hover:text-red-600 hover:bg-red-50 flex items-center justify-center"><X className="h-5 w-5" /></Button>
+                              </div>
+                            )}
+                         </div>
+                       ))}
+                    </div>
+                  )}
+               </CardContent>
+            </Card>
+         </div>
+
+      </div>
+
     </div>
   );
 }

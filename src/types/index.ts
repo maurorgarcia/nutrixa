@@ -412,3 +412,18 @@ export interface FilterState {
     to: Date | null;
   };
 }
+// --- PAGOS Y COBROS ---
+export interface Payment {
+  id: string;
+  patient_id: string;
+  nutritionist_id: string;
+  amount: number;
+  status: 'pending' | 'paid' | 'cancelled' | 'refunded';
+  method: 'cash' | 'transfer' | 'mercadopago' | 'stripe' | 'other';
+  description: string;
+  external_reference: string | null;
+  payment_url: string | null;
+  paid_at: string | null;
+  created_at: string;
+  updated_at: string;
+}

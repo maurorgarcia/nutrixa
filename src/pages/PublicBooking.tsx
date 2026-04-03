@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -165,7 +165,9 @@ export function PublicBooking() {
           <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
           <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[radial-gradient(ellipse_at_top_right,rgba(14,157,90,0.08),transparent_70%)] pointer-events-none" />
           <div className="relative z-10 p-10 lg:p-14">
-            <img src="/logoNutrixa.png" alt="Nutrixa" className="h-9 w-auto opacity-90" />
+            <Link to="/">
+              <img src="/logoNutrixa.png" alt="Nutrixa" className="h-9 w-auto opacity-90 hover:opacity-100 transition-opacity" />
+            </Link>
           </div>
           <div className="relative z-10 px-10 lg:px-14 space-y-6">
             <h1 className="text-4xl lg:text-5xl font-extrabold tracking-tighter text-zinc-900 leading-[1.1]">
@@ -186,8 +188,10 @@ export function PublicBooking() {
         {/* Right panel */}
         <div className="flex flex-col justify-center min-h-screen px-4 py-12 sm:px-6 lg:px-8 bg-zinc-50 lg:col-span-2">
           <div className="mx-auto w-full max-w-sm animate-in fade-in zoom-in-95 duration-700 text-center space-y-6">
-            <div className="flex justify-center mb-2">
-              <img src="/logoNutrixa.png" alt="Nutrixa" className="h-16 w-auto object-contain" />
+            <div className="flex md:hidden justify-center mb-2">
+              <Link to="/">
+                <img src="/logoNutrixa.png" alt="Nutrixa" className="h-12 w-auto object-contain hover:scale-105 transition-transform" />
+              </Link>
             </div>
 
             <div className="h-20 w-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto border border-emerald-100">
@@ -231,7 +235,9 @@ export function PublicBooking() {
 
         {/* Top: Logo */}
         <div className="relative z-10 p-10 lg:p-14">
-          <img src="/logoNutrixa.png" alt="Nutrixa" className="h-9 w-auto opacity-90" />
+          <Link to="/">
+            <img src="/logoNutrixa.png" alt="Nutrixa" className="h-9 w-auto opacity-90 hover:opacity-100 transition-opacity" />
+          </Link>
         </div>
 
         {/* Center: Value prop */}
@@ -282,8 +288,10 @@ export function PublicBooking() {
         <div className="mx-auto w-full max-w-sm animate-in fade-in zoom-in-95 duration-700">
 
           {/* Logo — igual que Login */}
-          <div className="flex justify-center mb-8">
-            <img src="/logoNutrixa.png" alt="Nutrixa" className="h-16 w-auto object-contain drop-shadow-sm hover:scale-105 transition-transform duration-500" />
+          <div className="flex md:hidden justify-center mb-8 mt-8 md:mt-0">
+            <Link to="/">
+              <img src="/logoNutrixa.png" alt="Nutrixa" className="h-12 w-auto object-contain drop-shadow-sm hover:scale-105 transition-transform duration-500" />
+            </Link>
           </div>
 
           {/* Header */}

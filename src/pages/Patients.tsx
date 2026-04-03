@@ -2,63 +2,49 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { usePatientStore } from '@/stores/patientStore';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { 
-  Search, 
-  Plus, 
-  MoreVertical, 
-  Edit, 
-  Trash2, 
-  FileText, 
-  Calendar,
-  TrendingUp,
-  Utensils,
-  ChevronRight,
-  Loader2
+  Search, Plus, Edit, Trash2, FileText,
+  Loader2, MoreVertical, Users, ArrowRight
 } from 'lucide-react';
-import { calculateAge } from '@/utils/calculations';
+import {
+  DropdownMenu, DropdownMenuContent,
+  DropdownMenuItem, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { PatientForm } from './PatientForm';
 import type { PatientWithAge } from '@/types';
+import { cn } from '@/lib/utils';
 
 export function Patients() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  const { patients, loading, fetchPatients, deletePatient, setSearchQuery, filteredPatients } = usePatientStore();
+  const { loading, fetchPatients, deletePatient, setSearchQuery, filteredPatients } = usePatientStore();
   
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [patientToDelete, setPatientToDelete] = useState<PatientWithAge | null>(null);
   const [searchValue, setSearchValue] = useState('');
+  const [isAddingPatient, setIsAddingPatient] = useState(false);
+  const [editingPatientId, setEditingPatientId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user) {
-      fetchPatients(user.id);
-    }
+    if (user) fetchPatients(user.id);
   }, [user]);
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      setSearchQuery(searchValue);
-    }, 300);
-    return () => clearTimeout(timeout);
+    const t = setTimeout(() => setSearchQuery(searchValue), 300);
+    return () => clearTimeout(t);
   }, [searchValue]);
 
   const handleDelete = async () => {
@@ -69,206 +55,153 @@ export function Patients() {
     }
   };
 
-  const getInitials = (firstName: string, lastName: string) => {
-    return `${firstName[0]}${lastName[0]}`.toUpperCase();
-  };
-
-  const getStressLevelBadge = (level: string | null) => {
-    if (!level) return null;
-    
-    const configs = {
-      low: { label: 'Bajo', className: 'bg-green-100 text-green-800' },
-      moderate: { label: 'Moderado', className: 'bg-yellow-100 text-yellow-800' },
-      high: { label: 'Alto', className: 'bg-red-100 text-red-800' },
-    };
-    
-    const config = configs[level as keyof typeof configs];
-    if (!config) return null;
-    
-    return <Badge variant="secondary" className={config.className}>{config.label}</Badge>;
+  const onSuccess = () => {
+    setIsAddingPatient(false);
+    setEditingPatientId(null);
+    if (user) fetchPatients(user.id);
   };
 
   const displayedPatients = filteredPatients();
 
+  const stressMap: Record<string, { label: string; cls: string }> = {
+    low:      { label: 'Bajo',     cls: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
+    moderate: { label: 'Moderado', cls: 'bg-amber-50 text-amber-700 border-amber-100' },
+    high:     { label: 'Alto',     cls: 'bg-red-50 text-red-700 border-red-100' },
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-nutri-forest">Pacientes</h1>
-          <p className="text-gray-500 mt-1">Gestiona tus pacientes y su información</p>
+    <div className="space-y-12 animate-in fade-in duration-700">
+
+      {/* ── BOUTIQUE HEADER (Editorial) ── */}
+      <div className="flex flex-col md:flex-row md:items-start justify-between gap-10">
+        <div className="space-y-4">
+           <div className="flex items-center gap-2">
+              <div className="h-[1px] w-6 bg-primary/30" />
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Directorio Clínico</p>
+           </div>
+           <h1 className="text-5xl font-black text-primary leading-none tracking-tight">
+              Pacientes.
+           </h1>
+           <p className="text-foreground/60 font-medium max-w-md">
+             {displayedPatients.length} perfiles activos registrados bajo tu supervisión profesional.
+           </p>
         </div>
-        <Button onClick={() => navigate('/patients/new')} className="bg-nutri-forest hover:bg-nutri-emerald">
-          <Plus className="h-4 w-4 mr-2" />
-          Nuevo Paciente
+        <Button
+          onClick={() => setIsAddingPatient(true)}
+          className="h-14 px-10 rounded-full bg-primary text-white font-black uppercase tracking-widest text-[10px] shadow-2xl hover:scale-105 transition-transform active:scale-95 flex items-center gap-3"
+        >
+          <Plus className="h-5 w-5" /> Nuevo Registro
         </Button>
       </div>
 
-      {/* Search */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Buscar por nombre, email o teléfono..."
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              className="pl-10 h-11"
+      {/* ── SEARCH (Bespoke interaction) ── */}
+      <div className="relative group max-w-2xl">
+        <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/20 group-focus-within:text-primary transition-colors" />
+        <input
+          type="text"
+          placeholder="Filtrar por nombre, identificación o contacto..."
+          value={searchValue}
+          onChange={e => setSearchValue(e.target.value)}
+          className="w-full h-16 pl-14 pr-6 text-sm font-bold border border-primary/5 rounded-[2rem] bg-white transition-all placeholder:text-primary/20 focus:ring-0 focus:border-primary/20 shadow-sm"
+        />
+      </div>
+
+      {/* ── PATIENT GRID (Signature layout) ── */}
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-40 gap-4">
+          <Loader2 className="h-10 w-10 text-primary/20 animate-spin" />
+          <p className="text-[10px] font-black uppercase tracking-widest text-primary/40">Sincronizando archivos...</p>
+        </div>
+      ) : displayedPatients.length === 0 ? (
+        <div className="py-40 text-center bg-white/50 rounded-[3rem] border-2 border-dashed border-primary/5">
+          <Users className="h-12 w-12 text-primary/10 mx-auto mb-4" />
+          <p className="text-primary/40 text-[10px] font-black uppercase tracking-widest">No se encontraron registros asociados</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {displayedPatients.map((patient) => (
+            <div
+              key={patient.id}
+              className="group relative bg-white border border-primary/5 p-8 rounded-[2.5rem] hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/5 transition-all cursor-pointer"
+              onClick={() => navigate(`/patients/${patient.id}`)}
+            >
+              <div className="flex items-start justify-between mb-8">
+                <div className="h-14 w-14 bg-primary/5 rounded-2xl border border-primary/10 flex items-center justify-center">
+                   <p className="text-xl font-black text-primary uppercase">{patient.first_name[0]}{patient.last_name[0]}</p>
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                    <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full text-foreground/40 hover:text-primary">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="rounded-2xl border-primary/10 shadow-xl">
+                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setEditingPatientId(patient.id); setIsAddingPatient(true); }} className="rounded-xl font-bold py-2">
+                       <Edit className="h-4 w-4 mr-2" /> Editar Perfil
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setPatientToDelete(patient); setDeleteDialogOpen(true); }} className="text-red-600 focus:text-red-600 focus:bg-red-50 rounded-xl font-bold py-2">
+                       <Trash2 className="h-4 w-4 mr-2" /> Eliminar
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                   <h3 className="text-xl font-black text-primary leading-none group-hover:underline decoration-primary/20 underline-offset-4">{patient.first_name} {patient.last_name}</h3>
+                   <p className="text-[11px] font-bold text-foreground/40 uppercase tracking-widest mt-2">{patient.email || 'Sin contacto'}</p>
+                </div>
+                
+                <div className="flex flex-wrap gap-2 pt-4 border-t border-primary/5">
+                   <span className="px-3 py-1 bg-primary/5 text-primary rounded-full text-[10px] font-black uppercase tracking-wider">{patient.age} años</span>
+                   {patient.stress_level && (
+                     <span className={cn("px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider", stressMap[patient.stress_level].cls)}>
+                        Stress {stressMap[patient.stress_level].label}
+                     </span>
+                   )}
+                </div>
+                
+                <div className="pt-4 flex items-center justify-between">
+                   <p className="text-[10px] font-black uppercase tracking-widest text-primary/30 group-hover:text-primary/60 transition-colors">Ver ficha completa</p>
+                   <ArrowRight className="h-4 w-4 text-primary/10 group-hover:translate-x-1 group-hover:text-primary transition-all" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── FORMS ── */}
+      <Sheet open={isAddingPatient} onOpenChange={setIsAddingPatient}>
+        <SheetContent className="sm:max-w-xl rounded-l-[3rem] border-primary/10 p-0 overflow-hidden">
+          <div className="h-full overflow-y-auto px-8 py-10 no-scrollbar">
+            <SheetHeader className="mb-10 pl-6 border-l-4 border-primary">
+              <SheetTitle className="text-3xl font-black text-primary tracking-tighter uppercase whitespace-pre-line leading-none">
+                {editingPatientId ? 'Modificar\nRegistro.' : 'Nuevo\nPaciente.'}
+              </SheetTitle>
+              <SheetDescription className="text-xs font-bold text-foreground/40 uppercase tracking-widest">
+                Gestión de archivos clínicos Nutrixa
+              </SheetDescription>
+            </SheetHeader>
+            <PatientForm 
+              patientId={editingPatientId ?? undefined} 
+              onSuccess={onSuccess} 
             />
           </div>
-        </CardContent>
-      </Card>
+        </SheetContent>
+      </Sheet>
 
-      {/* Patients List */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold">
-            {displayedPatients.length} {displayedPatients.length === 1 ? 'paciente' : 'pacientes'}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="flex justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-            </div>
-          ) : displayedPatients.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Search className="h-8 w-8 text-gray-400" />
-              </div>
-              <h3 className="text-lg font-medium text-nutri-forest mb-1">
-                {searchValue ? 'No se encontraron pacientes' : 'No hay pacientes registrados'}
-              </h3>
-              <p className="text-gray-500 mb-4">
-                {searchValue 
-                  ? 'Intenta con otros términos de búsqueda' 
-                  : 'Comienza agregando tu primer paciente'}
-              </p>
-              {!searchValue && (
-                <Button onClick={() => navigate('/patients/new')} className="bg-nutri-forest hover:bg-nutri-emerald">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Agregar Paciente
-                </Button>
-              )}
-            </div>
-          ) : (
-            <div className="divide-y divide-gray-100">
-              {displayedPatients.map((patient) => (
-                <div 
-                  key={patient.id}
-                  className="flex items-center justify-between py-4 group"
-                >
-                  <div 
-                    className="flex items-center gap-4 flex-1 cursor-pointer"
-                    onClick={() => navigate(`/patients/${patient.id}`)}
-                  >
-                    <Avatar className="h-12 w-12">
-                      <AvatarFallback className="bg-gray-200 text-gray-700">
-                        {getInitials(patient.first_name, patient.last_name)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <h3 className="font-semibold text-nutri-forest">
-                          {patient.first_name} {patient.last_name}
-                        </h3>
-                        {getStressLevelBadge(patient.stress_level)}
-                      </div>
-                      <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
-                        <span>{patient.age} años</span>
-                        <span>•</span>
-                        <span>{patient.gender === 'male' ? 'Masculino' : patient.gender === 'female' ? 'Femenino' : 'Otro'}</span>
-                        {patient.email && (
-                          <>
-                            <span>•</span>
-                            <span>{patient.email}</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => navigate(`/patients/${patient.id}/anamnesis`)}
-                      className="hidden sm:flex"
-                    >
-                      <FileText className="h-4 w-4 mr-2" />
-                      Anamnesis
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => navigate(`/patients/${patient.id}/meal-plans`)}
-                      className="hidden sm:flex"
-                    >
-                      <Utensils className="h-4 w-4 mr-2" />
-                      Plan
-                    </Button>
-
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => navigate(`/patients/${patient.id}`)}>
-                          <ChevronRight className="h-4 w-4 mr-2" />
-                          Ver detalle
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => navigate(`/patients/${patient.id}/edit`)}>
-                          <Edit className="h-4 w-4 mr-2" />
-                          Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => navigate(`/patients/${patient.id}/anamnesis`)}>
-                          <FileText className="h-4 w-4 mr-2" />
-                          Anamnesis
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => navigate(`/patients/${patient.id}/meal-plans`)}>
-                          <Calendar className="h-4 w-4 mr-2" />
-                          Plan de alimentación
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => navigate(`/patients/${patient.id}/follow-ups`)}>
-                          <TrendingUp className="h-4 w-4 mr-2" />
-                          Seguimiento
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          className="text-red-600"
-                          onClick={() => {
-                            setPatientToDelete(patient);
-                            setDeleteDialogOpen(true);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Eliminar
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="rounded-[2.5rem] border-primary/10 p-10">
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar paciente?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta acción eliminará a <strong>{patientToDelete?.first_name} {patientToDelete?.last_name}</strong> y todos sus datos asociados (anamnesis, planes, seguimientos). Esta acción no se puede deshacer.
+            <AlertDialogTitle className="text-3xl font-black text-primary tracking-tighter leading-none mb-4 uppercase">¿Eliminar registro?</AlertDialogTitle>
+            <AlertDialogDescription className="text-foreground/60 font-medium">
+              Esta acción eliminará de forma permanente el expediente clínico del paciente y no podrá recuperarse el historial de anamnesis asociado.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
-              Eliminar
-            </AlertDialogAction>
+          <AlertDialogFooter className="mt-8 gap-4">
+            <AlertDialogCancel className="rounded-full border-primary/10 h-14 px-8 font-black uppercase text-[10px] tracking-widest shadow-none">Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="rounded-full bg-red-600 text-white h-14 px-8 font-black uppercase text-[10px] tracking-widest shadow-2xl hover:bg-red-700">Confirmar Baja</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

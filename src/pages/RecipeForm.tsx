@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Loader2, Plus, Save, Trash2, X } from 'lucide-react';
+import { ArrowLeft, Loader2, Plus, Save, Trash2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import type { RecipeFormData, RecipeIngredient, RecipeTag } from '@/types';
 
 const recipeTags: { value: RecipeTag; label: string }[] = [
@@ -49,13 +49,21 @@ const initialFormData: RecipeFormData = {
   tags: [],
 };
 
-export function RecipeForm() {
+interface RecipeFormProps {
+  onSuccess?: () => void;
+  onCancel?: () => void;
+  initialId?: string;
+}
+
+export function RecipeForm({ onSuccess, onCancel, initialId }: RecipeFormProps) {
   const navigate = useNavigate();
-  const { id } = useParams<{ id: string }>();
+  const { id: routeId } = useParams<{ id: string }>();
+  const id = initialId || routeId;
   const { user } = useAuthStore();
   const { selectedRecipe, createRecipe, updateRecipe, getRecipeById, loading } = useRecipeStore();
   
   const isEditing = Boolean(id);
+  const isInsideSheet = Boolean(onSuccess);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState<RecipeFormData>(initialFormData);
 
@@ -88,7 +96,6 @@ export function RecipeForm() {
     setSaving(true);
     
     try {
-      // Clean up data
       const cleanedData = {
         ...formData,
         instructions: formData.instructions.filter(i => i.trim() !== ''),
@@ -103,7 +110,12 @@ export function RecipeForm() {
       } else {
         await createRecipe(user.id, cleanedData);
       }
-      navigate('/recipes');
+      
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        navigate('/recipes');
+      }
     } catch (error) {
       console.error('Error saving recipe:', error);
     } finally {
@@ -137,28 +149,6 @@ export function RecipeForm() {
     }));
   };
 
-  const addInstruction = () => {
-    setFormData(prev => ({
-      ...prev,
-      instructions: [...prev.instructions, ''],
-    }));
-  };
-
-  const updateInstruction = (index: number, value: string) => {
-    setFormData(prev => {
-      const newInstructions = [...prev.instructions];
-      newInstructions[index] = value;
-      return { ...prev, instructions: newInstructions };
-    });
-  };
-
-  const removeInstruction = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      instructions: prev.instructions.filter((_, i) => i !== index),
-    }));
-  };
-
   const toggleTag = (tag: RecipeTag) => {
     setFormData(prev => ({
       ...prev,
@@ -168,10 +158,13 @@ export function RecipeForm() {
     }));
   };
 
-  // Calculate total calories from ingredients
-  const totalCalories = formData.ingredients.reduce((sum, ing) => sum + (ing.calories || 0), 0);
-  const servings = parseInt(formData.servings) || 1;
-  const calculatedCaloriesPerServing = Math.round(totalCalories / servings);
+  const handleCancelClick = () => {
+    if (onCancel) {
+      onCancel();
+    } else {
+      navigate('/recipes');
+    }
+  };
 
   if (isEditing && loading) {
     return (
@@ -182,295 +175,94 @@ export function RecipeForm() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/recipes')}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold text-nutri-forest">
-            {isEditing ? 'Editar Receta' : 'Nueva Receta'}
-          </h1>
-          <p className="text-gray-500 mt-1">
-            {isEditing 
-              ? 'Actualiza los datos de la receta' 
-              : 'Completa los datos para crear una nueva receta'}
-          </p>
+    <div className={cn("space-y-6", isInsideSheet && "pb-24")}>
+      {!isInsideSheet && (
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => navigate('/recipes')}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold text-nutri-forest">
+              {isEditing ? 'Editar Receta' : 'Nueva Receta'}
+            </h1>
+          </div>
         </div>
-      </div>
+      )}
 
-      <form onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Basic Info */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold">Información Básica</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className={cn("grid grid-cols-1 gap-6", !isInsideSheet && "lg:grid-cols-3")}>
+          <div className={cn("space-y-6", !isInsideSheet && "lg:col-span-2")}>
+            <Card className={isInsideSheet ? "border-0 shadow-none bg-transparent" : "border-zinc-200"}>
+              {!isInsideSheet && <CardHeader><CardTitle className="text-lg font-semibold">Información Básica</CardTitle></CardHeader>}
+              <CardContent className={cn("space-y-4", isInsideSheet && "p-0")}>
                 <div className="space-y-2">
                   <Label htmlFor="name">Nombre de la receta *</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => handleChange('name', e.target.value)}
-                    required
-                    placeholder="Ej: Ensalada de quinoa con verduras"
-                  />
+                  <Input id="name" value={formData.name} onChange={(e) => handleChange('name', e.target.value)} required className="h-10 border-zinc-200" />
                 </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="description">Descripción</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => handleChange('description', e.target.value)}
-                    placeholder="Breve descripción de la receta..."
-                    rows={3}
-                  />
+                  <Textarea id="description" value={formData.description} onChange={(e) => handleChange('description', e.target.value)} className="border-zinc-200" rows={3} />
                 </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="prep_time">Tiempo prep. (min)</Label>
-                    <Input
-                      id="prep_time"
-                      type="number"
-                      value={formData.prep_time}
-                      onChange={(e) => handleChange('prep_time', e.target.value)}
-                      placeholder="15"
-                    />
+                    <Label htmlFor="prep_time">Prep. (min)</Label>
+                    <Input id="prep_time" type="number" value={formData.prep_time} onChange={(e) => handleChange('prep_time', e.target.value)} className="h-10 border-zinc-200" />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="cook_time">Tiempo cocción (min)</Label>
-                    <Input
-                      id="cook_time"
-                      type="number"
-                      value={formData.cook_time}
-                      onChange={(e) => handleChange('cook_time', e.target.value)}
-                      placeholder="20"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="servings">Porciones</Label>
-                    <Input
-                      id="servings"
-                      type="number"
-                      value={formData.servings}
-                      onChange={(e) => handleChange('servings', e.target.value)}
-                      placeholder="4"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="calories">Calorías/porción</Label>
-                    <Input
-                      id="calories"
-                      type="number"
-                      value={formData.calories_per_serving}
-                      onChange={(e) => handleChange('calories_per_serving', e.target.value)}
-                      placeholder={calculatedCaloriesPerServing > 0 ? calculatedCaloriesPerServing.toString() : '300'}
-                    />
+                    <Label htmlFor="cook_time">Cocción (min)</Label>
+                    <Input id="cook_time" type="number" value={formData.cook_time} onChange={(e) => handleChange('cook_time', e.target.value)} className="h-10 border-zinc-200" />
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Ingredients */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
+            <Card className={isInsideSheet ? "border-0 shadow-none bg-transparent" : "border-zinc-200"}>
+              <CardHeader className="flex flex-row items-center justify-between px-0 py-4">
                 <CardTitle className="text-lg font-semibold">Ingredientes</CardTitle>
-                <Button type="button" variant="outline" size="sm" onClick={addIngredient}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Agregar
+                <Button type="button" variant="outline" size="sm" onClick={addIngredient} className="rounded-xl font-bold">
+                  <Plus className="h-4 w-4 mr-2" /> Agregar
                 </Button>
               </CardHeader>
-              <CardContent>
-                {formData.ingredients.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    <p>No hay ingredientes agregados</p>
-                    <Button type="button" variant="outline" className="mt-4" onClick={addIngredient}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Agregar ingrediente
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {formData.ingredients.map((ingredient, index) => (
-                      <div key={index} className="flex gap-2 items-start p-4 bg-gray-50 rounded-lg">
-                        <div className="flex-1 grid grid-cols-6 gap-2">
-                          <div className="col-span-2">
-                            <Input
-                              placeholder="Nombre"
-                              value={ingredient.name}
-                              onChange={(e) => updateIngredient(index, 'name', e.target.value)}
-                            />
-                          </div>
-                          <div>
-                            <Input
-                              type="number"
-                              step="0.1"
-                              placeholder="Cant."
-                              value={ingredient.quantity || ''}
-                              onChange={(e) => updateIngredient(index, 'quantity', parseFloat(e.target.value) || 0)}
-                            />
-                          </div>
-                          <div>
-                            <Input
-                              placeholder="Unidad"
-                              value={ingredient.unit}
-                              onChange={(e) => updateIngredient(index, 'unit', e.target.value)}
-                            />
-                          </div>
-                          <div>
-                            <Input
-                              type="number"
-                              placeholder="Kcal"
-                              value={ingredient.calories || ''}
-                              onChange={(e) => updateIngredient(index, 'calories', parseFloat(e.target.value) || 0)}
-                            />
-                          </div>
-                          <div className="flex gap-1">
-                            <Input
-                              type="number"
-                              step="0.1"
-                              placeholder="P"
-                              value={ingredient.protein || ''}
-                              onChange={(e) => updateIngredient(index, 'protein', parseFloat(e.target.value) || 0)}
-                            />
-                          </div>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeIngredient(index)}
-                          className="text-red-500"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Instructions */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-lg font-semibold">Preparación</CardTitle>
-                <Button type="button" variant="outline" size="sm" onClick={addInstruction}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Agregar paso
-                </Button>
-              </CardHeader>
-              <CardContent>
+              <CardContent className="px-0">
                 <div className="space-y-3">
-                  {formData.instructions.map((instruction, index) => (
-                    <div key={index} className="flex gap-2 items-start">
-                      <span className="w-8 h-8 flex items-center justify-center bg-black text-white rounded-full text-sm font-medium shrink-0">
-                        {index + 1}
-                      </span>
-                      <Textarea
-                        value={instruction}
-                        onChange={(e) => updateInstruction(index, e.target.value)}
-                        placeholder={`Paso ${index + 1}...`}
-                        className="flex-1 min-h-[60px]"
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeInstruction(index)}
-                        className="text-red-500"
-                        disabled={formData.instructions.length === 1}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                  {formData.ingredients.map((ing, i) => (
+                    <div key={i} className="flex gap-2 p-3 bg-zinc-50 rounded-xl border border-zinc-100">
+                      <Input placeholder="Harina" value={ing.name} onChange={(e) => updateIngredient(i, 'name', e.target.value)} className="flex-1 h-9 border-zinc-200" />
+                      <Input type="number" placeholder="100" value={ing.quantity || ''} onChange={(e) => updateIngredient(i, 'quantity', parseFloat(e.target.value) || 0)} className="w-20 h-9 border-zinc-200" />
+                      <Button type="button" variant="ghost" size="icon" onClick={() => removeIngredient(i)} className="text-zinc-400 hover:text-red-500"><Trash2 className="h-4 w-4"/></Button>
                     </div>
                   ))}
                 </div>
               </CardContent>
             </Card>
           </div>
-
-          {/* Sidebar */}
+          
           <div className="space-y-6">
-            {/* Tags */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold">Etiquetas</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {recipeTags.map((tag) => (
-                    <button
-                      key={tag.value}
-                      type="button"
-                      onClick={() => toggleTag(tag.value)}
-                      className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
-                        formData.tags.includes(tag.value)
-                          ? 'bg-black text-white'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      }`}
-                    >
-                      {tag.label}
-                    </button>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+             <Card className={isInsideSheet ? "border-0 shadow-none bg-transparent" : "border-zinc-200"}>
+               <CardHeader className="px-0 py-4"><CardTitle className="text-sm font-black uppercase tracking-widest text-zinc-400">Etiquetas</CardTitle></CardHeader>
+               <CardContent className="px-0">
+                  <div className="flex flex-wrap gap-2">
+                    {recipeTags.map(tag => (
+                      <button key={tag.value} type="button" onClick={() => toggleTag(tag.value)} className={cn("px-3 py-1.5 rounded-xl text-xs font-bold transition-all border", formData.tags.includes(tag.value) ? "bg-zinc-900 border-zinc-900 text-white" : "bg-white border-zinc-200 text-zinc-600 hover:border-zinc-400")}>
+                        {tag.label}
+                      </button>
+                    ))}
+                  </div>
+               </CardContent>
+             </Card>
 
-            {/* Nutrition Summary */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold">Resumen Nutricional</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Calorías totales</span>
-                    <span className="font-medium">{totalCalories} kcal</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Por porción</span>
-                    <span className="font-medium">{calculatedCaloriesPerServing} kcal</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Proteínas totales</span>
-                    <span className="font-medium">
-                      {formData.ingredients.reduce((sum, ing) => sum + (ing.protein || 0), 0).toFixed(1)}g
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Actions */}
-            <div className="flex flex-col gap-3">
-              <Button
-                type="submit"
-                className="w-full bg-nutri-forest hover:bg-nutri-emerald"
-                disabled={saving}
-              >
-                {saving ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                ) : (
-                  <Save className="h-4 w-4 mr-2" />
-                )}
-                {isEditing ? 'Guardar cambios' : 'Crear receta'}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={() => navigate('/recipes')}
-              >
-                Cancelar
-              </Button>
-            </div>
+             <div className={cn(
+              "flex flex-col gap-3",
+              isInsideSheet && "fixed bottom-0 right-0 left-0 p-6 bg-white border-t border-zinc-100 sm:left-auto sm:w-[450px]"
+             )}>
+                <Button type="submit" className="w-full bg-zinc-900 hover:bg-zinc-800 text-white font-bold h-10 px-6 rounded-xl" disabled={saving}>
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+                  {isEditing ? 'Guardar cambios' : 'Crear receta'}
+                </Button>
+                <Button type="button" variant="ghost" className="w-full font-semibold text-zinc-500" onClick={handleCancelClick}>
+                  Cancelar
+                </Button>
+             </div>
           </div>
         </div>
       </form>

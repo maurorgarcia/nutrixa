@@ -6,7 +6,8 @@ import {
   Calendar, 
   TrendingUp, 
   Settings,
-  User
+  User,
+  DollarSign
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -16,6 +17,7 @@ const navigation = [
   { name: 'Recetario',    href: '/recipes',    icon: BookOpen },
   { name: 'Planes',       href: '/meal-plans', icon: Calendar },
   { name: 'Seguimiento',  href: '/follow-ups', icon: TrendingUp },
+  { name: 'Cobros',       href: '/payments',   icon: DollarSign },
 ];
 
 const secondaryNavigation = [

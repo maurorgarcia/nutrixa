@@ -4,67 +4,46 @@ import { useAuthStore } from '@/stores/authStore';
 import { useMealPlanStore } from '@/stores/mealPlanStore';
 import { usePatientStore } from '@/stores/patientStore';
 import { useRecipeStore } from '@/stores/recipeStore';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem,
+  SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { ArrowLeft, Loader2, Plus, Save, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Loader2, Plus, Save, Trash2, Search } from 'lucide-react';
 import type { MealPlanFormData, MealFormData, MealType } from '@/types';
 
-const daysOfWeek = [
-  { value: 1, label: 'Lunes' },
-  { value: 2, label: 'Martes' },
-  { value: 3, label: 'Miércoles' },
-  { value: 4, label: 'Jueves' },
-  { value: 5, label: 'Viernes' },
-  { value: 6, label: 'Sábado' },
-  { value: 7, label: 'Domingo' },
+const DAYS = [
+  { value: 1, short: 'Lun', label: 'Lunes' },
+  { value: 2, short: 'Mar', label: 'Martes' },
+  { value: 3, short: 'Mié', label: 'Miércoles' },
+  { value: 4, short: 'Jue', label: 'Jueves' },
+  { value: 5, short: 'Vie', label: 'Viernes' },
+  { value: 6, short: 'Sáb', label: 'Sábado' },
+  { value: 7, short: 'Dom', label: 'Domingo' },
 ];
 
-const mealTypes: { value: MealType; label: string; defaultTime: string }[] = [
-  { value: 'breakfast', label: 'Desayuno', defaultTime: '08:00' },
-  { value: 'mid_morning', label: 'Media Mañana', defaultTime: '10:30' },
-  { value: 'lunch', label: 'Almuerzo', defaultTime: '13:00' },
-  { value: 'snack', label: 'Merienda', defaultTime: '16:30' },
-  { value: 'dinner', label: 'Cena', defaultTime: '20:00' },
+const MEAL_TYPES: { value: MealType; label: string; time: string; emoji: string }[] = [
+  { value: 'breakfast',   label: 'Desayuno',      time: '08:00', emoji: '🌅' },
+  { value: 'mid_morning', label: 'Media Mañana',  time: '10:30', emoji: '🍎' },
+  { value: 'lunch',       label: 'Almuerzo',      time: '13:00', emoji: '🍽️' },
+  { value: 'snack',       label: 'Merienda',       time: '16:30', emoji: '☕' },
+  { value: 'dinner',      label: 'Cena',           time: '20:00', emoji: '🌙' },
 ];
 
-const emptyMeal: MealFormData = {
-  type: 'breakfast',
-  name: '',
-  time: '08:00',
-  recipes: [],
-  notes: '',
-};
+const EMPTY_MEAL: MealFormData = { type: 'breakfast', name: '', time: '08:00', recipes: [], notes: '' };
 
-const initialFormData: MealPlanFormData = {
-  name: '',
-  description: '',
-  start_date: '',
-  end_date: '',
-  daily_calories: '',
-  macros: {
-    protein: '30',
-    carbs: '40',
-    fats: '30',
-  },
-  days: daysOfWeek.map(day => ({
-    day_of_week: day.value,
-    meals: [],
-  })),
+const INITIAL: MealPlanFormData = {
+  name: '', description: '', start_date: '', end_date: '', daily_calories: '',
+  macros: { protein: '30', carbs: '40', fats: '30' },
+  days: DAYS.map(d => ({ day_of_week: d.value, meals: [] })),
 };
 
 export function MealPlanForm() {
   const navigate = useNavigate();
-  const { id } = useParams<{ id: string }>();
+  const { id, patientId } = useParams<{ id: string; patientId?: string }>();
   const { user } = useAuthStore();
   const { selectedMealPlan, createMealPlan, updateMealPlan, getMealPlanById, loading } = useMealPlanStore();
   const { patients, fetchPatients } = usePatientStore();
@@ -72,21 +51,17 @@ export function MealPlanForm() {
   
   const isEditing = Boolean(id);
   const [saving, setSaving] = useState(false);
-  const [formData, setFormData] = useState<MealPlanFormData>(initialFormData);
-  const [selectedPatient, setSelectedPatient] = useState('');
-  const [expandedDays, setExpandedDays] = useState<number[]>([1]);
+  const [formData, setFormData] = useState<MealPlanFormData>(INITIAL);
+  const [selectedPatient, setSelectedPatient] = useState(patientId || '');
+  const [activeDay, setActiveDay] = useState(1);
+  const [recipeSearch, setRecipeSearch] = useState('');
 
   useEffect(() => {
-    if (user) {
-      fetchPatients(user.id);
-      fetchRecipes(user.id);
-    }
+    if (user) { fetchPatients(user.id); fetchRecipes(user.id); }
   }, [user]);
 
   useEffect(() => {
-    if (isEditing && id) {
-      getMealPlanById(id);
-    }
+    if (isEditing && id) getMealPlanById(id);
   }, [id, isEditing]);
 
   useEffect(() => {
@@ -106,13 +81,8 @@ export function MealPlanForm() {
         days: selectedMealPlan.days.map(day => ({
           day_of_week: day.day_of_week,
           meals: day.meals.map(meal => ({
-            type: meal.type,
-            name: meal.name,
-            time: meal.time,
-            recipes: meal.recipes.map(r => ({
-              recipe_id: r.recipe_id,
-              quantity: r.quantity.toString(),
-            })),
+            type: meal.type, name: meal.name, time: meal.time,
+            recipes: meal.recipes.map(r => ({ recipe_id: r.recipe_id, quantity: r.quantity.toString() })),
             notes: meal.notes || '',
           })),
         })),
@@ -123,445 +93,387 @@ export function MealPlanForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !selectedPatient) return;
-
     setSaving(true);
-    
     try {
-      if (isEditing && id) {
-        await updateMealPlan(id, formData);
-      } else {
-        await createMealPlan(user.id, selectedPatient, formData);
-      }
-      navigate('/meal-plans');
-    } catch (error) {
-      console.error('Error saving meal plan:', error);
-    } finally {
-      setSaving(false);
-    }
+      if (isEditing && id) await updateMealPlan(id, formData);
+      else await createMealPlan(user.id, selectedPatient, formData);
+      navigate(patientId ? `/patients/${patientId}/meal-plans` : '/meal-plans');
+    } catch (err) { console.error(err); }
+    finally { setSaving(false); }
   };
 
-  const toggleDay = (dayValue: number) => {
-    setExpandedDays(prev => 
-      prev.includes(dayValue)
-        ? prev.filter(d => d !== dayValue)
-        : [...prev, dayValue]
-    );
-  };
-
-  const addMeal = (dayIndex: number) => {
+  // ── Mutators ──
+  const dayIndex = (dayValue: number) => formData.days.findIndex(d => d.day_of_week === dayValue);
+  
+  const addMeal = (dayVal: number) => {
     setFormData(prev => {
-      const newDays = [...prev.days];
-      newDays[dayIndex] = {
-        ...newDays[dayIndex],
-        meals: [...newDays[dayIndex].meals, { ...emptyMeal, type: 'breakfast' }],
-      };
-      return { ...prev, days: newDays };
+      const days = [...prev.days];
+      const di = days.findIndex(d => d.day_of_week === dayVal);
+      days[di] = { ...days[di], meals: [...days[di].meals, { ...EMPTY_MEAL }] };
+      return { ...prev, days };
     });
   };
 
-  const updateMeal = (dayIndex: number, mealIndex: number, field: keyof MealFormData, value: any) => {
+  const removeMeal = (dayVal: number, mealIdx: number) => {
     setFormData(prev => {
-      const newDays = [...prev.days];
-      const newMeals = [...newDays[dayIndex].meals];
-      newMeals[mealIndex] = { ...newMeals[mealIndex], [field]: value };
-      newDays[dayIndex] = { ...newDays[dayIndex], meals: newMeals };
-      return { ...prev, days: newDays };
+      const days = [...prev.days];
+      const di = days.findIndex(d => d.day_of_week === dayVal);
+      days[di] = { ...days[di], meals: days[di].meals.filter((_, i) => i !== mealIdx) };
+      return { ...prev, days };
     });
   };
 
-  const removeMeal = (dayIndex: number, mealIndex: number) => {
+  const updateMealField = (dayVal: number, mealIdx: number, field: keyof MealFormData, value: any) => {
     setFormData(prev => {
-      const newDays = [...prev.days];
-      newDays[dayIndex] = {
-        ...newDays[dayIndex],
-        meals: newDays[dayIndex].meals.filter((_, i) => i !== mealIndex),
-      };
-      return { ...prev, days: newDays };
+      const days = [...prev.days];
+      const di = days.findIndex(d => d.day_of_week === dayVal);
+      const meals = [...days[di].meals];
+      meals[mealIdx] = { ...meals[mealIdx], [field]: value };
+      days[di] = { ...days[di], meals };
+      return { ...prev, days };
     });
   };
 
-  const addRecipeToMeal = (dayIndex: number, mealIndex: number) => {
+  const addRecipeToMeal = (dayVal: number, mealIdx: number, recipeId: string) => {
     setFormData(prev => {
-      const newDays = [...prev.days];
-      const newMeals = [...newDays[dayIndex].meals];
-      newMeals[mealIndex] = {
-        ...newMeals[mealIndex],
-        recipes: [...newMeals[mealIndex].recipes, { recipe_id: '', quantity: '1' }],
-      };
-      newDays[dayIndex] = { ...newDays[dayIndex], meals: newMeals };
-      return { ...prev, days: newDays };
+      const days = [...prev.days];
+      const di = days.findIndex(d => d.day_of_week === dayVal);
+      const meals = [...days[di].meals];
+      // Don't add duplicates
+      if (meals[mealIdx].recipes.some(r => r.recipe_id === recipeId)) return prev;
+      meals[mealIdx] = { ...meals[mealIdx], recipes: [...meals[mealIdx].recipes, { recipe_id: recipeId, quantity: '1' }] };
+      days[di] = { ...days[di], meals };
+      return { ...prev, days };
     });
   };
 
-  const updateRecipeInMeal = (dayIndex: number, mealIndex: number, recipeIndex: number, field: string, value: string) => {
+  const removeRecipeFromMeal = (dayVal: number, mealIdx: number, recipeIdx: number) => {
     setFormData(prev => {
-      const newDays = [...prev.days];
-      const newMeals = [...newDays[dayIndex].meals];
-      const newRecipes = [...newMeals[mealIndex].recipes];
-      newRecipes[recipeIndex] = { ...newRecipes[recipeIndex], [field]: value };
-      newMeals[mealIndex] = { ...newMeals[mealIndex], recipes: newRecipes };
-      newDays[dayIndex] = { ...newDays[dayIndex], meals: newMeals };
-      return { ...prev, days: newDays };
+      const days = [...prev.days];
+      const di = days.findIndex(d => d.day_of_week === dayVal);
+      const meals = [...days[di].meals];
+      meals[mealIdx] = { ...meals[mealIdx], recipes: meals[mealIdx].recipes.filter((_, i) => i !== recipeIdx) };
+      days[di] = { ...days[di], meals };
+      return { ...prev, days };
     });
   };
 
-  const removeRecipeFromMeal = (dayIndex: number, mealIndex: number, recipeIndex: number) => {
+  const updateRecipeQty = (dayVal: number, mealIdx: number, recipeIdx: number, qty: string) => {
     setFormData(prev => {
-      const newDays = [...prev.days];
-      const newMeals = [...newDays[dayIndex].meals];
-      newMeals[mealIndex] = {
-        ...newMeals[mealIndex],
-        recipes: newMeals[mealIndex].recipes.filter((_, i) => i !== recipeIndex),
-      };
-      newDays[dayIndex] = { ...newDays[dayIndex], meals: newMeals };
-      return { ...prev, days: newDays };
+      const days = [...prev.days];
+      const di = days.findIndex(d => d.day_of_week === dayVal);
+      const meals = [...days[di].meals];
+      const recs = [...meals[mealIdx].recipes];
+      recs[recipeIdx] = { ...recs[recipeIdx], quantity: qty };
+      meals[mealIdx] = { ...meals[mealIdx], recipes: recs };
+      days[di] = { ...days[di], meals };
+      return { ...prev, days };
     });
   };
 
-  if (isEditing && loading) {
-    return (
-      <div className="flex justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-      </div>
-    );
-  }
+  if (isEditing && loading) return (
+    <div className="flex justify-center py-16"><Loader2 className="h-7 w-7 animate-spin text-slate-300" /></div>
+  );
+
+  const activeDayData = formData.days.find(d => d.day_of_week === activeDay);
+  const filteredRecipes = recipes.filter(r => r.name.toLowerCase().includes(recipeSearch.toLowerCase()));
+  const macroTotal = Number(formData.macros.protein) + Number(formData.macros.carbs) + Number(formData.macros.fats);
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/meal-plans')}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold text-nutri-forest">
-            {isEditing ? 'Editar Plan' : 'Nuevo Plan de Alimentación'}
-          </h1>
-          <p className="text-gray-500 mt-1">
-            {isEditing 
-              ? 'Actualiza el plan nutricional' 
-              : 'Diseña un plan personalizado para tu paciente'}
-          </p>
+    <form onSubmit={handleSubmit} className="space-y-0 animate-in fade-in duration-500">
+
+      {/* ── STICKY HEADER ── */}
+      <div className="sticky top-0 z-20 bg-white border-b border-slate-200 -mx-6 px-6 py-4 mb-6 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => navigate(patientId ? `/patients/${patientId}/meal-plans` : '/meal-plans')}
+            className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </button>
+          <div>
+            <h1 className="text-lg font-black text-slate-900 tracking-tight">
+              {isEditing ? 'Editar Plan' : 'Nuevo Plan de Alimentación'}
+            </h1>
+            <p className="text-xs font-medium text-slate-500">
+              {isEditing ? 'Actualizá el plan nutricional' : 'Diseñá un plan personalizado'}
+            </p>
+          </div>
         </div>
+        <Button
+          type="submit"
+          disabled={saving || (!isEditing && !selectedPatient)}
+          className="bg-slate-900 hover:bg-slate-800 text-white h-9 px-5 rounded-lg text-sm font-bold flex items-center gap-2"
+        >
+          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+          {isEditing ? 'Guardar cambios' : 'Crear plan'}
+        </Button>
       </div>
 
-      <form onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Basic Info */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold">Información del Plan</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {!isEditing && (
-                  <div className="space-y-2">
-                    <Label htmlFor="patient">Paciente *</Label>
-                    <Select
-                      value={selectedPatient}
-                      onValueChange={setSelectedPatient}
-                      required
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar paciente..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {patients.map((patient) => (
-                          <SelectItem key={patient.id} value={patient.id}>
-                            {patient.first_name} {patient.last_name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
+      <div className="flex gap-6">
 
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nombre del plan *</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    required
-                    placeholder="Ej: Plan de adelgazamiento - Fase 1"
-                  />
+        {/* ══ LEFT: PLAN CONFIG + DAY EDITOR ══ */}
+        <div className="flex-1 min-w-0 space-y-6">
+
+          {/* Plan Info */}
+          <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4">
+            <h2 className="text-xs font-black text-slate-500 uppercase tracking-wider mb-4">Configuración del Plan</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {!isEditing && (
+                <div className="space-y-1.5 sm:col-span-2">
+                  <Label className="text-xs font-black text-slate-500 uppercase tracking-wider">Paciente *</Label>
+                  <Select value={selectedPatient} onValueChange={setSelectedPatient} required>
+                    <SelectTrigger className="h-9 text-sm">
+                      <SelectValue placeholder="Seleccionar paciente..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {patients.map(p => (
+                        <SelectItem key={p.id} value={p.id}>{p.first_name} {p.last_name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
+              )}
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label className="text-xs font-black text-slate-500 uppercase tracking-wider">Nombre del plan *</Label>
+                <Input
+                  value={formData.name}
+                  onChange={e => setFormData(p => ({ ...p, name: e.target.value }))}
+                  required placeholder="Ej: Plan de déficit calórico — Fase 1"
+                  className="h-9 text-sm"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-black text-slate-500 uppercase tracking-wider">Inicio *</Label>
+                <Input type="date" value={formData.start_date} onChange={e => setFormData(p => ({ ...p, start_date: e.target.value }))} required className="h-9 text-sm" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-black text-slate-500 uppercase tracking-wider">Fin (opcional)</Label>
+                <Input type="date" value={formData.end_date} onChange={e => setFormData(p => ({ ...p, end_date: e.target.value }))} className="h-9 text-sm" />
+              </div>
+            </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="description">Descripción</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="Objetivos y características del plan..."
-                    rows={3}
-                  />
+            {/* Macros inline */}
+            <div className="pt-2 border-t border-slate-100">
+              <div className="flex flex-wrap items-end gap-4">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-black text-slate-500 uppercase tracking-wider">Kcal/día</Label>
+                  <Input type="number" value={formData.daily_calories} onChange={e => setFormData(p => ({ ...p, daily_calories: e.target.value }))} placeholder="2000" className="h-9 text-sm w-28" />
                 </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="start_date">Fecha de inicio *</Label>
-                    <Input
-                      id="start_date"
-                      type="date"
-                      value={formData.start_date}
-                      onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
-                      required
+                {(['protein', 'carbs', 'fats'] as const).map((macro, i) => (
+                  <div key={macro} className="space-y-1.5">
+                    <Label className="text-xs font-black text-slate-500 uppercase tracking-wider">
+                      {['Proteínas', 'Carbos', 'Grasas'][i]} %
+                    </Label>
+                    <Input type="number" min="0" max="100" value={formData.macros[macro]}
+                      onChange={e => setFormData(p => ({ ...p, macros: { ...p.macros, [macro]: e.target.value } }))}
+                      className="h-9 text-sm w-20"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="end_date">Fecha de fin (opcional)</Label>
-                    <Input
-                      id="end_date"
-                      type="date"
-                      value={formData.end_date}
-                      onChange={(e) => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
-                    />
-                  </div>
+                ))}
+                <div className={`text-xs font-bold px-2 py-1 rounded-full ${macroTotal === 100 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>
+                  Total: {macroTotal}%
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Weekly Plan */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold">Plan Semanal</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {formData.days.map((day, dayIndex) => (
-                    <div key={day.day_of_week} className="border rounded-lg overflow-hidden">
-                      <button
-                        type="button"
-                        onClick={() => toggleDay(day.day_of_week)}
-                        className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
-                      >
-                        <span className="font-medium">{daysOfWeek[dayIndex].label}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-500">
-                            {day.meals.length} comidas
-                          </span>
-                          {expandedDays.includes(day.day_of_week) ? (
-                            <ChevronUp className="h-4 w-4" />
-                          ) : (
-                            <ChevronDown className="h-4 w-4" />
-                          )}
-                        </div>
-                      </button>
-
-                      {expandedDays.includes(day.day_of_week) && (
-                        <div className="p-4 space-y-4">
-                          {day.meals.length === 0 ? (
-                            <p className="text-center text-gray-500 py-4">
-                              No hay comidas asignadas para este día
-                            </p>
-                          ) : (
-                            day.meals.map((meal, mealIndex) => (
-                              <div key={mealIndex} className="p-4 bg-gray-50 rounded-lg space-y-3">
-                                <div className="flex items-center justify-between">
-                                  <div className="flex gap-2 flex-1">
-                                    <Select
-                                      value={meal.type}
-                                      onValueChange={(value) => updateMeal(dayIndex, mealIndex, 'type', value as MealType)}
-                                    >
-                                      <SelectTrigger className="w-40">
-                                        <SelectValue />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        {mealTypes.map((type) => (
-                                          <SelectItem key={type.value} value={type.value}>
-                                            {type.label}
-                                          </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
-                                    <Input
-                                      placeholder="Nombre (opcional)"
-                                      value={meal.name}
-                                      onChange={(e) => updateMeal(dayIndex, mealIndex, 'name', e.target.value)}
-                                      className="flex-1"
-                                    />
-                                    <Input
-                                      type="time"
-                                      value={meal.time}
-                                      onChange={(e) => updateMeal(dayIndex, mealIndex, 'time', e.target.value)}
-                                      className="w-28"
-                                    />
-                                  </div>
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => removeMeal(dayIndex, mealIndex)}
-                                    className="text-red-500"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </div>
-
-                                {/* Recipes */}
-                                <div className="space-y-2">
-                                  {meal.recipes.map((recipe, recipeIndex) => (
-                                    <div key={recipeIndex} className="flex gap-2">
-                                      <Select
-                                        value={recipe.recipe_id}
-                                        onValueChange={(value) => updateRecipeInMeal(dayIndex, mealIndex, recipeIndex, 'recipe_id', value)}
-                                      >
-                                        <SelectTrigger className="flex-1">
-                                          <SelectValue placeholder="Seleccionar receta..." />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          {recipes.map((r) => (
-                                            <SelectItem key={r.id} value={r.id}>
-                                              {r.name}
-                                            </SelectItem>
-                                          ))}
-                                        </SelectContent>
-                                      </Select>
-                                      <Input
-                                        type="number"
-                                        step="0.1"
-                                        placeholder="Cant."
-                                        value={recipe.quantity}
-                                        onChange={(e) => updateRecipeInMeal(dayIndex, mealIndex, recipeIndex, 'quantity', e.target.value)}
-                                        className="w-24"
-                                      />
-                                      <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => removeRecipeFromMeal(dayIndex, mealIndex, recipeIndex)}
-                                        className="text-red-500"
-                                      >
-                                        <Trash2 className="h-4 w-4" />
-                                      </Button>
-                                    </div>
-                                  ))}
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => addRecipeToMeal(dayIndex, mealIndex)}
-                                  >
-                                    <Plus className="h-3 w-3 mr-1" />
-                                    Agregar receta
-                                  </Button>
-                                </div>
-
-                                <Textarea
-                                  placeholder="Notas adicionales..."
-                                  value={meal.notes}
-                                  onChange={(e) => updateMeal(dayIndex, mealIndex, 'notes', e.target.value)}
-                                  className="min-h-[60px]"
-                                />
-                              </div>
-                            ))
-                          )}
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => addMeal(dayIndex)}
-                            className="w-full"
-                          >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Agregar comida
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Macros */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold">Macronutrientes</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="daily_calories">Calorías diarias</Label>
-                  <Input
-                    id="daily_calories"
-                    type="number"
-                    value={formData.daily_calories}
-                    onChange={(e) => setFormData(prev => ({ ...prev, daily_calories: e.target.value }))}
-                    placeholder="2000"
-                  />
-                </div>
+          {/* Day Tabs */}
+          <div>
+            <div className="flex gap-1 border-b border-slate-200 overflow-x-auto pb-0 -mb-px">
+              {DAYS.map(day => {
+                const di = dayIndex(day.value);
+                const mealCount = formData.days[di]?.meals.length ?? 0;
+                return (
+                  <button
+                    key={day.value}
+                    type="button"
+                    onClick={() => setActiveDay(day.value)}
+                    className={`relative flex flex-col items-center gap-0.5 px-4 py-2.5 text-xs font-bold whitespace-nowrap border-b-2 transition-colors ${
+                      activeDay === day.value
+                        ? 'border-emerald-600 text-emerald-700'
+                        : 'border-transparent text-slate-500 hover:text-slate-900'
+                    }`}
+                  >
+                    {day.short}
+                    {mealCount > 0 && (
+                      <span className={`text-[10px] font-black leading-none ${activeDay === day.value ? 'text-emerald-600' : 'text-slate-400'}`}>
+                        {mealCount}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
 
-                <div className="space-y-2">
-                  <Label>Distribución (%)</Label>
-                  <div className="grid grid-cols-3 gap-2">
-                    <div>
-                      <Label className="text-xs text-gray-500">Proteínas</Label>
-                      <Input
-                        type="number"
-                        value={formData.macros.protein}
-                        onChange={(e) => setFormData(prev => ({ 
-                          ...prev, 
-                          macros: { ...prev.macros, protein: e.target.value }
-                        }))}
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-xs text-gray-500">Carbs</Label>
-                      <Input
-                        type="number"
-                        value={formData.macros.carbs}
-                        onChange={(e) => setFormData(prev => ({ 
-                          ...prev, 
-                          macros: { ...prev.macros, carbs: e.target.value }
-                        }))}
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-xs text-gray-500">Grasas</Label>
-                      <Input
-                        type="number"
-                        value={formData.macros.fats}
-                        onChange={(e) => setFormData(prev => ({ 
-                          ...prev, 
-                          macros: { ...prev.macros, fats: e.target.value }
-                        }))}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Active day meals */}
+            <div className="bg-white border border-t-0 border-slate-200 rounded-b-xl p-5 space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-black text-slate-900">
+                  {DAYS.find(d => d.value === activeDay)?.label}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => addMeal(activeDay)}
+                  className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-lg transition-colors"
+                >
+                  <Plus className="h-3.5 w-3.5" /> Agregar comida
+                </button>
+              </div>
 
-            {/* Actions */}
-            <div className="flex flex-col gap-3">
-              <Button
-                type="submit"
-                className="w-full bg-nutri-forest hover:bg-nutri-emerald"
-                disabled={saving || (!isEditing && !selectedPatient)}
-              >
-                {saving ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                ) : (
-                  <Save className="h-4 w-4 mr-2" />
-                )}
-                {isEditing ? 'Guardar cambios' : 'Crear plan'}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={() => navigate('/meal-plans')}
-              >
-                Cancelar
-              </Button>
+              {(!activeDayData || activeDayData.meals.length === 0) ? (
+                <div className="text-center py-10 border border-dashed border-slate-200 rounded-xl">
+                  <p className="text-sm font-medium text-slate-400">Sin comidas para este día</p>
+                  <button type="button" onClick={() => addMeal(activeDay)} className="mt-2 text-xs font-bold text-emerald-600 hover:text-emerald-700">
+                    + Agregar primera comida
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {activeDayData?.meals.map((meal, mealIdx) => {
+                    const mealMeta = MEAL_TYPES.find(m => m.value === meal.type);
+                    return (
+                      <div key={mealIdx} className="border border-slate-200 rounded-xl overflow-hidden">
+                        {/* Meal header */}
+                        <div className="flex items-center gap-3 px-4 py-3 bg-slate-50 border-b border-slate-100">
+                          <span className="text-base">{mealMeta?.emoji}</span>
+                          <Select
+                            value={meal.type}
+                            onValueChange={val => updateMealField(activeDay, mealIdx, 'type', val as MealType)}
+                          >
+                            <SelectTrigger className="border-0 bg-transparent h-7 text-sm font-bold text-slate-900 p-0 w-auto focus:ring-0 shadow-none">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {MEAL_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.emoji} {t.label}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                          <input
+                            type="time"
+                            value={meal.time}
+                            onChange={e => updateMealField(activeDay, mealIdx, 'time', e.target.value)}
+                            className="text-xs font-bold text-slate-500 bg-transparent border-0 focus:outline-none p-0 ml-auto"
+                          />
+                          <button type="button" onClick={() => removeMeal(activeDay, mealIdx)} className="text-slate-400 hover:text-red-500 transition-colors ml-2">
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+
+                        {/* Meal body */}
+                        <div className="p-4 space-y-3">
+                          {/* Recipes added to this meal */}
+                          {meal.recipes.length > 0 && (
+                            <div className="space-y-2">
+                              {meal.recipes.map((r, ri) => {
+                                const recipeMeta = recipes.find(rec => rec.id === r.recipe_id);
+                                return (
+                                  <div key={ri} className="flex items-center gap-2 py-1.5 px-3 bg-slate-50 rounded-lg border border-slate-100">
+                                    <span className="text-xs font-bold text-slate-700 flex-1 truncate">{recipeMeta?.name || 'Receta'}</span>
+                                    <span className="text-[10px] font-medium text-slate-400 shrink-0">
+                                      {recipeMeta ? `${recipeMeta.calories_per_serving * Number(r.quantity)} kcal` : ''}
+                                    </span>
+                                    <input
+                                      type="number"
+                                      step="0.5"
+                                      min="0.5"
+                                      value={r.quantity}
+                                      onChange={e => updateRecipeQty(activeDay, mealIdx, ri, e.target.value)}
+                                      className="w-14 text-xs font-bold text-center border border-slate-200 rounded-md h-6 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                    />
+                                    <span className="text-[10px] text-slate-400">porc.</span>
+                                    <button type="button" onClick={() => removeRecipeFromMeal(activeDay, mealIdx, ri)} className="text-slate-300 hover:text-red-400 transition-colors">
+                                      <Trash2 className="h-3 w-3" />
+                                    </button>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+
+                          {/* Notes */}
+                          <Textarea
+                            placeholder="Notas adicionales..."
+                            value={meal.notes}
+                            onChange={e => updateMealField(activeDay, mealIdx, 'notes', e.target.value)}
+                            className="min-h-[52px] text-xs resize-none border-slate-200"
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         </div>
-      </form>
-    </div>
+
+        {/* ══ RIGHT: RECIPE SIDEBAR ══ */}
+        <div className="w-72 shrink-0 hidden lg:flex flex-col gap-4 sticky top-[88px] self-start">
+          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50">
+              <p className="text-xs font-black text-slate-700 uppercase tracking-wider">Recetario</p>
+              <span className="text-[10px] font-bold text-slate-400">{filteredRecipes.length} recetas</span>
+            </div>
+
+            {/* Search */}
+            <div className="px-3 py-2 border-b border-slate-100">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Buscar receta..."
+                  value={recipeSearch}
+                  onChange={e => setRecipeSearch(e.target.value)}
+                  className="w-full h-7 pl-7 pr-3 text-xs font-medium bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 placeholder:text-slate-400"
+                />
+              </div>
+            </div>
+
+            {/* Recipe list — click to add to current day's first available meal, or let user pick */}
+            <div className="overflow-y-auto max-h-[calc(100vh-300px)]">
+              {filteredRecipes.length === 0 ? (
+                <p className="text-xs text-slate-400 text-center py-8">Sin recetas</p>
+              ) : filteredRecipes.map(recipe => (
+                <div key={recipe.id} className="group border-b border-slate-50 last:border-0">
+                  <div className="px-4 py-3">
+                    <p className="text-xs font-bold text-slate-900 truncate mb-0.5">{recipe.name}</p>
+                    <p className="text-[10px] font-medium text-slate-400">{recipe.calories_per_serving} kcal/por.</p>
+                    {/* Add buttons for each meal in active day */}
+                    {activeDayData && activeDayData.meals.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {activeDayData.meals.map((m, idx) => {
+                          const meta = MEAL_TYPES.find(mt => mt.value === m.type);
+                          const alreadyAdded = m.recipes.some(r => r.recipe_id === recipe.id);
+                          return (
+                            <button
+                              key={idx}
+                              type="button"
+                              disabled={alreadyAdded}
+                              onClick={() => addRecipeToMeal(activeDay, idx, recipe.id)}
+                              className={`text-[10px] font-bold px-2 py-0.5 rounded-full border transition-all ${
+                                alreadyAdded
+                                  ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'
+                                  : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                              }`}
+                            >
+                              {alreadyAdded ? '✓' : '+'} {meta?.label ?? `Comida ${idx + 1}`}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                    {(!activeDayData || activeDayData.meals.length === 0) && (
+                      <p className="text-[10px] text-slate-400 mt-1">Agregá una comida primero</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </form>
   );
 }

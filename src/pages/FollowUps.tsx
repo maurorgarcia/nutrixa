@@ -7,6 +7,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { 
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,23 +36,19 @@ import {
   Edit, 
   Trash2, 
   Calendar,
-  TrendingUp,
-  Weight,
   ChevronRight,
   Loader2,
-  Download
+  Download,
+  Activity,
+  History,
+  Target
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import type { FollowUp } from '@/types';
 import { exportFollowUpToPDF } from '@/utils/pdfExport';
-
-const adherenceLabels = {
-  excellent: { label: 'Excelente', color: 'bg-green-100 text-green-800' },
-  good: { label: 'Buena', color: 'bg-blue-100 text-blue-800' },
-  fair: { label: 'Regular', color: 'bg-yellow-100 text-yellow-800' },
-  poor: { label: 'Deficiente', color: 'bg-red-100 text-red-800' },
-};
+import { FollowUpForm } from './FollowUpForm';
+import { cn } from '@/lib/utils';
 
 export function FollowUps() {
   const navigate = useNavigate();
@@ -53,6 +56,8 @@ export function FollowUps() {
   const { followUpsWithPatient, loading, fetchFollowUps, deleteFollowUp } = useFollowUpStore();
   const { patients } = usePatientStore();
   
+  const [isAddingFollowUp, setIsAddingFollowUp] = useState(false);
+  const [selectedFollowUpId, setSelectedFollowUpId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [followUpToDelete, setFollowUpToDelete] = useState<FollowUp | null>(null);
 
@@ -91,184 +96,159 @@ export function FollowUps() {
     }
   };
 
+  const stats = [
+    { label: 'Total Controles', value: followUpsWithPatient.length, sub: 'Gestión Acumulada', icon: History, color: 'zinc' },
+    { label: 'Citas esta Semana', value: followUpsWithPatient.filter(fu => {
+      if (!fu.next_appointment) return false;
+      const nextDate = new Date(fu.next_appointment);
+      const today = new Date();
+      const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+      return nextDate >= today && nextDate <= nextWeek;
+    }).length, sub: 'Agenda Próxima', icon: Calendar, color: 'emerald' },
+    { label: 'Pacientes Únicos', value: new Set(followUpsWithPatient.map(fu => fu.patient_id)).size, sub: 'Fidelización Activa', icon: Target, color: 'blue' },
+  ];
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-10 animate-in fade-in duration-500 max-w-7xl mx-auto pb-20">
+      
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-nutri-forest">Seguimiento</h1>
-          <p className="text-gray-500 mt-1">Registra y visualiza el progreso de tus pacientes</p>
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 pb-8 border-b border-zinc-100">
+        <div className="space-y-1">
+          <h1 className="text-4xl font-black text-zinc-900 tracking-tighter uppercase">Bitácora de Evolución</h1>
+          <p className="text-zinc-500 font-bold text-xs uppercase tracking-widest">Seguimiento clínico y monitoreo de adherencia</p>
         </div>
-        <Button onClick={() => navigate('/follow-ups/new')} className="bg-nutri-forest hover:bg-nutri-emerald">
-          <Plus className="h-4 w-4 mr-2" />
-          Nuevo Control
+        <Button onClick={() => setIsAddingFollowUp(true)} className="h-12 px-8 rounded-2xl bg-zinc-900 text-white font-black uppercase tracking-widest text-[10px] shadow-2xl flex items-center gap-3 active:scale-95 transition-all">
+          <Plus className="h-4 w-4" /> Registrar Progreso
         </Button>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center">
-                <TrendingUp className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Total controles</p>
-                <p className="text-2xl font-bold">{followUpsWithPatient.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
-                <Calendar className="h-5 w-5 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Citas esta semana</p>
-                <p className="text-2xl font-bold">
-                  {followUpsWithPatient.filter(fu => {
-                    if (!fu.next_appointment) return false;
-                    const nextDate = new Date(fu.next_appointment);
-                    const today = new Date();
-                    const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
-                    return nextDate >= today && nextDate <= nextWeek;
-                  }).length}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                <Weight className="h-5 w-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Pacientes con seguimiento</p>
-                <p className="text-2xl font-bold">
-                  {new Set(followUpsWithPatient.map(fu => fu.patient_id)).size}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        {stats.map((s, i) => (
+          <Card key={i} className="border-none shadow-sm rounded-3xl overflow-hidden bg-white border border-zinc-100/50">
+            <CardContent className="p-6 flex items-center gap-5">
+               <div className={cn("h-12 w-12 rounded-2xl flex items-center justify-center border", 
+                 s.color === 'emerald' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                 s.color === 'blue' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-zinc-50 text-zinc-500 border-zinc-100'
+               )}>
+                  <s.icon className="h-6 w-6" />
+               </div>
+               <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-0.5">{s.label}</p>
+                  <p className="text-2xl font-black text-zinc-900 tracking-tighter leading-none">{s.value}</p>
+                  <p className="text-[9px] font-bold text-zinc-400 uppercase mt-1.5">{s.sub}</p>
+               </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Follow Ups List */}
       {loading ? (
-        <div className="flex justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+        <div className="flex justify-center py-24">
+          <Loader2 className="h-10 w-10 animate-spin text-zinc-100" />
         </div>
       ) : followUpsWithPatient.length === 0 ? (
-        <Card>
-          <CardContent className="text-center py-12">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <TrendingUp className="h-8 w-8 text-gray-400" />
-            </div>
-            <h3 className="text-lg font-medium text-nutri-forest mb-1">No hay controles registrados</h3>
-            <p className="text-gray-500 mb-4">Comienza registrando el primer seguimiento</p>
-            <Button onClick={() => navigate('/follow-ups/new')} className="bg-nutri-forest hover:bg-nutri-emerald">
-              <Plus className="h-4 w-4 mr-2" />
-              Nuevo Control
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="py-32 text-center bg-white rounded-[3rem] border border-zinc-100 shadow-sm">
+           <Activity className="h-16 w-16 text-zinc-100 mx-auto mb-6" />
+           <h3 className="text-xl font-black text-zinc-900 tracking-tighter uppercase mb-2">Sin registros de evolución</h3>
+           <p className="text-zinc-400 max-w-sm mx-auto text-xs font-bold uppercase tracking-widest mb-10 leading-relaxed">Comenzá registrando el peso y las observaciones clínicas para ver la curva de progreso.</p>
+           <Button onClick={() => setIsAddingFollowUp(true)} className="bg-zinc-900 text-white font-black uppercase tracking-widest h-12 px-10 rounded-2xl text-[10px] shadow-xl">
+             Registrar Primer Control
+           </Button>
+        </div>
       ) : (
-        <div className="space-y-4">
+        <div className="grid gap-4">
           {followUpsWithPatient.map((followUp) => (
-            <Card key={followUp.id} className="group hover:shadow-md transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-4">
-                    <Avatar className="h-12 w-12">
-                      <AvatarFallback className="bg-gray-200 text-gray-700">
+            <Card key={followUp.id} className="group border-zinc-100 shadow-sm rounded-[2rem] overflow-hidden hover:shadow-xl transition-all duration-500 bg-white hover:border-zinc-200">
+              <CardContent className="p-8">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
+                  <div className="flex items-center gap-6">
+                    <Avatar className="h-16 w-16 border-4 border-zinc-50 shadow-sm ring-1 ring-zinc-100">
+                      <AvatarFallback className="bg-zinc-900 text-white font-black uppercase text-xl">
                         {getInitials(followUp.patient_id)}
                       </AvatarFallback>
                     </Avatar>
-                    <div>
-                      <p className="font-semibold text-nutri-forest">
-                        {getPatientName(followUp.patient_id)}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        {format(new Date(followUp.date), "d 'de' MMMM, yyyy", { locale: es })}
-                      </p>
-                      <div className="flex items-center gap-3 mt-1">
-                        <span className="text-lg font-bold">{followUp.weight} kg</span>
-                        {followUp.adherence && (
-                          <Badge 
-                            variant="secondary" 
-                            className={adherenceLabels[followUp.adherence].color}
-                          >
-                            {adherenceLabels[followUp.adherence].label}
-                          </Badge>
-                        )}
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-3">
+                         <p className="text-xl font-black text-zinc-900 tracking-tighter uppercase group-hover:text-emerald-700 transition-colors">
+                           {getPatientName(followUp.patient_id)}
+                         </p>
+                         <Badge variant="outline" className={cn(
+                           "rounded-lg h-6 px-3 text-[9px] font-black uppercase tracking-widest border",
+                           followUp.adherence === 'excellent' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 
+                           followUp.adherence === 'good' ? 'bg-blue-50 border-blue-100 text-blue-700' : 'bg-slate-50 border-slate-100 text-slate-500'
+                         )}>
+                            {followUp.adherence || 'Sin adherencia'}
+                         </Badge>
                       </div>
+                      <p className="text-xs font-black text-zinc-400 uppercase tracking-widest mt-1 flex items-center gap-2">
+                        <Calendar className="h-3 w-3" /> {format(new Date(followUp.date), "dd MMMM, yyyy", { locale: es })}
+                      </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col md:flex-row md:items-center gap-8 md:gap-12 pl-22 md:pl-0">
+                    <div className="text-center">
+                       <p className="text-[9px] font-black text-zinc-300 uppercase tracking-widest leading-none mb-2">Peso Actual</p>
+                       <p className="text-3xl font-black text-zinc-900 tracking-tighter leading-none">{followUp.weight} <span className="text-[10px] uppercase text-zinc-400">kg</span></p>
+                    </div>
+
                     {followUp.next_appointment && (
-                      <div className="text-right mr-4 hidden sm:block">
-                        <p className="text-sm text-gray-500">Próxima cita</p>
-                        <p className="font-medium">
-                          {format(new Date(followUp.next_appointment), "d MMM", { locale: es })}
+                      <div className="text-center hidden lg:block bg-zinc-50 px-6 py-3 rounded-2xl border border-zinc-100">
+                        <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1 underline underline-offset-4 decoration-emerald-500/30">Próximo Turno</p>
+                        <p className="text-sm font-black text-zinc-900 uppercase">
+                          {format(new Date(followUp.next_appointment), "dd MMM", { locale: es })}
                         </p>
                       </div>
                     )}
 
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => navigate(`/follow-ups/${followUp.id}/edit`)}>
-                          <Edit className="h-4 w-4 mr-2" />
-                          Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleExport(followUp)}>
-                          <Download className="h-4 w-4 mr-2" />
-                          Exportar PDF
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          className="text-red-600"
-                          onClick={() => {
-                            setFollowUpToDelete(followUp);
-                            setDeleteDialogOpen(true);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Eliminar
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <div className="flex items-center gap-2">
+                       <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-12 w-12 rounded-2xl border border-zinc-100 hover:bg-zinc-50 text-zinc-400 hover:text-zinc-900 transition-all opacity-0 group-hover:opacity-100">
+                              <MoreVertical className="h-5 w-5" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-56 p-2 rounded-2xl border-zinc-100 shadow-2xl">
+                            <DropdownMenuItem onClick={() => { setSelectedFollowUpId(followUp.id); setIsAddingFollowUp(true); }} className="h-11 rounded-xl font-bold">
+                              <Edit className="h-4 w-4 mr-3" /> Editar Registro
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleExport(followUp)} className="h-11 rounded-xl font-bold">
+                              <Download className="h-4 w-4 mr-3" /> Exportar Reporte
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              className="h-11 rounded-xl text-red-600 font-bold focus:bg-red-50 focus:text-red-700"
+                              onClick={() => {
+                                setFollowUpToDelete(followUp);
+                                setDeleteDialogOpen(true);
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4 mr-3" /> Eliminar permanentemente
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                       </DropdownMenu>
+                       <Button variant="ghost" size="icon" className="h-12 w-12 rounded-2xl border border-zinc-100 hover:bg-zinc-50 text-zinc-400 group-hover:text-zinc-900 transition-all sm:hidden" onClick={() => navigate(`/patients/${followUp.patient_id}`)}>
+                          <ChevronRight className="h-5 w-5" />
+                       </Button>
+                    </div>
                   </div>
                 </div>
 
                 {(followUp.symptoms?.length > 0 || followUp.concerns?.length > 0 || followUp.notes) && (
-                  <div className="mt-4 pt-4 border-t">
-                    {followUp.symptoms?.length > 0 && (
-                      <div className="mb-2">
-                        <span className="text-sm text-gray-500">Síntomas: </span>
-                        <span className="text-sm">{followUp.symptoms.join(', ')}</span>
-                      </div>
-                    )}
-                    {followUp.concerns?.length > 0 && (
-                      <div className="mb-2">
-                        <span className="text-sm text-gray-500">Inquietudes: </span>
-                        <span className="text-sm">{followUp.concerns.join(', ')}</span>
-                      </div>
-                    )}
+                  <div className="mt-8 pt-8 border-t border-zinc-50 grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="flex flex-wrap gap-2">
+                       {followUp.symptoms?.map((s, i) => (
+                         <span key={i} className="px-3 py-1 bg-red-50 text-red-700 text-[9px] font-black uppercase tracking-widest border border-red-100 rounded-lg">{s}</span>
+                       ))}
+                       {followUp.concerns?.map((c, i) => (
+                         <span key={i} className="px-3 py-1 bg-amber-50 text-amber-700 text-[9px] font-black uppercase tracking-widest border border-amber-100 rounded-lg">{c}</span>
+                       ))}
+                    </div>
                     {followUp.notes && (
-                      <div>
-                        <span className="text-sm text-gray-500">Notas: </span>
-                        <span className="text-sm">{followUp.notes}</span>
-                      </div>
+                      <p className="text-xs font-bold text-zinc-400 leading-relaxed italic border-l-2 border-zinc-100 pl-4">
+                        "{followUp.notes}"
+                      </p>
                     )}
                   </div>
                 )}
@@ -280,21 +260,41 @@ export function FollowUps() {
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="rounded-3xl border-none p-10">
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar control?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta acción eliminará el registro de seguimiento. Esta acción no se puede deshacer.
+            <AlertDialogTitle className="text-2xl font-black text-zinc-900 tracking-tighter uppercase">¿Eliminar control?</AlertDialogTitle>
+            <AlertDialogDescription className="text-zinc-500 font-medium text-base leading-relaxed">
+              Estás a punto de borrar definitivamente este registro clinico de <strong>{followUpToDelete ? getPatientName(followUpToDelete.patient_id) : ''}</strong>. Esta acción romperá la continuidad histórica de su peso.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
-              Eliminar
+          <AlertDialogFooter className="mt-8 gap-3">
+            <AlertDialogCancel className="h-12 rounded-2xl font-black uppercase text-[10px] tracking-widest border-zinc-200">Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="h-12 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-black uppercase text-[10px] tracking-widest shadow-xl">
+              Eliminar Definitivamente
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Sheet for Adding/Editing Follow Up */}
+      <Sheet open={isAddingFollowUp} onOpenChange={(v) => { setIsAddingFollowUp(v); if(!v) setSelectedFollowUpId(null); }}>
+        <SheetContent className="sm:max-w-[450px] p-0 overflow-hidden border-l border-zinc-100 shadow-2xl flex flex-col">
+          <SheetHeader className="p-8 border-b border-zinc-50 bg-zinc-50/50 shrink-0 text-left">
+            <SheetTitle className="text-2xl font-black text-zinc-900 tracking-tighter uppercase">{selectedFollowUpId ? 'Editar Evolución' : 'Ficha de Progreso'}</SheetTitle>
+            <SheetDescription className="font-bold text-zinc-400 text-[10px] uppercase tracking-widest mt-1">
+              Registro manual de parámetros clínico-nutricionales
+            </SheetDescription>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto p-8">
+            <FollowUpForm 
+              initialId={selectedFollowUpId || undefined}
+              onSuccess={() => { setIsAddingFollowUp(false); setSelectedFollowUpId(null); if(user) fetchFollowUps(user.id); }}
+              onCancel={() => { setIsAddingFollowUp(false); setSelectedFollowUpId(null); }}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
+
     </div>
   );
 }

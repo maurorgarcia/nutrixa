@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ArrowLeft, Loader2, Save } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import type { PatientFormData } from '@/types';
 
 const initialFormData: PatientFormData = {
@@ -29,13 +30,21 @@ const initialFormData: PatientFormData = {
   stress_level: '',
 };
 
-export function PatientForm() {
+interface PatientFormProps {
+  onSuccess?: () => void;
+  onCancel?: () => void;
+  initialId?: string;
+}
+
+export function PatientForm({ onSuccess, onCancel, initialId }: PatientFormProps) {
   const navigate = useNavigate();
-  const { id } = useParams<{ id: string }>();
+  const { id: routeId } = useParams<{ id: string }>();
+  const id = initialId || routeId;
   const { user } = useAuthStore();
   const { selectedPatient, createPatient, updatePatient, getPatientById, loading } = usePatientStore();
   
   const isEditing = Boolean(id);
+  const isInsideSheet = Boolean(onSuccess);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState<PatientFormData>(initialFormData);
 
@@ -78,7 +87,12 @@ export function PatientForm() {
       } else {
         await createPatient(user.id, dataToSave as PatientFormData);
       }
-      navigate('/patients');
+      
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        navigate('/patients');
+      }
     } catch (error) {
       console.error('Error saving patient:', error);
     } finally {
@@ -90,6 +104,14 @@ export function PatientForm() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleCancelClick = () => {
+    if (onCancel) {
+      onCancel();
+    } else {
+      navigate('/patients');
+    }
+  };
+
   if (isEditing && loading) {
     return (
       <div className="flex justify-center py-12">
@@ -99,32 +121,36 @@ export function PatientForm() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/patients')}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold text-nutri-forest">
-            {isEditing ? 'Editar Paciente' : 'Nuevo Paciente'}
-          </h1>
-          <p className="text-gray-500 mt-1">
-            {isEditing 
-              ? 'Actualiza la información del paciente' 
-              : 'Completa los datos para registrar un nuevo paciente'}
-          </p>
+    <div className={cn("space-y-6", isInsideSheet && "pb-20")}>
+      {/* Header - Only show if not inside sheet */}
+      {!isInsideSheet && (
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => navigate('/patients')}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold text-nutri-forest">
+              {isEditing ? 'Editar Paciente' : 'Nuevo Paciente'}
+            </h1>
+            <p className="text-gray-500 mt-1">
+              {isEditing 
+                ? 'Actualiza la información del paciente' 
+                : 'Completa los datos para registrar un nuevo paciente'}
+            </p>
+          </div>
         </div>
-      </div>
+      )}
 
-      <form onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className={cn("grid grid-cols-1 gap-6", !isInsideSheet && "lg:grid-cols-2")}>
           {/* Personal Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg font-semibold">Información Personal</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <Card className={isInsideSheet ? "border-0 shadow-none bg-transparent" : ""}>
+            {!isInsideSheet && (
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold">Información Personal</CardTitle>
+              </CardHeader>
+            )}
+            <CardContent className={cn("space-y-4", isInsideSheet && "p-0")}>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="first_name">Nombre *</Label>
@@ -134,6 +160,7 @@ export function PatientForm() {
                     onChange={(e) => handleChange('first_name', e.target.value)}
                     required
                     placeholder="Juan"
+                    className="h-10 border-zinc-200"
                   />
                 </div>
                 <div className="space-y-2">
@@ -144,6 +171,7 @@ export function PatientForm() {
                     onChange={(e) => handleChange('last_name', e.target.value)}
                     required
                     placeholder="Pérez"
+                    className="h-10 border-zinc-200"
                   />
                 </div>
               </div>
@@ -156,6 +184,7 @@ export function PatientForm() {
                   value={formData.email}
                   onChange={(e) => handleChange('email', e.target.value)}
                   placeholder="paciente@email.com"
+                  className="h-10 border-zinc-200"
                 />
               </div>
 
@@ -167,6 +196,7 @@ export function PatientForm() {
                   value={formData.phone}
                   onChange={(e) => handleChange('phone', e.target.value)}
                   placeholder="+54 11 1234-5678"
+                  className="h-10 border-zinc-200"
                 />
               </div>
 
@@ -178,27 +208,28 @@ export function PatientForm() {
                   value={formData.birth_date}
                   onChange={(e) => handleChange('birth_date', e.target.value)}
                   required
+                  className="h-10 border-zinc-200"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>Sexo *</Label>
+                <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500">Sexo *</Label>
                 <RadioGroup
                   value={formData.gender}
                   onValueChange={(value) => handleChange('gender', value as 'male' | 'female' | 'other')}
-                  className="flex gap-4"
+                  className="flex gap-4 p-4 bg-zinc-50 rounded-xl border border-zinc-100"
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="male" id="male" />
-                    <Label htmlFor="male" className="cursor-pointer">Masculino</Label>
+                    <Label htmlFor="male" className="cursor-pointer text-sm">Masculino</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="female" id="female" />
-                    <Label htmlFor="female" className="cursor-pointer">Femenino</Label>
+                    <Label htmlFor="female" className="cursor-pointer text-sm">Femenino</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="other" id="other" />
-                    <Label htmlFor="other" className="cursor-pointer">Otro</Label>
+                    <Label htmlFor="other" className="cursor-pointer text-sm">Otro</Label>
                   </div>
                 </RadioGroup>
               </div>
@@ -206,11 +237,13 @@ export function PatientForm() {
           </Card>
 
           {/* Additional Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg font-semibold">Información Adicional</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <Card className={isInsideSheet ? "border-0 shadow-none bg-transparent" : ""}>
+            {!isInsideSheet && (
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold">Información Adicional</CardTitle>
+              </CardHeader>
+            )}
+            <CardContent className={cn("space-y-4", isInsideSheet && "p-0")}>
               <div className="space-y-2">
                 <Label htmlFor="occupation">Ocupación</Label>
                 <Input
@@ -218,6 +251,7 @@ export function PatientForm() {
                   value={formData.occupation}
                   onChange={(e) => handleChange('occupation', e.target.value)}
                   placeholder="Ej: Ingeniero, Estudiante..."
+                  className="h-10 border-zinc-200"
                 />
               </div>
 
@@ -228,6 +262,7 @@ export function PatientForm() {
                   value={formData.work_schedule}
                   onChange={(e) => handleChange('work_schedule', e.target.value)}
                   placeholder="Ej: 9:00 - 18:00, turno rotativo..."
+                  className="h-10 border-zinc-200"
                 />
               </div>
 
@@ -237,7 +272,7 @@ export function PatientForm() {
                   value={formData.stress_level}
                   onValueChange={(value) => handleChange('stress_level', value)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-10 border-zinc-200">
                     <SelectValue placeholder="Seleccionar nivel de estrés" />
                   </SelectTrigger>
                   <SelectContent>
@@ -252,18 +287,24 @@ export function PatientForm() {
           </Card>
         </div>
 
-        {/* Actions */}
-        <div className="flex justify-end gap-4 mt-6">
+        {/* Actions - Stick to bottom in Sheet, or normal in Page */}
+        <div className={cn(
+          "flex justify-end gap-3",
+          isInsideSheet 
+            ? "fixed bottom-0 right-0 left-0 p-6 bg-white border-t border-zinc-100 z-10 sm:left-auto sm:w-[450px]" 
+            : "mt-6"
+        )}>
           <Button
             type="button"
-            variant="outline"
-            onClick={() => navigate('/patients')}
+            variant="ghost"
+            onClick={handleCancelClick}
+            className="font-semibold text-zinc-500"
           >
             Cancelar
           </Button>
           <Button
             type="submit"
-            className="bg-nutri-forest hover:bg-nutri-emerald"
+            className="bg-zinc-900 hover:bg-zinc-800 text-white font-bold h-10 px-6 rounded-xl"
             disabled={saving}
           >
             {saving ? (

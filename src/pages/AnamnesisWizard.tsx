@@ -15,8 +15,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ArrowLeft, ArrowRight, Check, Loader2, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Loader2, Plus, Trash2, Sparkles, AlertTriangle, Info } from 'lucide-react';
 import { calculateBMI, getBMICategory } from '@/utils/calculations';
+import { analyzeAnamnesisWithAI, type AIAnalysisResult } from '@/utils/aiAnalysis';
 import type { AnamnesisFormData } from '@/types';
 
 const steps = [
@@ -96,6 +97,8 @@ export function AnamnesisWizard() {
   const [newDisease, setNewDisease] = useState('');
   const [newAllergy, setNewAllergy] = useState('');
   const [newIntolerance, setNewIntolerance] = useState('');
+  const [aiResult, setAiResult] = useState<AIAnalysisResult | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
 
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
@@ -111,7 +114,6 @@ export function AnamnesisWizard() {
 
   const handleSubmit = async () => {
     if (!user || !patientId) return;
-    
     setSaving(true);
     try {
       await createAnamnesis(user.id, patientId, formData);
@@ -120,6 +122,16 @@ export function AnamnesisWizard() {
       console.error('Error creating anamnesis:', error);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleAIAnalysis = async () => {
+    setAiLoading(true);
+    try {
+      const result = await analyzeAnamnesisWithAI(formData);
+      setAiResult(result);
+    } finally {
+      setAiLoading(false);
     }
   };
 
@@ -819,18 +831,33 @@ export function AnamnesisWizard() {
         </Button>
 
         {currentStep === steps.length - 1 ? (
-          <Button
-            onClick={handleSubmit}
-            disabled={saving}
-            className="bg-nutri-forest hover:bg-nutri-emerald"
-          >
-            {saving ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-            ) : (
-              <Check className="h-4 w-4 mr-2" />
-            )}
-            Guardar Anamnesis
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleAIAnalysis}
+              disabled={aiLoading}
+              className="border-violet-200 text-violet-700 hover:bg-violet-50"
+            >
+              {aiLoading
+                ? <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                : <Sparkles className="h-4 w-4 mr-2" />
+              }
+              Analizar con IA
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={saving}
+              className="bg-nutri-forest hover:bg-nutri-emerald"
+            >
+              {saving ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <Check className="h-4 w-4 mr-2" />
+              )}
+              Guardar Anamnesis
+            </Button>
+          </div>
         ) : (
           <Button
             onClick={handleNext}
@@ -841,6 +868,78 @@ export function AnamnesisWizard() {
           </Button>
         )}
       </div>
+
+      {/* ── AI ANALYSIS PANEL ── */}
+      {aiResult && (
+        <div className="bg-violet-50 border border-violet-200 rounded-xl p-6 space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-violet-600" />
+            <h2 className="text-base font-black text-violet-900">Análisis Clínico-Nutricional IA</h2>
+            {aiResult.estimatedCalories && (
+              <span className="ml-auto text-xs font-bold text-violet-700 bg-violet-100 px-2 py-0.5 rounded-full">
+                TMB estimada: {aiResult.estimatedCalories} kcal/día
+              </span>
+            )}
+          </div>
+
+          <p className="text-sm text-violet-800 font-medium">{aiResult.summary}</p>
+
+          {aiResult.risks.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-1.5">
+                <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
+                <p className="text-xs font-black text-amber-700 uppercase tracking-wider">Factores de Riesgo</p>
+              </div>
+              <ul className="space-y-1.5">
+                {aiResult.risks.map((r, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-amber-900">
+                    <span className="w-1 h-1 rounded-full bg-amber-500 mt-2 shrink-0" />
+                    {r}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {aiResult.nutritionalPriorities.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-1.5">
+                <Info className="h-3.5 w-3.5 text-violet-600" />
+                <p className="text-xs font-black text-violet-700 uppercase tracking-wider">Prioridades Nutricionales</p>
+              </div>
+              <ul className="space-y-1.5">
+                {aiResult.nutritionalPriorities.map((p, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-violet-900">
+                    <span className="w-1 h-1 rounded-full bg-violet-500 mt-2 shrink-0" />
+                    {p}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {aiResult.recommendations.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-1.5">
+                <Check className="h-3.5 w-3.5 text-emerald-600" />
+                <p className="text-xs font-black text-emerald-700 uppercase tracking-wider">Recomendaciones</p>
+              </div>
+              <ul className="space-y-1.5">
+                {aiResult.recommendations.map((r, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-emerald-900">
+                    <span className="w-1 h-1 rounded-full bg-emerald-500 mt-2 shrink-0" />
+                    {r}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <p className="text-[10px] text-violet-500 font-medium border-t border-violet-200 pt-3">
+            ⚡ Análisis generado por motor de reglas clínicas nutricionales. Solo como orientación profesional — siempre aplicá tu criterio clínico.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

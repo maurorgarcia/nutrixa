@@ -5,11 +5,9 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { Login } from '@/pages/Login';
 import { Dashboard } from '@/pages/Dashboard';
 import { Patients } from '@/pages/Patients';
-import { PatientForm } from '@/pages/PatientForm';
 import { PatientDetail } from '@/pages/PatientDetail';
 import { AnamnesisWizard } from '@/pages/AnamnesisWizard';
 import { Recipes } from '@/pages/Recipes';
-import { RecipeForm } from '@/pages/RecipeForm';
 import { RecipeDetail } from '@/pages/RecipeDetail';
 import { MealPlans } from '@/pages/MealPlans';
 import { MealPlanForm } from '@/pages/MealPlanForm';
@@ -21,6 +19,7 @@ import { Landing } from '@/pages/Landing';
 import { PublicBooking } from '@/pages/PublicBooking';
 import { Privacy } from '@/pages/Privacy';
 import { Terms } from '@/pages/Terms';
+import { Payments } from '@/pages/Payments';
 import { Toaster } from '@/components/ui/sonner';
 
 // ── ROUTE GUARDS ────────────────────────────────────────────────────────────
@@ -85,20 +84,11 @@ function AnimatedRoutes({ user }: { user: any }) {
         <Route path="/patients" element={
           <ProtectedRoute><MainLayout><Patients /></MainLayout></ProtectedRoute>
         } />
-        <Route path="/patients/new" element={
-          <ProtectedRoute><MainLayout><PatientForm /></MainLayout></ProtectedRoute>
-        } />
         <Route path="/patients/:id" element={
           <ProtectedRoute><MainLayout><PatientDetail /></MainLayout></ProtectedRoute>
         } />
-        <Route path="/patients/:id/edit" element={
-          <ProtectedRoute><MainLayout><PatientForm /></MainLayout></ProtectedRoute>
-        } />
 
         {/* Anamnesis */}
-        <Route path="/patients/:patientId/anamnesis" element={
-          <ProtectedRoute><MainLayout><PatientDetail /></MainLayout></ProtectedRoute>
-        } />
         <Route path="/patients/:patientId/anamnesis/new" element={
           <ProtectedRoute><MainLayout><AnamnesisWizard /></MainLayout></ProtectedRoute>
         } />
@@ -107,14 +97,8 @@ function AnimatedRoutes({ user }: { user: any }) {
         <Route path="/recipes" element={
           <ProtectedRoute><MainLayout><Recipes /></MainLayout></ProtectedRoute>
         } />
-        <Route path="/recipes/new" element={
-          <ProtectedRoute><MainLayout><RecipeForm /></MainLayout></ProtectedRoute>
-        } />
         <Route path="/recipes/:id" element={
           <ProtectedRoute><MainLayout><RecipeDetail /></MainLayout></ProtectedRoute>
-        } />
-        <Route path="/recipes/:id/edit" element={
-          <ProtectedRoute><MainLayout><RecipeForm /></MainLayout></ProtectedRoute>
         } />
 
         {/* Meal Plans */}
@@ -127,9 +111,6 @@ function AnimatedRoutes({ user }: { user: any }) {
         <Route path="/meal-plans/:id" element={
           <ProtectedRoute><MainLayout><MealPlanForm /></MainLayout></ProtectedRoute>
         } />
-        <Route path="/meal-plans/:id/edit" element={
-          <ProtectedRoute><MainLayout><MealPlanForm /></MainLayout></ProtectedRoute>
-        } />
 
         {/* Patient-specific Meal Plans */}
         <Route path="/patients/:patientId/meal-plans" element={
@@ -139,9 +120,6 @@ function AnimatedRoutes({ user }: { user: any }) {
           <ProtectedRoute><MainLayout><MealPlanForm /></MainLayout></ProtectedRoute>
         } />
         <Route path="/patients/:patientId/meal-plans/:id" element={
-          <ProtectedRoute><MainLayout><MealPlanForm /></MainLayout></ProtectedRoute>
-        } />
-        <Route path="/patients/:patientId/meal-plans/:id/edit" element={
           <ProtectedRoute><MainLayout><MealPlanForm /></MainLayout></ProtectedRoute>
         } />
 
@@ -171,6 +149,11 @@ function AnimatedRoutes({ user }: { user: any }) {
         } />
         <Route path="/patients/:patientId/follow-ups/:id/edit" element={
           <ProtectedRoute><MainLayout><FollowUpForm /></MainLayout></ProtectedRoute>
+        } />
+
+        {/* Payments */}
+        <Route path="/payments" element={
+          <ProtectedRoute><MainLayout><Payments /></MainLayout></ProtectedRoute>
         } />
 
         {/* Profile & Settings */}

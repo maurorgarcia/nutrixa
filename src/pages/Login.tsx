@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Eye, EyeOff, CheckCircle, Calendar, BarChart3, FileText } from 'lucide-react';
+import { Loader2, Eye, EyeOff, CheckCircle, Calendar, BarChart3, FileText, ArrowLeft } from 'lucide-react';
 
 export function Login() {
   const navigate = useNavigate();
@@ -61,7 +61,9 @@ export function Login() {
 
         {/* Top: Logo */}
         <div className="relative z-10 p-10 lg:p-14">
-          <img src="/logoNutrixa.png" alt="Nutrixa" className="h-9 w-auto opacity-90" />
+          <Link to="/">
+            <img src="/logoNutrixa.png" alt="Nutrixa" className="h-9 w-auto opacity-90 hover:opacity-100 transition-opacity" />
+          </Link>
         </div>
 
         {/* Center: Value prop */}
@@ -109,22 +111,37 @@ export function Login() {
 
       {/* ── RIGHT PANEL — Form ── */}
       <div className="flex flex-col justify-center min-h-screen px-4 py-12 sm:px-6 lg:px-8 bg-white lg:col-span-2 relative">
-        <div className="mx-auto w-full max-w-sm animate-in fade-in zoom-in-95 duration-700">
-          
-          {/* Logo — always visible on form panel */}
-          <div className="flex justify-center mb-10">
-            <img src="/logoNutrixa.png" alt="Nutrixa" className="h-14 w-auto object-contain drop-shadow-sm hover:scale-105 transition-transform duration-500" />
-          </div>
+        
+        {/* Right Panel Header (Mobile only) */}
+        <div className="md:hidden p-8 flex items-center justify-between border-b border-zinc-50 bg-white sticky top-0 z-30">
+          <Link to="/">
+            <img src="/logoNutrixa.png" alt="Nutrixa" className="h-8 w-auto" />
+          </Link>
+          <Link to="/" className="text-xs font-black uppercase tracking-widest text-zinc-400 flex items-center gap-2 hover:text-zinc-600 transition-colors">
+            <ArrowLeft className="h-3.5 w-3.5" /> Volver
+          </Link>
+        </div>
 
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold tracking-tight text-nutri-forest">
-              {isSignUp ? 'Crear cuenta' : 'Bienvenido de nuevo'}
+        {/* Right Panel Header (Desktop) */}
+        <div className="hidden md:flex p-10 justify-end absolute top-0 right-0 z-20">
+           <Link to="/" className="text-xs font-black uppercase tracking-widest text-zinc-400 flex items-center gap-2 hover:text-zinc-600 transition-colors group">
+            <ArrowLeft className="h-3.5 w-3.5 group-hover:-translate-x-1 transition-transform" /> Inicio
+          </Link>
+        </div>
+
+        <div className="mx-auto w-full max-w-sm animate-in fade-in zoom-in-95 duration-700 relative flex-1 flex flex-col justify-center px-8 md:px-0">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-black tracking-tight text-zinc-900 uppercase">
+              {isSignUp ? 'Empezar' : 'Entrar'}
             </h2>
-            <p className="mt-2 text-sm text-gray-500">
-              {isSignUp
-                ? 'Ingresa tus datos para comenzar con Nutrixa'
-                : 'Usa tus credenciales para acceder a tu escritorio'}
-            </p>
+            <div className="mt-2 flex items-center justify-center gap-2">
+              <span className="h-1 w-1 rounded-full bg-emerald-500" />
+              <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
+                {isSignUp
+                  ? 'Plataforma Profesional Nutrixa'
+                  : 'Escritorio de Control Central'}
+              </p>
+            </div>
           </div>
           
           <form onSubmit={handleSubmit} className="space-y-5">

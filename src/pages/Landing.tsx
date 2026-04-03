@@ -1,337 +1,353 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { 
-  Calendar, CheckCircle, FileText, ArrowRight,
-  Menu, X, Shield, Activity, BarChart3, ChevronRight, Check,
-  ChevronDown
+  Menu, X, Shield, ChevronDown, Check, ArrowUp, ArrowRight,
+  Monitor, Activity, FileText
 } from 'lucide-react';
 
 export function Landing() {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+      setShowScrollTop(window.scrollY > 500);
+    };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] text-zinc-900 font-sans selection:bg-nutri-emerald/20 selection:text-nutri-forest overflow-x-hidden">
-      
-      {/* ── NAVBAR ── */}
-      <nav className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ease-out ${scrolled ? 'bg-white/90 backdrop-blur-md border-b border-zinc-200/50 shadow-sm py-1.5' : 'bg-transparent py-3'}`}>
-        <div className="max-w-[85rem] mx-auto px-6 flex items-center justify-between">
+    <div className="min-h-screen bg-white text-[#0F172A] font-sans selection:bg-emerald-100 selection:text-emerald-900">
+
+      {/* ── CORPORATE NAVBAR ── */}
+      <nav className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 bg-white ${scrolled ? 'border-b border-gray-200 shadow-sm' : 'border-b border-gray-100'}`}>
+        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <button 
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="flex items-center gap-2 outline-none rounded-lg group"
+            className="outline-none flex items-center"
           >
-            <img src="/logoNutrixa.png" alt="Nutrixa" className="h-7 md:h-8 w-auto group-hover:opacity-80 transition-opacity" />
+            <img src="/logoNutrixa.png" alt="Nutrixa" className="h-7 w-auto" />
           </button>
 
-          <div className="hidden md:flex items-center gap-1 bg-white/50 backdrop-blur-md rounded-full px-2 py-1 shadow-[0_0_0_1px_rgba(0,0,0,0.03)] border border-white">
-            <a href="#features" className="text-sm font-semibold text-zinc-500 hover:text-zinc-900 hover:bg-white hover:shadow-sm px-4 py-1.5 rounded-full transition-all duration-300">Infraestructura</a>
-            <a href="#workflow" className="text-sm font-semibold text-zinc-500 hover:text-zinc-900 hover:bg-white hover:shadow-sm px-4 py-1.5 rounded-full transition-all duration-300">Sistema</a>
-            <a href="#pricing" className="text-sm font-semibold text-zinc-500 hover:text-zinc-900 hover:bg-white hover:shadow-sm px-4 py-1.5 rounded-full transition-all duration-300">Licencias</a>
-            <a href="#faq" className="text-sm font-semibold text-zinc-500 hover:text-zinc-900 hover:bg-white hover:shadow-sm px-4 py-1.5 rounded-full transition-all duration-300">FAQ</a>
+          <div className="hidden md:flex items-center gap-8">
+            <a href="#infraestructura" className="text-sm font-semibold text-slate-600 hover:text-emerald-600 transition-colors">Infraestructura</a>
+            <a href="#flujos" className="text-sm font-semibold text-slate-600 hover:text-emerald-600 transition-colors">Sistema Operativo</a>
+            <a href="#licencias" className="text-sm font-semibold text-slate-600 hover:text-emerald-600 transition-colors">Licencias Corporativas</a>
           </div>
 
           <div className="hidden md:flex items-center gap-4">
-            <Link to="/login" className="text-sm font-bold text-zinc-600 hover:text-zinc-900 transition-colors px-2">
+            <button
+              onClick={() => navigate('/login')}
+              className="text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors px-3 py-2"
+            >
               Acceso Institucional
-            </Link>
+            </button>
             <button
               onClick={() => navigate('/login?signup=true')}
-              className="bg-nutri-forest hover:bg-zinc-900 text-white text-sm font-bold px-5 py-2 rounded-full transition-all duration-300 shadow-sm hover:shadow-md flex items-center gap-2 group"
+              className="bg-[#0F172A] hover:bg-slate-800 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
             >
-              Comenzar <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              Comenzar prueba
             </button>
           </div>
 
-          {/* Mobile Toggle */}
-          <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2 md:hidden text-zinc-600 relative z-10">
+          <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2 md:hidden text-slate-600">
             {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
 
-        {/* Mobile Dropdown */}
-        <div className={`md:hidden absolute top-full left-0 w-full bg-white/95 backdrop-blur-xl transition-all duration-300 origin-top overflow-hidden border-b border-zinc-100 ${isMenuOpen ? 'max-h-[400px] shadow-2xl opacity-100' : 'max-h-0 opacity-0 pointer-events-none'}`}>
-          <div className="px-6 py-6 flex flex-col gap-5">
-            <div className="flex flex-col gap-4 border-b border-zinc-100 pb-5">
-              <a href="#features" onClick={()=>setIsMenuOpen(false)} className="text-base font-semibold text-zinc-600">Infraestructura</a>
-              <a href="#workflow" onClick={()=>setIsMenuOpen(false)} className="text-base font-semibold text-zinc-600">Sistema</a>
-              <a href="#pricing" onClick={()=>setIsMenuOpen(false)} className="text-base font-semibold text-zinc-600">Licencias</a>
-              <a href="#faq" onClick={()=>setIsMenuOpen(false)} className="text-base font-semibold text-zinc-600">FAQ</a>
-            </div>
-            <div className="flex flex-col gap-4">
-              <Link to="/login" onClick={()=>setIsMenuOpen(false)} className="text-base font-bold text-zinc-900 text-center py-2">
-                Acceso Institucional
-              </Link>
-              <button
-                onClick={() => { setIsMenuOpen(false); navigate('/login?signup=true'); }}
-                className="bg-nutri-forest text-white text-base font-semibold px-5 py-4 rounded-xl shadow-sm w-full"
-              >
-                Comenzar gratis
-              </button>
-            </div>
+        {/* Mobile menu */}
+        <div className={`md:hidden absolute top-20 inset-x-0 bg-white border-b border-gray-200 transition-all duration-300 overflow-hidden ${isMenuOpen ? 'max-h-96' : 'max-h-0'}`}>
+          <div className="px-6 py-4 flex flex-col gap-4">
+            <a href="#infraestructura" onClick={() => setIsMenuOpen(false)} className="text-base font-semibold text-slate-700 py-2">Infraestructura</a>
+            <a href="#flujos" onClick={() => setIsMenuOpen(false)} className="text-base font-semibold text-slate-700 py-2">Sistema Operativo</a>
+            <a href="#licencias" onClick={() => setIsMenuOpen(false)} className="text-base font-semibold text-slate-700 py-2">Licencias Corporativas</a>
+            <div className="h-px bg-gray-100 my-2"></div>
+            <button onClick={() => navigate('/login')} className="w-full text-left text-base font-semibold text-slate-700 py-2">Acceso Institucional</button>
+            <button onClick={() => navigate('/login?signup=true')} className="w-full bg-[#0F172A] text-white rounded-lg py-3 text-base font-semibold mt-2">Comenzar prueba</button>
           </div>
         </div>
       </nav>
 
-      {/* ── HERO SECTION ── */}
-      <section className="relative pt-28 pb-16 md:pt-36 md:pb-20 px-6 overflow-hidden">
-        
-        {/* Absolute premium background mesh */}
-        <div className="absolute inset-0 z-0 opacity-40">
-           <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(14,157,90,0.1),rgba(255,255,255,0))]" />
-           <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:24px_24px]" />
-        </div>
-
-        <div className="max-w-[85rem] mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-16 relative z-10">
-          
-          <div className="flex-1 text-center lg:text-left space-y-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-zinc-200/80 shadow-sm text-zinc-600 font-semibold text-xs animate-in fade-in slide-in-from-bottom-8 duration-700 hover:shadow-md transition-shadow cursor-default">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-nutri-emerald opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-nutri-emerald"></span>
-              </span>
-              Nutrixa Profesional — Plataforma B2B
-            </div>
-
-            <h1 className="text-4xl md:text-5xl lg:text-[4rem] font-extrabold tracking-tighter text-zinc-900 leading-[1.05] animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
-              Gestión clínica <br className="hidden lg:block"/>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-nutri-forest to-nutri-emerald">
-                sin fricción.
-              </span>
+      {/* ── B2B HERO SECTION ── */}
+      <section className="pt-40 pb-24 md:pt-52 md:pb-32 px-6">
+        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-16">
+          <div className="flex-1 space-y-8 text-center lg:text-left">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-[4rem] font-black tracking-tighter text-[#0F172A] leading-[1.1]">
+              Sistema centralizado <br className="hidden lg:block"/> de gestión clínica.
             </h1>
-            
-            <p className="text-base md:text-lg text-zinc-500 max-w-xl mx-auto lg:mx-0 leading-relaxed font-medium animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
-              Unifica reportes antropométricos, diseño dietoterapéutico automatizado y agenda online en un entorno nativo hiper-veloz. Sin distracciones.
+            <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto lg:mx-0 font-medium leading-relaxed">
+              Infraestructura de alto rendimiento para profesionales de la nutrición. 
+              Centralice expedientes, dietoterapia automatizada y agendas web en un entorno seguro y nativo.
             </p>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300">
+            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-4">
               <button
                 onClick={() => navigate('/login?signup=true')}
-                className="w-full sm:w-auto bg-nutri-forest text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 px-6 py-3.5 rounded-xl text-base font-bold flex items-center justify-center gap-2 group"
+                className="w-full sm:w-auto bg-[#10B981] hover:bg-emerald-600 text-white px-8 py-4 rounded-xl font-bold text-base transition-colors flex items-center justify-center gap-2"
               >
-                Configurar mi espacio
-                <ChevronRight className="w-4 h-4 opacity-70 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                Configurar mi espacio <ArrowRight className="w-4 h-4" />
               </button>
               <button
                  onClick={() => navigate('/login')}
-                 className="w-full sm:w-auto text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100/80 px-6 py-3.5 rounded-xl font-bold transition-colors duration-300"
+                 className="w-full sm:w-auto text-slate-700 bg-slate-50 hover:bg-slate-100 border border-slate-200 px-8 py-4 rounded-xl font-semibold text-base transition-colors"
               >
-                 Acceso personal
+                 Contactar ventas
               </button>
-            </div>
-
-            {/* Social Proof Avatars Restyled */}
-            <div className="flex items-center justify-center lg:justify-start gap-3 pt-4 border-t border-zinc-200/60 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-500 max-w-sm mx-auto lg:mx-0">
-               <div className="flex -space-x-2.5">
-                 <img className="w-8 h-8 rounded-full border-2 border-[#FAFAFA] bg-zinc-200" src="https://images.unsplash.com/photo-1594824432247-497d337f7cce?w=100&auto=format&fit=crop&q=80" alt="Nutricionista" />
-                 <img className="w-8 h-8 rounded-full border-2 border-[#FAFAFA] bg-zinc-200" src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&auto=format&fit=crop&q=80" alt="Médico" />
-                 <img className="w-8 h-8 rounded-full border-2 border-[#FAFAFA] bg-zinc-200" src="https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=100&auto=format&fit=crop&q=80" alt="Especialista" />
-               </div>
-               <div className="text-xs font-medium text-zinc-500">
-                 Estándar clínico elegido por <strong className="text-zinc-900 font-bold">+2,400 nutricionistas</strong>.
-               </div>
-            </div>
-          </div>
-
-          <div className="flex-1 w-full max-w-2xl lg:max-w-none animate-in fade-in zoom-in-95 duration-1000 delay-200 relative">
-            
-            <div className="relative group/mockup isolate">
-              {/* Floating Element UI */}
-              <div className="absolute -left-6 md:-left-10 top-16 bg-white/90 backdrop-blur-xl rounded-xl shadow-lg border border-white p-3 hidden lg:flex items-center gap-3 z-20 transition-all duration-700 opacity-0 translate-y-4 group-hover/mockup:opacity-100 group-hover/mockup:translate-y-0 delay-100">
-                <div className="h-8 w-8 rounded-full bg-emerald-50 flex items-center justify-center shrink-0">
-                  <Shield className="h-4 w-4 text-nutri-emerald" />
-                </div>
-                <div className="pr-1">
-                  <p className="text-[9px] font-extrabold text-zinc-400 uppercase tracking-widest">Protección Segura</p>
-                  <p className="text-xs font-bold text-zinc-900">100% Encriptado</p>
-                </div>
-              </div>
-
-              {/* Main mockup */}
-              <div className="relative bg-white/50 backdrop-blur-sm rounded-[2rem] border border-white/60 shadow-[0_0_50px_rgba(0,0,0,0.04)] p-2 md:p-3 transform hover:-translate-y-1 transition-transform duration-700">
-                <div className="bg-white rounded-2xl border border-zinc-200/50 shadow-sm overflow-hidden flex flex-col h-[280px] md:h-[400px]">
-                  <div className="flex items-center gap-1.5 px-4 py-2.5 bg-[#FCFCFC] border-b border-zinc-100 h-10">
-                    <span className="h-2 w-2 rounded-full bg-zinc-300" />
-                    <span className="h-2 w-2 rounded-full bg-zinc-300" />
-                    <span className="h-2 w-2 rounded-full bg-zinc-300" />
-                  </div>
-                  <img
-                    src="https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&q=80&w=2670"
-                    alt="Dashboard Nutrixa UI"
-                    className="w-full h-full object-cover object-left-top opacity-95 hover:opacity-100 transition-opacity"
-                  />
-                </div>
-              </div>
             </div>
           </div>
           
+          <div className="flex-1 w-full lg:w-auto">
+             <div className="bg-white rounded-2xl border border-gray-200 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] overflow-hidden">
+               <div className="bg-slate-50 border-b border-gray-100 px-4 py-3 flex items-center gap-2">
+                 <div className="w-3 h-3 rounded-full bg-red-400"></div>
+                 <div className="w-3 h-3 rounded-full bg-amber-400"></div>
+                 <div className="w-3 h-3 rounded-full bg-emerald-400"></div>
+               </div>
+               <img
+                 src="https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&q=80&w=2670"
+                 alt="Nutrixa Dashboard"
+                 className="w-full h-auto object-cover border-b border-white"
+               />
+             </div>
+          </div>
         </div>
       </section>
 
-      {/* ── MODULES / INFRASTRUCTURE ── */}
-      <section id="features" className="py-16 md:py-24 bg-[#FAFAFA] relative border-t border-zinc-200/60">
-        <div className="max-w-[85rem] mx-auto px-6">
-          <div className="text-center max-w-2xl mx-auto mb-12">
-            <h2 className="text-emerald-600 font-bold tracking-widest uppercase text-xs mb-2">Arquitectura Modular</h2>
-            <h3 className="text-3xl lg:text-4xl font-extrabold text-zinc-900 tracking-tight leading-[1.1] mb-4">
-              Infraestructura diseñada para <span className="text-nutri-forest">alto rendimiento.</span>
-            </h3>
-            <p className="text-zinc-500 text-base font-medium leading-relaxed">
-              Herramientas de clase empresarial, empaquetadas en la interfaz más intuitiva del mercado médico.
+      {/* ── CLIENTS / TRUST SIGNALS ── */}
+      <section className="border-y border-gray-100 bg-slate-50 py-12">
+         <div className="max-w-7xl mx-auto px-6">
+            <p className="text-center text-sm font-semibold text-slate-500 mb-8">Infraestructura confiable, integrada con los estándares del sector</p>
+            <div className="flex flex-wrap justify-center items-center gap-12 md:gap-20 opacity-60 grayscale">
+              <span className="text-xl font-black text-slate-700">MediCare</span>
+              <span className="text-xl font-black text-slate-700">NutriTech</span>
+              <span className="text-xl font-black text-slate-700">HealthData API</span>
+              <span className="text-xl font-black text-slate-700 hidden sm:block">BioSys</span>
+              <span className="text-xl font-black text-slate-700 hidden md:block">Clinical Hub</span>
+            </div>
+         </div>
+      </section>
+
+      {/* ── INFRASTRUCTURE GRID ── */}
+      <section id="infraestructura" className="py-24 md:py-32 bg-white border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="max-w-3xl mb-16 md:mb-24">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-[#0F172A] tracking-tighter leading-tight mb-6">
+              Arquitectura diseñada <br className="hidden md:block"/> para escalabilidad clínica.
+            </h2>
+            <p className="text-lg text-slate-600 font-medium leading-relaxed">
+              Herramientas de clase empresarial, empaquetadas en una interfaz austera y altamente funcional. Elimine procesos redundantes en su consultorio.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="bg-white border border-gray-200 rounded-2xl p-8 hover:border-emerald-500 hover:shadow-lg transition-all duration-300">
+              <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center border border-gray-100 mb-6">
+                <FileText className="w-6 h-6 text-emerald-600" />
+              </div>
+              <h3 className="text-xl font-bold text-[#0F172A] mb-3">Expediente Centralizado</h3>
+              <p className="text-slate-600 font-medium leading-relaxed">
+                Anamnesis completa, control de medicación y cuadros gráficos de evolución en una sola vista estructurada.
+              </p>
+            </div>
+
+            <div className="bg-white border border-gray-200 rounded-2xl p-8 hover:border-emerald-500 hover:shadow-lg transition-all duration-300">
+              <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center border border-gray-100 mb-6">
+                <Activity className="w-6 h-6 text-emerald-600" />
+              </div>
+              <h3 className="text-xl font-bold text-[#0F172A] mb-3">Dietoterapia Dinámica</h3>
+              <p className="text-slate-600 font-medium leading-relaxed">
+                Construcción paramétrica de planes en base a un repositorio central con macro-cálculos en vivo.
+              </p>
+            </div>
+
+            <div className="bg-white border border-gray-200 rounded-2xl p-8 hover:border-emerald-500 hover:shadow-lg transition-all duration-300">
+              <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center border border-gray-100 mb-6">
+                <Monitor className="w-6 h-6 text-emerald-600" />
+              </div>
+              <h3 className="text-xl font-bold text-[#0F172A] mb-3">Turnera Inteligente</h3>
+              <p className="text-slate-600 font-medium leading-relaxed">
+                Portal web para pacientes. Recordatorios automáticos por WhatsApp y correo para reducir ausentismo.
+              </p>
+            </div>
             
-            {[
-              { icon: FileText, title: "Expediente Centralizado", desc: "Anamnesis completa, control de medicación y gráficos de evolución corporal progresiva." },
-              { icon: CheckCircle, title: "Dietoterapia Dinámica", desc: "Construcción paramétrica de planes en base a un repositorio central y cálculos en vivo." },
-              { icon: Calendar, title: "Turnera Inteligente", desc: "Portal web para pacientes sincronizado. Reduce ausentismo mediante notificaciones." }
-            ].map((mod, i) => (
-               <div key={i} className="group bg-white border border-zinc-200/80 rounded-2xl p-6 hover:shadow-md hover:border-emerald-200 transition-all duration-300 relative overflow-hidden flex flex-col justify-center">
-                 <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-50/50 rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                 <div className="relative z-10 flex flex-col items-center md:items-start text-center md:text-left">
-                   <div className="bg-[#FAFAFA] border border-zinc-100 h-12 w-12 rounded-[1rem] flex items-center justify-center mb-5 group-hover:bg-nutri-emerald group-hover:border-transparent transition-all duration-300 shadow-sm shrink-0">
-                     <mod.icon className="w-5 h-5 text-zinc-600 group-hover:text-white transition-colors" />
-                   </div>
-                   <h4 className="text-lg font-bold text-zinc-900 mb-2">{mod.title}</h4>
-                   <p className="text-zinc-500 font-medium leading-relaxed text-sm">
-                     {mod.desc}
-                   </p>
-                 </div>
+            <div className="lg:col-span-3 bg-slate-900 rounded-2xl p-8 md:p-12 flex flex-col md:flex-row gap-8 items-center justify-between border border-slate-800 relative overflow-hidden">
+               <div className="relative z-10 max-w-2xl">
+                 <h3 className="text-2xl md:text-3xl font-bold text-white mb-4">Auditoría financiera y proyecciones</h3>
+                 <p className="text-slate-400 font-medium text-lg leading-relaxed">
+                   Panel gerencial que monitorea retención, facturación y crecimiento global. Respaldado en bases de datos inmutables e interpretados visualmente para la toma de decisiones.
+                 </p>
                </div>
-            ))}
-
-             <div className="group bg-zinc-950 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 p-8 lg:p-10 flex flex-col md:col-span-3 relative overflow-hidden mt-1">
-               <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_60%_at_100%_100%,rgba(14,157,90,0.15),transparent)] pointer-events-none" />
-               
-               <div className="flex flex-col lg:flex-row gap-8 items-center justify-between relative z-10 w-full text-center lg:text-left">
-                 <div className="flex-1 max-w-2xl">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 border border-white/10 rounded-full mb-4">
-                      <BarChart3 className="w-3 h-3 text-nutri-lime" />
-                      <span className="text-white text-[10px] font-bold uppercase tracking-widest">Dashboard Gerencial</span>
-                    </div>
-                    <h4 className="text-2xl lg:text-3xl font-extrabold text-white mb-3 tracking-tight">
-                      Auditoría financiera y proyecciones.
-                    </h4>
-                    <p className="text-zinc-400 font-medium leading-relaxed text-base">
-                      Panel gerencial que monitorea métricas en tiempo real: nivel de retención, facturación y crecimiento. Respaldado en datos inmutables y de fácil interpretación visual.
-                    </p>
-                 </div>
-                 <div className="shrink-0 mt-2 lg:mt-0">
-                    <button onClick={() => navigate('/login?signup=true')} className="bg-white text-zinc-900 font-bold px-6 py-3.5 rounded-xl flex items-center gap-2 hover:bg-zinc-100 transition-colors shadow-lg">
-                      Ver Estadísticas <ArrowRight className="w-4 h-4"/>
-                    </button>
-                 </div>
-               </div>
-             </div>
-
+               <button onClick={() => navigate('/login?signup=true')} className="relative z-10 w-full md:w-auto bg-white hover:bg-gray-100 text-[#0F172A] font-bold px-8 py-4 rounded-xl flex justify-center items-center gap-2 transition-colors shrink-0">
+                 Activar entorno de prueba <ArrowRight className="w-5 h-5"/>
+               </button>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ── WORKFLOW / SYSTEM ── */}
-      <section id="workflow" className="py-16 md:py-24 bg-white border-t border-zinc-200/80 overflow-hidden">
-        <div className="max-w-[85rem] mx-auto px-6">
-          
-          <div className="flex flex-col lg:flex-row gap-12 lg:gap-16 items-center">
+      {/* ── WORKFLOW STRUCTURE ── */}
+      <section id="flujos" className="py-24 md:py-32 bg-slate-50 border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex flex-col lg:flex-row gap-16 lg:gap-24 items-center">
             
-            <div className="flex-1 space-y-8">
-              <div className="space-y-3">
-                <h2 className="text-nutri-forest font-bold tracking-widest uppercase text-xs mb-2">Experiencia del paciente</h2>
-                <h3 className="text-3xl lg:text-4xl font-extrabold text-zinc-900 tracking-tight leading-[1.1]">
-                  Interacciones trazables.
+            <div className="flex-1 space-y-12">
+              <div>
+                <h2 className="text-sm font-bold text-emerald-600 tracking-widest uppercase mb-4">Flujos estructurados</h2>
+                <h3 className="text-3xl md:text-4xl lg:text-5xl font-black text-[#0F172A] tracking-tighter leading-tight mb-6">
+                  Interacciones trazables de punta a punta.
                 </h3>
-                <p className="text-base text-zinc-500 font-medium leading-relaxed">
-                  Automatiza el circuito completo: desde la cita agendada hasta la emisión del plan.
+                <p className="text-lg text-slate-600 font-medium leading-relaxed">
+                  Automatice el ciclo completo de atención del paciente desde la agendación hasta la emisión del reporte nutricional.
                 </p>
               </div>
 
-              <div className="relative">
-                {/* Dashed Connecting Line */}
-                <div className="absolute left-[1.35rem] top-6 bottom-6 w-px border-l-2 border-dashed border-zinc-200 hidden md:block" />
-
-                <div className="space-y-6">
-                  {[
-                     { num: "01", title: "Carga Pre-Clínica", desc: "Formularios para que ingresen ya perfilados." },
-                     { num: "02", title: "Sesión Terapéutica", desc: "Registro métrico e historial de guardado automático." },
-                     { num: "03", title: "Emisión de Reporte", desc: "Exportación del plan y auto-agenda de siguiente control." }
-                  ].map((step, i) => (
-                    <div key={i} className="relative flex gap-5 md:gap-6 group">
-                      <div className="w-11 h-11 bg-white border-2 border-zinc-200 rounded-xl flex items-center justify-center shrink-0 z-10 shadow-sm group-hover:border-zinc-900 group-hover:bg-zinc-900 group-hover:text-white text-zinc-400 font-extrabold text-sm transition-all duration-300">
-                        {step.num}
-                      </div>
-                      <div className="pt-2">
-                        <h4 className="text-lg font-bold text-zinc-900 mb-1">{step.title}</h4>
-                        <p className="text-zinc-500 font-medium leading-relaxed text-sm">{step.desc}</p>
-                      </div>
+              <div className="space-y-8">
+                {[
+                   { num: "01", title: "Carga Pre-Clínica", desc: "El paciente completa formatos web estandarizados para ingresar a la base de datos." },
+                   { num: "02", title: "Sesión Terapéutica", desc: "Registro de variables clínicas en un entorno estructurado con autoguardado en tiempo real." },
+                   { num: "03", title: "Emisión y Alta", desc: "Exportación del plan y automatización retrospectiva de futuras citas." }
+                ].map((step, i) => (
+                  <div key={i} className="flex gap-6">
+                    <div className="text-emerald-600 font-black text-xl pt-1">
+                      {step.num}
                     </div>
-                  ))}
-                </div>
+                    <div>
+                      <h4 className="text-xl font-bold text-[#0F172A] mb-2">{step.title}</h4>
+                      <p className="text-slate-600 font-medium leading-relaxed">{step.desc}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 
             <div className="flex-1 w-full relative">
-               <div className="relative rounded-[1.5rem] bg-zinc-900 p-1.5 shadow-xl transform rotate-1 hover:rotate-0 transition-transform duration-700">
+               <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-2 overflow-hidden">
                  <img 
                    src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&q=80&w=1000" 
                    alt="Labor Nutrixa" 
-                   className="w-full h-full lg:min-h-[400px] object-cover rounded-[1.25rem] opacity-90"
+                   className="w-full h-auto object-cover rounded-xl"
                  />
-                 
-                 <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end gap-3 z-20">
-                   <div className="bg-white/95 backdrop-blur shadow-lg border border-white px-4 py-2.5 rounded-lg flex items-center gap-2">
-                      <Shield className="w-4 h-4 text-zinc-900" />
-                      <div>
-                        <p className="text-[9px] uppercase font-bold text-zinc-400 tracking-widest leading-none">Seguridad</p>
-                        <p className="text-xs font-bold text-zinc-900 leading-tight block mt-0.5">Control Total</p>
-                      </div>
-                   </div>
+                 <div className="p-6 bg-white flex items-start gap-4">
+                    <Shield className="w-6 h-6 text-emerald-600 shrink-0 mt-1" />
+                    <div>
+                      <p className="font-bold text-[#0F172A] mb-1">Privacidad y Cumplimiento</p>
+                      <p className="text-sm font-medium text-slate-600">Base de datos encriptada en reposo, garantizando el absoluto secreto en la relación médico-paciente.</p>
+                    </div>
                  </div>
                </div>
             </div>
 
           </div>
-
         </div>
       </section>
 
-      {/* ── NATIVE FAQ ACCORDION ── */}
-      <section id="faq" className="py-16 md:py-20 bg-[#FAFAFA] border-t border-zinc-200/80">
-        <div className="max-w-[42rem] mx-auto px-6">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl font-extrabold text-zinc-900 tracking-tight mb-3">Preguntas Frecuentes</h2>
-            <p className="text-base text-zinc-500 font-medium">Transparencia absoluta técnica y operativa.</p>
+      {/* ── B2B PRICING ── */}
+      <section id="licencias" className="py-24 md:py-32 bg-white border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="max-w-3xl mx-auto text-center mb-16 md:mb-24">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-[#0F172A] tracking-tighter leading-tight mb-6">
+              Licenciamiento Corporativo
+            </h2>
+            <p className="text-lg text-slate-600 font-medium leading-relaxed">
+              Adquisición de software bajo modelos predecibles, orientados a la expansión de centros médicos y nutricionistas independientes.
+            </p>
           </div>
-          
-          <div className="space-y-3">
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+             
+            {/* Standard Tier */}
+            <div className="bg-white rounded-2xl border border-gray-200 p-10 flex flex-col hover:border-gray-300 transition-colors">
+              <h3 className="text-2xl font-bold text-[#0F172A] mb-2">Fundamental</h3>
+              <p className="text-slate-600 font-medium mb-8">Infraestructura limitada para entornos de prueba.</p>
+              <div className="flex items-baseline gap-2 mb-8">
+                <span className="text-5xl font-black text-[#0F172A] tracking-tighter">Gratis</span>
+              </div>
+              <ul className="space-y-4 mb-10 flex-1">
+                {[
+                  'Base limitada a 5 pacientes activos',
+                  'Módulo clínico predeterminado',
+                  'Cálculo dietoterapéutico básico',
+                  'Soporte estándar por correo'
+                ].map((item, i) => (
+                  <li key={i} className="flex items-start gap-3">
+                    <Check className="w-5 h-5 text-slate-400 shrink-0 mt-0.5" />
+                    <span className="text-slate-700 font-medium">{item}</span>
+                  </li>
+                ))}
+              </ul>
+              <button
+                onClick={() => navigate('/login?signup=true')}
+                className="w-full bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200 font-bold py-4 rounded-xl transition-colors text-base"
+              >
+                Crear entorno
+              </button>
+            </div>
+
+            {/* Premium Tier */}
+            <div className="bg-slate-900 rounded-2xl border border-slate-800 p-10 flex flex-col relative shadow-xl">
+              <div className="absolute top-0 right-8 -translate-y-1/2 bg-emerald-500 text-white font-bold text-xs uppercase tracking-widest px-4 py-1.5 rounded-full">
+                Sugerido
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-2">Avanzado</h3>
+              <p className="text-slate-400 font-medium mb-8">Despliegue operativo íntegro para profesionales.</p>
+              <div className="flex items-baseline gap-2 mb-8">
+                <span className="text-5xl font-black text-white tracking-tighter">Consultar</span>
+              </div>
+              <ul className="space-y-4 mb-10 flex-1">
+                {[
+                  'Pacientes y expedientes ilimitados',
+                  'Turnera pública web integrada',
+                  'Suite dietoterapéutica proactiva',
+                  'Métricas gerenciales e historial',
+                  'Soporte técnico preferencial con SLA'
+                ].map((item, i) => (
+                  <li key={i} className="flex items-start gap-3">
+                    <Check className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+                    <span className="text-slate-300 font-medium">{item}</span>
+                  </li>
+                ))}
+              </ul>
+              <button
+                onClick={() => navigate('/login?signup=true')}
+                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-xl transition-colors text-base"
+              >
+                Solicitar Acceso
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* ── MINIMAL FAQ ── */}
+      <section id="faq" className="py-24 md:py-32 bg-slate-50 border-b border-gray-100">
+        <div className="max-w-4xl mx-auto px-6">
+          <h2 className="text-3xl md:text-4xl font-black text-[#0F172A] tracking-tighter text-center mb-16">Transparencia Operativa</h2>
+          <div className="space-y-4">
             {[
               {
-                q: "¿Requiere instalación de alguna App?",
-                a: "No. Nutrixa funciona en cualquier navegador (PC, Tablet, Celular) y no requiere que los pacientes instalen aplicaciones extras para visualizar sus turnos o dietas."
+                q: "¿Requiere instalación nativa en dispositivos?",
+                a: "No. Nutrixa System opera integralmente sobre la nube como una PWA. Puede acceder desde cualquier dispositivo con un navegador moderno, sin descargar ejecutables pesados."
               },
               {
-                q: "¿Dónde y cómo se protegen los datos?",
-                a: "Empleamos encriptación AES-256 en servidores de alto resguardo clínico para asegurar que la confidencialidad médico-paciente esté protegida contra todo riesgo."
+                q: "¿Cómo se auditan y controlan los datos clínicos?",
+                a: "La información es almacenada en servidores dedicados bajo protocolos de encriptación estándar internacional (AES-256), restringiendo el acceso exclusivamente al administrador del entorno."
               },
               {
-                q: "¿Puedo importar recetarios previos?",
-                a: "Contamos con una suite fácil de 'copiar y pegar' donde agilizas el alta de tus dietas y menús propios rápidamente para disponer de ellos al recetar."
+                q: "¿Cuáles son los límites de uso en la licencia gratuita?",
+                a: "El plan Fundamental provee acceso técnico al 100% de la arquitectura básica, limitando únicamente el volumen de registros a 5 pacientes para pruebas de estrés técnico."
               }
             ].map((faq, i) => (
-              <details key={i} className="group bg-white border border-zinc-200/80 rounded-xl [&_summary::-webkit-details-marker]:hidden open:border-zinc-300 transition-colors shadow-sm">
-                <summary className="flex cursor-pointer items-center justify-between gap-4 p-5 font-bold text-zinc-900 text-sm md:text-base focus:outline-none">
+              <details key={i} className="group bg-white rounded-xl border border-gray-200 hover:border-gray-300 transition-colors [&_summary::-webkit-details-marker]:hidden">
+                <summary className="flex cursor-pointer items-center justify-between gap-6 p-6 font-bold text-[#0F172A] text-lg focus:outline-none select-none">
                   <span>{faq.q}</span>
-                  <ChevronDown className="h-4 w-4 text-zinc-400 group-open:-rotate-180 transition-transform duration-300 shrink-0" />
+                  <ChevronDown className="h-5 w-5 text-slate-400 group-open:text-emerald-600 group-open:-rotate-180 transition-transform" />
                 </summary>
-                <div className="border-t border-zinc-100 px-5 pb-5 pt-3">
-                  <p className="text-zinc-600 font-medium leading-relaxed text-sm">{faq.a}</p>
+                <div className="px-6 pb-6 pt-0">
+                  <p className="text-slate-600 font-medium leading-relaxed border-t border-gray-100 pt-4">{faq.a}</p>
                 </div>
               </details>
             ))}
@@ -339,157 +355,60 @@ export function Landing() {
         </div>
       </section>
 
-      {/* ── PRICING B2B ── */}
-      <section id="pricing" className="py-16 md:py-24 bg-white border-t border-zinc-200/80 relative overflow-hidden">
-        <div className="max-w-[85rem] mx-auto px-6 relative z-10">
-          
-          <div className="text-center max-w-2xl mx-auto mb-12">
-            <h2 className="text-nutri-forest font-bold tracking-widest uppercase text-xs mb-2">Adquisición y Licencias</h2>
-            <h3 className="text-3xl md:text-4xl font-extrabold text-zinc-900 tracking-tight leading-[1.1] mb-4">Flexibilidad de Crecimiento</h3>
-            <p className="text-base text-zinc-500 font-medium leading-relaxed">
-              Integra el software de inmediato. Escalá según cómo evolucione tu clínica.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-[55rem] mx-auto items-center">
-            
-            {/* Plan Standard */}
-            <div className="bg-[#FAFAFA] border border-zinc-200 rounded-[1.5rem] p-8 flex flex-col shadow-sm">
-              <div className="mb-5">
-                <h4 className="text-xl font-bold text-zinc-900 mb-1">Fundamental</h4>
-                <p className="text-zinc-500 text-xs font-medium">Herramientas esenciales sin riesgo.</p>
-              </div>
-              <div className="mb-6 border-b border-zinc-200/80 pb-6">
-                <span className="text-4xl font-extrabold text-zinc-900 tracking-tighter">Gratis</span>
-              </div>
-              
-              <ul className="space-y-3 mb-8 flex-1">
-                {[
-                  'Base limitada a 5 pacientes',
-                  'Módulo clínico estándar',
-                  'Cálculo dietoterapéutico básico',
-                  'Soporte por email'
-                ].map((item, i) => (
-                  <li key={i} className="flex items-center gap-3">
-                    <div className="h-4 w-4 rounded-full bg-zinc-200/80 flex items-center justify-center shrink-0">
-                      <Check className="h-2.5 w-2.5 text-zinc-500" />
-                    </div>
-                    <span className="text-zinc-600 font-medium text-sm">{item}</span>
-                  </li>
-                ))}
-              </ul>
-              
-              <button
-                onClick={() => navigate('/login?signup=true')}
-                className="w-full bg-white hover:bg-zinc-50 border-2 border-zinc-200 text-zinc-900 font-bold text-sm py-3.5 rounded-xl transition-colors mt-auto"
-              >
-                Implementar Gratis
-              </button>
-            </div>
-
-            {/* Plan Profesional */}
-            <div className="bg-zinc-950 rounded-[1.5rem] p-8 lg:p-10 flex flex-col relative overflow-hidden shadow-xl border border-zinc-800">
-              <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-[radial-gradient(circle,rgba(14,157,90,0.2)_0%,transparent_70%)] rounded-full blur-3xl pointer-events-none" />
-              
-              <div className="mb-5 relative z-10 flex justify-between items-start">
-                <div>
-                  <h4 className="text-xl font-bold text-white mb-1">Institucional Vitalicio</h4>
-                  <p className="text-zinc-400 text-xs font-medium">Tratamiento para licencias Beta.</p>
-                </div>
-                <span className="bg-nutri-forest text-white text-[9px] uppercase font-extrabold tracking-widest px-2 py-1 rounded-full border border-nutri-emerald shadow-sm">
-                  Exclusivo
-                </span>
-              </div>
-              
-              <div className="mb-6 border-b border-zinc-800 pb-6 relative z-10 flex items-end gap-2">
-                <span className="text-4xl font-extrabold text-white tracking-tighter">Bonificado</span>
-              </div>
-              
-              <ul className="space-y-3 mb-8 flex-1 relative z-10">
-                {[
-                  'Pacientes y expedientes ilimitados',
-                  'Turnera pública web integrada',
-                  'Suite dietoterapéutica full activa',
-                  'Métricas gerenciales y finanzas',
-                  'Soporte técnico preferencial'
-                ].map((item, i) => (
-                  <li key={i} className="flex items-center gap-3">
-                    <div className="h-4 w-4 rounded-full bg-nutri-forest/30 flex items-center justify-center shrink-0 border border-nutri-forest/50">
-                      <Check className="h-2.5 w-2.5 text-nutri-lime" />
-                    </div>
-                    <span className="text-zinc-300 font-medium text-sm">{item}</span>
-                  </li>
-                ))}
-              </ul>
-              
-              <button
-                onClick={() => navigate('/login?signup=true')}
-                className="w-full relative z-10 bg-white hover:bg-zinc-100 text-zinc-950 transition-all duration-300 font-extrabold text-sm py-3.5 rounded-xl flex justify-center items-center gap-2 group shadow-md"
-              >
-                Suscribirme Libre <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform"/>
-              </button>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* ── FOOTER DEEP B2B ── */}
-      <footer className="bg-zinc-950 pt-16 pb-8 text-zinc-400 overflow-hidden relative">
-        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-zinc-800 to-transparent" />
-        
-        <div className="max-w-[85rem] mx-auto px-6 relative z-10">
-          <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-12 gap-8 mb-12">
-            <div className="col-span-1 md:col-span-4 lg:col-span-5">
-              <img src="/logoNutrixa.png" alt="Nutrixa" className="h-7 w-auto mb-5 brightness-0 invert opacity-90" />
-              <p className="text-xs md:text-sm font-medium leading-relaxed mb-5 max-w-sm">
-                Plataforma Clínica Especializada. Infraestructura digital orientada a la eficiencia operativa del nutricionista moderno institucional e independiente.
+      {/* ── B2B FOOTER ── */}
+      <footer className="bg-white py-16">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+            <div className="col-span-1 md:col-span-2">
+              <img src="/logoNutrixa.png" alt="Nutrixa" className="h-8 w-auto mb-6 grayscale opacity-80" />
+              <p className="text-sm text-slate-500 font-medium leading-relaxed max-w-sm">
+                Infraestructura digital especializada de alto rendimiento. Construida para resolver asimetrías de información y acelerar rutinas operatorias en consultorios.
               </p>
-              <div className="flex gap-3">
-                 <div className="w-7 h-7 rounded-md bg-zinc-900 border border-zinc-800 flex items-center justify-center cursor-pointer">
-                    <Activity className="w-3.5 h-3.5 text-zinc-500" />
-                 </div>
-                 <div className="w-7 h-7 rounded-md bg-zinc-900 border border-zinc-800 flex items-center justify-center cursor-pointer">
-                    <Shield className="w-3.5 h-3.5 text-zinc-500" />
-                 </div>
-              </div>
+            </div>
+            
+            <div>
+              <p className="text-xs font-black text-[#0F172A] mb-6 uppercase tracking-widest">Plataforma</p>
+              <ul className="space-y-4 text-sm font-medium text-slate-500">
+                <li><a href="#infraestructura" className="hover:text-emerald-600 transition-colors">Infraestructura</a></li>
+                <li><a href="#flujos" className="hover:text-emerald-600 transition-colors">Integraciones</a></li>
+                <li><a href="#licencias" className="hover:text-emerald-600 transition-colors">Auditoría y Licencias</a></li>
+              </ul>
             </div>
 
-            {/* Link columns: 2-col on mobile, spread on desktop */}
-            <div className="grid grid-cols-2 md:contents gap-8">
-              <div className="md:col-span-1 lg:col-start-7 lg:col-span-2">
-                <p className="text-[10px] font-extrabold text-white mb-4 uppercase tracking-widest">Plataforma</p>
-                <ul className="space-y-3 text-xs md:text-sm font-medium">
-                  <li><a href="#features" className="hover:text-white transition-colors">Sistema</a></li>
-                  <li><a href="#workflow" className="hover:text-white transition-colors">Integración</a></li>
-                  <li><a href="#pricing" className="hover:text-white transition-colors">Licencia B2B</a></li>
-                </ul>
-              </div>
-
-              <div className="md:col-span-1 lg:col-span-2">
-                <p className="text-[10px] font-extrabold text-white mb-4 uppercase tracking-widest">Legales</p>
-                <ul className="space-y-3 text-xs md:text-sm font-medium">
-                  <li><Link to="/privacy" className="hover:text-white transition-colors">Privacidad</Link></li>
-                  <li><Link to="/terms" className="hover:text-white transition-colors">Términos</Link></li>
-                  <li>
-                    <a href="https://wa.me/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 hover:text-white transition-colors group">
-                      Contacto <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform"/>
-                    </a>
-                  </li>
-                </ul>
-              </div>
+            <div>
+              <p className="text-xs font-black text-[#0F172A] mb-6 uppercase tracking-widest">Legal</p>
+              <ul className="space-y-4 text-sm font-medium text-slate-500">
+                <li><Link to="/privacy" className="hover:text-emerald-600 transition-colors">Aviso de Privacidad</Link></li>
+                <li><Link to="/terms" className="hover:text-emerald-600 transition-colors">Términos de Servicio</Link></li>
+                <li>
+                  <a href="https://wa.me/" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-600 transition-colors">
+                    Soporte Técnico
+                  </a>
+                </li>
+              </ul>
             </div>
           </div>
 
-          <div className="border-t border-zinc-900 pt-6 flex flex-col md:flex-row justify-between items-center gap-3 text-[11px] font-semibold text-zinc-500">
-            <p>Copyright © {new Date().getFullYear()} Nutrixa. Todos los derechos reservados.</p>
-            <div className="flex items-center gap-2">
-               <span className="w-1.5 h-1.5 rounded-full bg-nutri-emerald animate-pulse" />
-               Sistemas Operativos
+          <div className="border-t border-gray-200 pt-8 flex flex-col md:flex-row justify-between items-center gap-6">
+            <p className="text-sm text-slate-400 font-medium">
+              © {new Date().getFullYear()} Nutrixa System. Todos los derechos reservados.
+            </p>
+            <div className="flex items-center gap-2 text-slate-500 font-medium text-sm">
+               <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+               Sistemas Operativos en Línea
             </div>
           </div>
         </div>
       </footer>
+
+      {/* Floating Scroll Top Button */}
+      <button
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        className={`fixed bottom-6 right-6 md:bottom-10 md:right-10 z-50 p-3 rounded-xl bg-slate-900 border border-slate-700 text-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:bg-slate-800 ${showScrollTop ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0 pointer-events-none'}`}
+        aria-label="Volver arriba"
+      >
+        <ArrowUp className="w-5 h-5" />
+      </button>
 
     </div>
   );
