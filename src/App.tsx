@@ -18,6 +18,8 @@ import { Profile } from '@/pages/Profile';
 import { Settings } from '@/pages/Settings';
 import { Landing } from '@/pages/Landing';
 import { PublicBooking } from '@/pages/PublicBooking';
+import { Privacy } from '@/pages/Privacy';
+import { Terms } from '@/pages/Terms';
 import { Toaster } from '@/components/ui/sonner';
 
 function App() {
@@ -45,6 +47,8 @@ function App() {
         <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/book/:slug" element={<PublicBooking />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/terms" element={<Terms />} />
 
         {/* Protected Routes */}
         <Route path="/dashboard" element={<MainLayout><Dashboard /></MainLayout>} />
