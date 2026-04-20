@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { supabase, supabaseRestGet } from '@/lib/supabase/client';
+import { supabase } from '@/lib/supabase/client';
 import type { MealPlan, MealPlanFormData, MealType } from '@/types';
 
 interface MealPlanState {
@@ -55,8 +55,13 @@ export const useMealPlanStore = create<MealPlanState>((set, get) => ({
       set({ loading: true, error: null });
     }
     try {
-      const data = await supabaseRestGet('meal_plans', `user_id=eq.${userId}&select=*&order=created_at.desc`);
-      set({ mealPlans: data as MealPlan[] || [], loading: false });
+      const { data, error } = await supabase
+        .from('meal_plans')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      set({ mealPlans: (data as MealPlan[]) || [], loading: false });
     } catch (err: any) {
       set({ error: err.message, loading: false });
     }
@@ -65,8 +70,13 @@ export const useMealPlanStore = create<MealPlanState>((set, get) => ({
   fetchMealPlansByPatient: async (patientId) => {
     set({ loading: true, error: null });
     try {
-      const data = await supabaseRestGet('meal_plans', `patient_id=eq.${patientId}&select=*&order=created_at.desc`);
-      set({ mealPlans: data as MealPlan[] || [], loading: false });
+      const { data, error } = await supabase
+        .from('meal_plans')
+        .select('*')
+        .eq('patient_id', patientId)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      set({ mealPlans: (data as MealPlan[]) || [], loading: false });
     } catch (err: any) {
       set({ error: err.message, loading: false });
     }

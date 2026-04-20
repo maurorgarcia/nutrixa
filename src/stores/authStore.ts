@@ -21,6 +21,7 @@ interface AuthState {
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
+  signInWithGoogle: () => Promise<{ error: string | null }>;
   resetPassword: (email: string) => Promise<{ error: string | null }>;
   updateProfile: (data: Partial<User>) => Promise<{ error: string | null }>;
   
@@ -54,15 +55,16 @@ export const useAuthStore = create<AuthState>()(
             return { error: error.message };
           }
 
-          // Fetch user profile
-          let { data: profile, error: profileError } = await supabase
+          // Fetch user profile - with shorter timeout for responsiveness
+          const { data: profile, error: profileError } = await supabase
             .from('users')
             .select('*')
             .eq('id', data.user.id)
             .single();
 
-          // Si el perfil no existe, intentamos crearlo
           if (profileError || !profile) {
+            // If profile missing, create it immediately from auth metadata
+            const trialEnd = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
             const { data: newProfile, error: createError } = await supabase
               .from('users')
               .insert({
@@ -70,29 +72,36 @@ export const useAuthStore = create<AuthState>()(
                 email: data.user.email,
                 full_name: data.user.user_metadata?.full_name || 'Usuario',
                 role: 'nutritionist',
+                plan: 'trial',
+                trial_ends_at: trialEnd,
+                slug: (data.user.user_metadata?.full_name || 'usuario')
+                  .toLowerCase()
+                  .trim()
+                  .replace(/[^\w\s-]/g, '')
+                  .replace(/[\s_-]+/g, '-')
+                  .replace(/^-+|-+$/g, '') + '-' + Math.random().toString(36).substring(2, 6),
+                services: [
+                  { id: 'initial-1', name: 'Consulta General', price: 0, duration: 60 }
+                ]
               } as any)
               .select()
               .single();
             
-            if (!createError && newProfile) {
-              profile = newProfile;
-            } else if (createError) {
-              set({ error: createError.message, loading: false });
-              return { error: createError.message };
+            if (createError) {
+               set({ error: 'Error al inicializar perfil: ' + createError.message, loading: false });
+               return { error: createError.message };
             }
+            
+            set({ user: newProfile as unknown as User, session: data.session, loading: false });
+            return { error: null };
           }
 
-          if (profile) {
-            set({ 
-              user: profile as unknown as User, 
-              session: data.session, 
-              loading: false 
-            });
-            return { error: null };
-          } else {
-            set({ error: 'No se pudo cargar o crear el perfil de usuario', loading: false });
-            return { error: 'Perfil no encontrado' };
-          }
+          set({ 
+            user: profile as unknown as User, 
+            session: data.session, 
+            loading: false 
+          });
+          return { error: null };
         } catch (err: any) {
           set({ error: err.message, loading: false });
           return { error: err.message };
@@ -131,13 +140,31 @@ export const useAuthStore = create<AuthState>()(
       },
 
       signOut: async () => {
-        // Don't set loading:true — that triggers the full splash screen
-        // Just clear local state immediately so the UI reacts instantly
         set({ user: null, session: null, error: null });
         try {
           await supabase.auth.signOut();
         } catch (err) {
           console.error('Error signing out:', err);
+        }
+      },
+      
+      signInWithGoogle: async () => {
+        set({ loading: true, error: null });
+        try {
+          const { error } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+              redirectTo: window.location.origin,
+            },
+          });
+          if (error) {
+            set({ error: error.message, loading: false });
+            return { error: error.message };
+          }
+          return { error: null };
+        } catch (err: any) {
+          set({ error: err.message, loading: false });
+          return { error: err.message };
         }
       },
 
@@ -250,6 +277,7 @@ export const useAuthStore = create<AuthState>()(
 
             // Si falta el perfil al inicializar, lo creamos
             if (error || !profile) {
+              const trialEndInit = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
               const { data: newProfile, error: createError } = await supabase
                 .from('users')
                 .insert({
@@ -257,6 +285,17 @@ export const useAuthStore = create<AuthState>()(
                   email: session.user.email,
                   full_name: session.user.user_metadata?.full_name || 'Usuario',
                   role: 'nutritionist',
+                  plan: 'trial',
+                  trial_ends_at: trialEndInit,
+                  slug: (session.user.user_metadata?.full_name || 'usuario')
+                    .toLowerCase()
+                    .trim()
+                    .replace(/[^\w\s-]/g, '')
+                    .replace(/[\s_-]+/g, '-')
+                    .replace(/^-+|-+$/g, '') + '-' + Math.random().toString(36).substring(2, 6),
+                  services: [
+                    { id: 'initial-1', name: 'Consulta General', price: 0, duration: 60 }
+                  ]
                 } as any)
                 .select()
                 .single();
@@ -289,6 +328,7 @@ export const useAuthStore = create<AuthState>()(
                 .single();
 
               if (error || !profile) {
+                const trialEndAuth = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
                 const { data: newProfile, error: createError } = await supabase
                   .from('users')
                   .insert({
@@ -296,6 +336,17 @@ export const useAuthStore = create<AuthState>()(
                     email: session.user.email,
                     full_name: session.user.user_metadata?.full_name || 'Usuario',
                     role: 'nutritionist',
+                    plan: 'trial',
+                    trial_ends_at: trialEndAuth,
+                    slug: (session.user.user_metadata?.full_name || 'usuario')
+                      .toLowerCase()
+                      .trim()
+                      .replace(/[^\w\s-]/g, '')
+                      .replace(/[\s_-]+/g, '-')
+                      .replace(/^-+|-+$/g, '') + '-' + Math.random().toString(36).substring(2, 6),
+                    services: [
+                      { id: 'initial-1', name: 'Consulta General', price: 0, duration: 60 }
+                    ]
                   } as any)
                   .select()
                   .single();

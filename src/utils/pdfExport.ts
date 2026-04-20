@@ -13,7 +13,7 @@ const addHeader = (doc: jsPDF, title: string) => {
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
-  doc.text('NUTRIXA', 15, 12);
+  doc.text('SENRALIS', 15, 12);
   
   doc.setFontSize(12);
   doc.setFont('helvetica', 'normal');

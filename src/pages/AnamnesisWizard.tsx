@@ -780,7 +780,7 @@ export function AnamnesisWizard() {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h1 className="text-3xl font-bold text-nutri-forest">Anamnesis Nutricional</h1>
+          <h1 className="text-3xl font-bold text-senralis-dark">Anamnesis Nutricional</h1>
           <p className="text-gray-500 mt-1">Completa la información paso a paso</p>
         </div>
       </div>
@@ -848,7 +848,7 @@ export function AnamnesisWizard() {
             <Button
               onClick={handleSubmit}
               disabled={saving}
-              className="bg-nutri-forest hover:bg-nutri-emerald"
+              className="bg-senralis-dark hover:bg-senralis-main"
             >
               {saving ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -861,7 +861,7 @@ export function AnamnesisWizard() {
         ) : (
           <Button
             onClick={handleNext}
-            className="bg-nutri-forest hover:bg-nutri-emerald"
+            className="bg-senralis-dark hover:bg-senralis-main"
           >
             Siguiente
             <ArrowRight className="h-4 w-4 ml-2" />
@@ -921,13 +921,13 @@ export function AnamnesisWizard() {
           {aiResult.recommendations.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center gap-1.5">
-                <Check className="h-3.5 w-3.5 text-emerald-600" />
-                <p className="text-xs font-black text-emerald-700 uppercase tracking-wider">Recomendaciones</p>
+                <Check className="h-3.5 w-3.5 text-senralis-main" />
+                <p className="text-xs font-black text-senralis-dark uppercase tracking-wider">Recomendaciones</p>
               </div>
               <ul className="space-y-1.5">
                 {aiResult.recommendations.map((r, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm text-emerald-900">
-                    <span className="w-1 h-1 rounded-full bg-emerald-500 mt-2 shrink-0" />
+                  <li key={i} className="flex items-start gap-2 text-sm text-senralis-dark">
+                    <span className="w-1 h-1 rounded-full bg-senralis-main mt-2 shrink-0" />
                     {r}
                   </li>
                 ))}

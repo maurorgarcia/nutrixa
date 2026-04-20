@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { supabase, supabaseRestGet } from '@/lib/supabase/client';
+import { supabase } from '@/lib/supabase/client';
 import type { Recipe, RecipeFormData, RecipeTag } from '@/types';
 
 interface RecipeState {
@@ -52,7 +52,12 @@ export const useRecipeStore = create<RecipeState>((set, get) => ({
       set({ loading: true, error: null });
     }
     try {
-      const data = await supabaseRestGet('recipes', `select=*&or=(user_id.eq.${userId},is_template.eq.true)&order=created_at.desc`);
+      const { data, error } = await supabase
+        .from('recipes')
+        .select('*')
+        .or(`user_id.eq.${userId},is_template.eq.true`)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
       set({ recipes: data || [], loading: false });
     } catch (err: any) {
       set({ error: err.message, loading: false });

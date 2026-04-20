@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuthStore } from '@/stores/authStore';
-import { User, Save, Loader2, ShieldCheck, Mail } from 'lucide-react';
+import { User, Save, Loader2, ShieldCheck, Mail, Shield } from 'lucide-react';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 export function Profile() {
   const { user, updateProfile } = useAuthStore();
@@ -55,123 +56,126 @@ export function Profile() {
   };
 
   return (
-    <div className="space-y-10 max-w-5xl mx-auto animate-in fade-in duration-700">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pb-2 border-b border-zinc-100">
-        <div className="space-y-1.5">
-          <h1 className="text-4xl font-extrabold text-nutri-forest tracking-tight">Mi Perfil</h1>
-          <p className="text-zinc-500 text-lg font-medium">Administra tu información personal y credenciales de acceso a la plataforma</p>
+    <div className="clinical-page space-y-8 max-w-7xl mx-auto">
+      
+      {/* ── PROFESSIONAL HEADER ── */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2">
+        <div>
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-1">
+            Gestión de Perfil
+          </h1>
+          <p className="text-slate-500 font-medium text-sm">
+            Administrá tu identidad profesional y credenciales de acceso institucional.
+          </p>
         </div>
-        <Button onClick={handleSave} disabled={saving} className="bg-nutri-emerald hover:bg-nutri-forest hover:-translate-y-0.5 hover:shadow-lg text-white shadow-md transition-all duration-300 px-6 h-12 rounded-xl text-base">
-          {saving ? <Loader2 className="h-5 w-5 mr-2 animate-spin" /> : <Save className="h-5 w-5 mr-2" />}
+        <Button 
+          onClick={handleSave} 
+          disabled={saving}
+          className="h-11 px-6 rounded-xl bg-[#09090b] text-white font-semibold hover:bg-[#18181b] shadow-lg shadow-slate-200 transition-all flex items-center gap-2"
+        >
+          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
           Guardar Cambios
         </Button>
       </div>
 
-      <div className="space-y-12 divide-y divide-zinc-200 mt-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-8">
         
-        {/* Identidad Setup */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 pt-8">
-          <div className="md:col-span-1 space-y-4">
-            <div className="p-3 bg-emerald-50 rounded-2xl w-fit">
-              <User className="h-6 w-6 text-nutri-emerald" />
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-nutri-forest tracking-tight">Perfil e Identidad</h3>
-              <p className="text-sm font-medium text-zinc-500 mt-2 leading-relaxed">
-                Información pública que se mostrará en los comunicados a tus pacientes y en tu catálogo público.
-              </p>
-            </div>
-          </div>
-          
-          <div className="md:col-span-2">
-            <Card className="border-zinc-200 shadow-sm transition-all duration-300 rounded-3xl overflow-hidden bg-white">
-              <CardContent className="p-6 sm:p-8 space-y-8">
-                {/* Avatar Row */}
-                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-                  <div className="flex-shrink-0 relative">
-                    <div className="w-28 h-28 bg-emerald-50 rounded-full flex items-center justify-center border border-emerald-100 shadow-inner">
-                      <span className="text-4xl font-extrabold text-nutri-emerald tracking-tighter">
-                        {user?.full_name?.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) || 'U'}
-                      </span>
-                    </div>
-                    <div className="absolute -bottom-2 -right-2 bg-emerald-100 text-nutri-forest p-1.5 rounded-full border-2 border-white shadow-sm" title="Profesional Verificado">
-                      <ShieldCheck className="h-5 w-5" />
-                    </div>
-                  </div>
-                  
-                  <div className="flex-1 space-y-5 text-center sm:text-left w-full pt-2">
-                    <div className="flex flex-col sm:flex-row gap-4 w-full">
-                      <div className="space-y-2 w-full sm:w-1/3">
-                        <Label htmlFor="title" className="text-sm font-bold text-zinc-700 text-left block">Título</Label>
-                        <select 
-                          id="title"
-                          value={formData.title}
-                          onChange={e => setFormData({...formData, title: e.target.value})}
-                          className="h-14 w-full border border-zinc-200 focus:ring-nutri-emerald focus:border-nutri-emerald rounded-xl shadow-sm transition-all duration-200 text-base px-3 bg-white"
-                        >
-                          <option value="">Sin título</option>
-                          <option value="Lic.">Licenciada/o</option>
-                          <option value="Dr.">Doctor</option>
-                          <option value="Dra.">Doctora</option>
-                          <option value="Nut.">Nutricionista</option>
-                        </select>
-                      </div>
-                      <div className="space-y-2 w-full sm:w-2/3">
-                        <Label htmlFor="full_name" className="text-sm font-bold text-zinc-700 text-left block">Nombre Completo</Label>
-                        <Input 
-                          id="full_name" 
-                          value={formData.full_name} 
-                          onChange={e => setFormData({...formData, full_name: e.target.value})}
-                          placeholder="María Pérez" 
-                          className="h-14 w-full border-zinc-200 focus:ring-nutri-emerald focus:border-nutri-emerald rounded-xl shadow-sm transition-all duration-200 text-base"
-                        />
-                      </div>
-                    </div>
-                    <p className="text-xs font-bold text-nutri-forest flex items-center justify-center sm:justify-start gap-1.5 mt-2">
-                      Tus datos biográficos han sido verificados satisfactoriamente.
-                    </p>
-                  </div>
+        {/* ── LEFT COLUMN: Security & Badge ── */}
+        <div className="lg:col-span-4 space-y-6">
+           <div className="bg-[#09090b] rounded-xl p-8 text-white shadow-xl relative overflow-hidden">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(16,185,129,0.1),transparent_40%)] pointer-events-none" />
+              
+              <div className="flex flex-col items-center text-center space-y-4 relative z-10">
+                <div className="w-24 h-24 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10 shadow-inner group transition-all">
+                  <span className="text-3xl font-black text-senralis-main tracking-tighter">
+                    {user?.full_name?.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) || 'U'}
+                  </span>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+                <div>
+                   <h3 className="text-xl font-extrabold tracking-tight">{user?.full_name}</h3>
+                   <p className="text-xs font-bold text-senralis-soft uppercase tracking-widest mt-1">Profesional Verificado</p>
+                </div>
+                <div className="pt-6 w-full border-t border-white/5">
+                   <div className="flex items-center justify-center gap-2 text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em]">
+                      <ShieldCheck className="h-3.5 w-3.5 text-senralis-main" /> Identidad Auditada
+                   </div>
+                </div>
+              </div>
+           </div>
+
+           <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+              <div className="flex items-center gap-3 mb-4">
+                <Shield className="h-5 w-5 text-slate-400" />
+                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-tight">Privacidad</h3>
+              </div>
+              <p className="text-xs font-medium text-slate-500 leading-relaxed">
+                Tus datos están protegidos bajo estándares internacionales de seguridad clínica. El acceso a tu perfil está restringido a tu sesión cifrada.
+              </p>
+           </div>
         </div>
 
-        {/* Credentials Setup */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 pt-12">
-          <div className="md:col-span-1 space-y-4">
-            <div className="p-3 bg-zinc-100 rounded-2xl w-fit">
-              <Mail className="h-6 w-6 text-zinc-700" />
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-nutri-forest tracking-tight">Acceso y Seguridad</h3>
-              <p className="text-sm font-medium text-zinc-500 mt-2 leading-relaxed">
-                Credenciales exclusivas que utilizas para el inicio de sesión autorizado en Nutrixa.
-              </p>
-            </div>
-          </div>
+        {/* ── RIGHT COLUMN: Form ── */}
+        <div className="lg:col-span-8 space-y-8">
           
-          <div className="md:col-span-2">
-            <Card className="border-zinc-200 shadow-sm transition-all duration-300 rounded-3xl overflow-hidden bg-white">
-              <CardContent className="p-6 sm:p-8">
-                <div className="space-y-3">
-                  <Label htmlFor="email" className="text-sm font-bold text-zinc-700">Correo Electrónico Registrado</Label>
-                  <Input 
-                    id="email" 
-                    value={user?.email || ''} 
-                    disabled 
-                    className="h-14 w-full bg-zinc-50 text-zinc-500 cursor-not-allowed opacity-80 border-zinc-200 rounded-xl shadow-sm text-base" 
-                  />
-                  <div className="flex items-start gap-2 bg-amber-50 text-amber-800 p-4 rounded-xl border border-amber-200 shadow-sm mt-4">
-                    <ShieldCheck className="h-5 w-5 mt-0.5 flex-shrink-0" />
-                    <p className="text-sm font-medium leading-relaxed">
-                      La modificación del correo electrónico maestral está deshabilitada temporalmente por políticas de seguridad estrictas en tu cuenta.
-                    </p>
+          <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+            <div className="px-6 py-4 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between">
+               <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Identidad Institucional</h3>
+            </div>
+            <div className="p-8 space-y-8">
+               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                 <div className="space-y-2">
+                   <Label htmlFor="title" className="text-xs font-bold text-slate-500 uppercase tracking-wider">Título Oficial</Label>
+                   <select 
+                     id="title"
+                     value={formData.title}
+                     onChange={e => setFormData({...formData, title: e.target.value})}
+                     className="h-11 w-full bg-slate-50 border-slate-200 focus:bg-white transition-all font-semibold rounded-lg text-sm px-3"
+                   >
+                     <option value="">Sin título</option>
+                     <option value="Lic.">Lic.</option>
+                     <option value="Dr.">Dr.</option>
+                     <option value="Dra.">Dra.</option>
+                     <option value="Prof.">Prof.</option>
+                   </select>
+                 </div>
+                 <div className="sm:col-span-2 space-y-2">
+                   <Label htmlFor="full_name" className="text-xs font-bold text-slate-500 uppercase tracking-wider">Nombre Completo</Label>
+                   <Input 
+                     id="full_name" 
+                     value={formData.full_name} 
+                     onChange={e => setFormData({...formData, full_name: e.target.value})}
+                     placeholder="María Pérez" 
+                     className="h-11 bg-slate-50 border-slate-200 focus:bg-white transition-all font-semibold rounded-lg"
+                   />
+                 </div>
+               </div>
+
+               <div className="pt-8 border-t border-slate-50 space-y-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Mail className="h-4 w-4 text-slate-400" />
+                    <h3 className="text-sm font-bold text-slate-900 uppercase tracking-tight">Acceso Principal</h3>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="email" className="text-xs font-bold text-slate-500 uppercase tracking-wider">Correo Electrónico Registrado</Label>
+                      <Input 
+                        id="email" 
+                        value={user?.email || ''} 
+                        disabled 
+                        className="h-11 bg-slate-100 border-slate-200 text-slate-500 font-semibold rounded-lg cursor-not-allowed" 
+                      />
+                    </div>
+                    <div className="p-4 bg-amber-50 rounded-lg border border-amber-100 flex items-start gap-3">
+                       <Shield className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+                       <p className="text-[11px] font-bold text-amber-700 leading-normal">
+                         Por razones de seguridad institucional, la modificación del correo electrónico maestro debe solicitarse vía soporte técnico auditado.
+                       </p>
+                    </div>
+                  </div>
+               </div>
+            </div>
           </div>
+
         </div>
       </div>
     </div>

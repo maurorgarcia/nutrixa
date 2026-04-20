@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { useMealPlanStore } from '@/stores/mealPlanStore';
@@ -95,10 +96,15 @@ export function MealPlanForm() {
     if (!user || !selectedPatient) return;
     setSaving(true);
     try {
-      if (isEditing && id) await updateMealPlan(id, formData);
-      else await createMealPlan(user.id, selectedPatient, formData);
-      navigate(patientId ? `/patients/${patientId}/meal-plans` : '/meal-plans');
-    } catch (err) { console.error(err); }
+      if (isEditing && id) {
+        await updateMealPlan(id, formData);
+        toast.success('Protocolo actualizado con éxito');
+      } else {
+        await createMealPlan(user.id, selectedPatient, formData);
+        toast.success('Nuevo protocolo creado y asignado');
+      }
+      navigate(patientId ? `/patients/${patientId}` : '/meal-plans');
+    } catch (err) { console.error(err); toast.error('Error al guardar el protocolo'); }
     finally { setSaving(false); }
   };
 
@@ -229,7 +235,7 @@ export function MealPlanForm() {
                     </SelectTrigger>
                     <SelectContent>
                       {patients.map(p => (
-                        <SelectItem key={p.id} value={p.id}>{p.first_name} {p.last_name}</SelectItem>
+                        <SelectItem key={p.id} value={p.id}>{p.nombre_completo}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -272,7 +278,7 @@ export function MealPlanForm() {
                     />
                   </div>
                 ))}
-                <div className={`text-xs font-bold px-2 py-1 rounded-full ${macroTotal === 100 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>
+                <div className={`text-xs font-bold px-2 py-1 rounded-full ${macroTotal === 100 ? 'bg-slate-50 text-senralis-dark' : 'bg-red-50 text-red-600'}`}>
                   Total: {macroTotal}%
                 </div>
               </div>
@@ -292,13 +298,13 @@ export function MealPlanForm() {
                     onClick={() => setActiveDay(day.value)}
                     className={`relative flex flex-col items-center gap-0.5 px-4 py-2.5 text-xs font-bold whitespace-nowrap border-b-2 transition-colors ${
                       activeDay === day.value
-                        ? 'border-emerald-600 text-emerald-700'
+                        ? 'border-senralis-main text-senralis-dark'
                         : 'border-transparent text-slate-500 hover:text-slate-900'
                     }`}
                   >
                     {day.short}
                     {mealCount > 0 && (
-                      <span className={`text-[10px] font-black leading-none ${activeDay === day.value ? 'text-emerald-600' : 'text-slate-400'}`}>
+                      <span className={`text-[10px] font-black leading-none ${activeDay === day.value ? 'text-senralis-main' : 'text-slate-400'}`}>
                         {mealCount}
                       </span>
                     )}
@@ -316,7 +322,7 @@ export function MealPlanForm() {
                 <button
                   type="button"
                   onClick={() => addMeal(activeDay)}
-                  className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-lg transition-colors"
+                  className="flex items-center gap-1.5 text-xs font-bold text-senralis-dark bg-slate-50 hover:bg-slate-100 border border-emerald-200 px-3 py-1.5 rounded-lg transition-colors"
                 >
                   <Plus className="h-3.5 w-3.5" /> Agregar comida
                 </button>
@@ -325,7 +331,7 @@ export function MealPlanForm() {
               {(!activeDayData || activeDayData.meals.length === 0) ? (
                 <div className="text-center py-10 border border-dashed border-slate-200 rounded-xl">
                   <p className="text-sm font-medium text-slate-400">Sin comidas para este día</p>
-                  <button type="button" onClick={() => addMeal(activeDay)} className="mt-2 text-xs font-bold text-emerald-600 hover:text-emerald-700">
+                  <button type="button" onClick={() => addMeal(activeDay)} className="mt-2 text-xs font-bold text-senralis-main hover:text-senralis-dark">
                     + Agregar primera comida
                   </button>
                 </div>
@@ -379,7 +385,7 @@ export function MealPlanForm() {
                                       min="0.5"
                                       value={r.quantity}
                                       onChange={e => updateRecipeQty(activeDay, mealIdx, ri, e.target.value)}
-                                      className="w-14 text-xs font-bold text-center border border-slate-200 rounded-md h-6 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                      className="w-14 text-xs font-bold text-center border border-slate-200 rounded-md h-6 focus:outline-none focus:ring-1 focus:ring-senralis-main"
                                     />
                                     <span className="text-[10px] text-slate-400">porc.</span>
                                     <button type="button" onClick={() => removeRecipeFromMeal(activeDay, mealIdx, ri)} className="text-slate-300 hover:text-red-400 transition-colors">
@@ -425,7 +431,7 @@ export function MealPlanForm() {
                   placeholder="Buscar receta..."
                   value={recipeSearch}
                   onChange={e => setRecipeSearch(e.target.value)}
-                  className="w-full h-7 pl-7 pr-3 text-xs font-medium bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 placeholder:text-slate-400"
+                  className="w-full h-7 pl-7 pr-3 text-xs font-medium bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-senralis-main placeholder:text-slate-400"
                 />
               </div>
             </div>
@@ -454,7 +460,7 @@ export function MealPlanForm() {
                               className={`text-[10px] font-bold px-2 py-0.5 rounded-full border transition-all ${
                                 alreadyAdded
                                   ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'
-                                  : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                                  : 'bg-slate-50 text-senralis-dark border-emerald-200 hover:bg-slate-100'
                               }`}
                             >
                               {alreadyAdded ? '✓' : '+'} {meta?.label ?? `Comida ${idx + 1}`}

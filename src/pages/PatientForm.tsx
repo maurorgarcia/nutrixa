@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { usePatientStore } from '@/stores/patientStore';
@@ -6,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
   Select,
@@ -14,20 +16,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ArrowLeft, Loader2, Save } from 'lucide-react';
+import { ArrowLeft, Loader2, Save, Plus, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { PatientFormData } from '@/types';
+import type { PatientProfileFormData } from '@/types';
 
-const initialFormData: PatientFormData = {
-  first_name: '',
-  last_name: '',
-  email: '',
-  phone: '',
-  birth_date: '',
-  gender: 'male',
-  occupation: '',
-  work_schedule: '',
-  stress_level: '',
+const initialFormData: PatientProfileFormData = {
+  nombre_completo: '',
+  sexo: 'Femenino',
+  fecha_nacimiento: '',
+  edad: '',
+  telefono: '',
+  correo: '',
+  ocupacion: '',
+  nivel_estres: 'Moderado',
+  patologias_preexistentes: [],
+  medicacion_habitual: [],
+  antecedentes_familiares: [],
+  tipo_dieta: '',
+  alimentos_excluidos: [],
 };
 
 interface PatientFormProps {
@@ -46,7 +52,13 @@ export function PatientForm({ onSuccess, onCancel, initialId }: PatientFormProps
   const isEditing = Boolean(id);
   const isInsideSheet = Boolean(onSuccess);
   const [saving, setSaving] = useState(false);
-  const [formData, setFormData] = useState<PatientFormData>(initialFormData);
+  const [formData, setFormData] = useState<PatientProfileFormData>(initialFormData);
+  
+  // Local state for array inputs
+  const [newPathology, setNewPathology] = useState('');
+  const [newMedication, setNewMedication] = useState('');
+  const [newHistory, setNewHistory] = useState('');
+  const [newExcludedFood, setNewExcludedFood] = useState('');
 
   useEffect(() => {
     if (isEditing && id) {
@@ -57,15 +69,19 @@ export function PatientForm({ onSuccess, onCancel, initialId }: PatientFormProps
   useEffect(() => {
     if (isEditing && selectedPatient) {
       setFormData({
-        first_name: selectedPatient.first_name,
-        last_name: selectedPatient.last_name,
-        email: selectedPatient.email || '',
-        phone: selectedPatient.phone || '',
-        birth_date: selectedPatient.birth_date,
-        gender: selectedPatient.gender,
-        occupation: selectedPatient.occupation || '',
-        work_schedule: selectedPatient.work_schedule || '',
-        stress_level: selectedPatient.stress_level || '',
+        nombre_completo: selectedPatient.nombre_completo,
+        sexo: selectedPatient.sexo,
+        fecha_nacimiento: selectedPatient.fecha_nacimiento,
+        edad: selectedPatient.edad.toString(),
+        telefono: selectedPatient.telefono,
+        correo: selectedPatient.correo,
+        ocupacion: selectedPatient.ocupacion,
+        nivel_estres: selectedPatient.nivel_estres,
+        patologias_preexistentes: selectedPatient.patologias_preexistentes || [],
+        medicacion_habitual: selectedPatient.medicacion_habitual || [],
+        antecedentes_familiares: selectedPatient.antecedentes_familiares || [],
+        tipo_dieta: selectedPatient.tipo_dieta || '',
+        alimentos_excluidos: selectedPatient.alimentos_excluidos || [],
       });
     }
   }, [selectedPatient, isEditing]);
@@ -77,15 +93,12 @@ export function PatientForm({ onSuccess, onCancel, initialId }: PatientFormProps
     setSaving(true);
     
     try {
-      const dataToSave = {
-        ...formData,
-        stress_level: (formData.stress_level as string) === 'unspecified' ? '' : formData.stress_level
-      };
-
       if (isEditing && id) {
-        await updatePatient(id, dataToSave as PatientFormData);
+        await updatePatient(id, formData);
+        toast.success('Perfil actualizado correctamente');
       } else {
-        await createPatient(user.id, dataToSave as PatientFormData);
+        await createPatient(user.id, formData);
+        toast.success('Paciente creado con éxito');
       }
       
       if (onSuccess) {
@@ -100,16 +113,25 @@ export function PatientForm({ onSuccess, onCancel, initialId }: PatientFormProps
     }
   };
 
-  const handleChange = (field: keyof PatientFormData, value: string) => {
+  const handleChange = (field: keyof PatientProfileFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleCancelClick = () => {
-    if (onCancel) {
-      onCancel();
-    } else {
-      navigate('/patients');
+  const addItem = (field: 'patologias_preexistentes' | 'medicacion_habitual' | 'antecedentes_familiares' | 'alimentos_excluidos', value: string, setter: (v: string) => void) => {
+    if (value.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        [field]: [...(prev[field] as string[]), value.trim()]
+      }));
+      setter('');
     }
+  };
+
+  const removeItem = (field: 'patologias_preexistentes' | 'medicacion_habitual' | 'antecedentes_familiares' | 'alimentos_excluidos', index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: (prev[field] as string[]).filter((_, i) => i !== index)
+    }));
   };
 
   if (isEditing && loading) {
@@ -121,201 +143,284 @@ export function PatientForm({ onSuccess, onCancel, initialId }: PatientFormProps
   }
 
   return (
-    <div className={cn("space-y-6", isInsideSheet && "pb-20")}>
-      {/* Header - Only show if not inside sheet */}
+    <div className={cn("space-y-6", isInsideSheet && "pb-24")}>
       {!isInsideSheet && (
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => navigate('/patients')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-nutri-forest">
-              {isEditing ? 'Editar Paciente' : 'Nuevo Paciente'}
+            <h1 className="text-3xl font-bold text-slate-900">
+              {isEditing ? 'Editar Perfil' : 'Nuevo Registro de Paciente'}
             </h1>
-            <p className="text-gray-500 mt-1">
-              {isEditing 
-                ? 'Actualiza la información del paciente' 
-                : 'Completa los datos para registrar un nuevo paciente'}
-            </p>
+            <p className="text-slate-500 mt-1">Información estática del perfil del paciente.</p>
           </div>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className={cn("grid grid-cols-1 gap-6", !isInsideSheet && "lg:grid-cols-2")}>
-          {/* Personal Information */}
-          <Card className={isInsideSheet ? "border-0 shadow-none bg-transparent" : ""}>
-            {!isInsideSheet && (
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold">Información Personal</CardTitle>
-              </CardHeader>
-            )}
-            <CardContent className={cn("space-y-4", isInsideSheet && "p-0")}>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="first_name">Nombre *</Label>
-                  <Input
-                    id="first_name"
-                    value={formData.first_name}
-                    onChange={(e) => handleChange('first_name', e.target.value)}
-                    required
-                    placeholder="Juan"
-                    className="h-10 border-zinc-200"
-                  />
+      <form onSubmit={handleSubmit} className="space-y-8">
+        {/* ── SECCIÓN 1: DATOS PERSONALES ── */}
+        <section className="space-y-4">
+          <h2 className="text-sm font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+            <div className="h-px w-8 bg-slate-200" /> Datos Personales
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="nombre_completo">Nombre Completo *</Label>
+              <Input
+                id="nombre_completo"
+                value={formData.nombre_completo}
+                onChange={(e) => handleChange('nombre_completo', e.target.value)}
+                required
+                placeholder="María Agustina Nicoloriche"
+                className="h-11 rounded-xl"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Sexo *</Label>
+              <RadioGroup
+                value={formData.sexo}
+                onValueChange={(value) => handleChange('sexo', value)}
+                className="flex gap-4 p-2 bg-slate-50 rounded-xl border border-slate-100 h-11 items-center px-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="Masculino" id="masc" />
+                  <Label htmlFor="masc" className="cursor-pointer text-sm">M</Label>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="last_name">Apellido *</Label>
-                  <Input
-                    id="last_name"
-                    value={formData.last_name}
-                    onChange={(e) => handleChange('last_name', e.target.value)}
-                    required
-                    placeholder="Pérez"
-                    className="h-10 border-zinc-200"
-                  />
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="Femenino" id="fem" />
+                  <Label htmlFor="fem" className="cursor-pointer text-sm">F</Label>
                 </div>
-              </div>
-
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="Otro" id="otro" />
+                  <Label htmlFor="otro" className="cursor-pointer text-sm">Otro</Label>
+                </div>
+              </RadioGroup>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Correo electrónico</Label>
+                <Label htmlFor="fecha_nacimiento">Fecha de Nacimiento</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => handleChange('email', e.target.value)}
-                  placeholder="paciente@email.com"
-                  className="h-10 border-zinc-200"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="phone">Teléfono</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  value={formData.phone}
-                  onChange={(e) => handleChange('phone', e.target.value)}
-                  placeholder="+54 11 1234-5678"
-                  className="h-10 border-zinc-200"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="birth_date">Fecha de nacimiento *</Label>
-                <Input
-                  id="birth_date"
+                  id="fecha_nacimiento"
                   type="date"
-                  value={formData.birth_date}
-                  onChange={(e) => handleChange('birth_date', e.target.value)}
-                  required
-                  className="h-10 border-zinc-200"
+                  value={formData.fecha_nacimiento}
+                  onChange={(e) => handleChange('fecha_nacimiento', e.target.value)}
+                  className="h-11 rounded-xl"
                 />
               </div>
-
               <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500">Sexo *</Label>
-                <RadioGroup
-                  value={formData.gender}
-                  onValueChange={(value) => handleChange('gender', value as 'male' | 'female' | 'other')}
-                  className="flex gap-4 p-4 bg-zinc-50 rounded-xl border border-zinc-100"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="male" id="male" />
-                    <Label htmlFor="male" className="cursor-pointer text-sm">Masculino</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="female" id="female" />
-                    <Label htmlFor="female" className="cursor-pointer text-sm">Femenino</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="other" id="other" />
-                    <Label htmlFor="other" className="cursor-pointer text-sm">Otro</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Additional Information */}
-          <Card className={isInsideSheet ? "border-0 shadow-none bg-transparent" : ""}>
-            {!isInsideSheet && (
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold">Información Adicional</CardTitle>
-              </CardHeader>
-            )}
-            <CardContent className={cn("space-y-4", isInsideSheet && "p-0")}>
-              <div className="space-y-2">
-                <Label htmlFor="occupation">Ocupación</Label>
+                <Label htmlFor="edad">Edad</Label>
                 <Input
-                  id="occupation"
-                  value={formData.occupation}
-                  onChange={(e) => handleChange('occupation', e.target.value)}
-                  placeholder="Ej: Ingeniero, Estudiante..."
-                  className="h-10 border-zinc-200"
+                  id="edad"
+                  type="number"
+                  value={formData.edad}
+                  onChange={(e) => handleChange('edad', e.target.value)}
+                  className="h-11 rounded-xl"
                 />
               </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="ocupacion">Ocupación</Label>
+              <Input
+                id="ocupacion"
+                value={formData.ocupacion}
+                onChange={(e) => handleChange('ocupacion', e.target.value)}
+                placeholder="Ej: Empleada de atención al público"
+                className="h-11 rounded-xl"
+              />
+            </div>
+          </div>
+        </section>
 
-              <div className="space-y-2">
-                <Label htmlFor="work_schedule">Horario de trabajo</Label>
-                <Input
-                  id="work_schedule"
-                  value={formData.work_schedule}
-                  onChange={(e) => handleChange('work_schedule', e.target.value)}
-                  placeholder="Ej: 9:00 - 18:00, turno rotativo..."
-                  className="h-10 border-zinc-200"
+        {/* ── SECCIÓN 2: CONTACTO Y ESTILO DE VIDA ── */}
+        <section className="space-y-4">
+          <h2 className="text-sm font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+            <div className="h-px w-8 bg-slate-200" /> Contacto y Estilo de Vida
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="telefono">Teléfono</Label>
+              <Input
+                id="telefono"
+                value={formData.telefono}
+                onChange={(e) => handleChange('telefono', e.target.value)}
+                className="h-11 rounded-xl"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="correo">Correo</Label>
+              <Input
+                id="correo"
+                value={formData.correo}
+                onChange={(e) => handleChange('correo', e.target.value)}
+                className="h-11 rounded-xl"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="nivel_estres">Nivel de Estrés</Label>
+              <Select value={formData.nivel_estres} onValueChange={(v) => handleChange('nivel_estres', v)}>
+                <SelectTrigger className="h-11 rounded-xl">
+                  <SelectValue placeholder="Seleccionar" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Bajo">Bajo</SelectItem>
+                  <SelectItem value="Moderado">Moderado</SelectItem>
+                  <SelectItem value="Alto">Alto</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="tipo_dieta">Tipo de Dieta</Label>
+              <Input
+                id="tipo_dieta"
+                value={formData.tipo_dieta}
+                onChange={(e) => handleChange('tipo_dieta', e.target.value)}
+                placeholder="Ej: Vegetariana"
+                className="h-11 rounded-xl"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Alimentos Excluidos</Label>
+              <div className="flex gap-2">
+                <Input 
+                  value={newExcludedFood} 
+                  onChange={e => setNewExcludedFood(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addItem('alimentos_excluidos', newExcludedFood, setNewExcludedFood))}
+                  placeholder="Agregar alimento..."
+                  className="h-10 rounded-lg"
                 />
+                <Button type="button" size="icon" variant="outline" onClick={() => addItem('alimentos_excluidos', newExcludedFood, setNewExcludedFood)}>
+                  <Plus className="h-4 w-4" />
+                </Button>
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="stress_level">Nivel de estrés</Label>
-                <Select
-                  value={formData.stress_level}
-                  onValueChange={(value) => handleChange('stress_level', value)}
-                >
-                  <SelectTrigger className="h-10 border-zinc-200">
-                    <SelectValue placeholder="Seleccionar nivel de estrés" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="unspecified">No especificado</SelectItem>
-                    <SelectItem value="low">Bajo</SelectItem>
-                    <SelectItem value="moderate">Moderado</SelectItem>
-                    <SelectItem value="high">Alto</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {formData.alimentos_excluidos.map((item, idx) => (
+                  <Badge key={idx} variant="secondary" className="pl-2 pr-1 py-1 gap-1 flex items-center bg-slate-100 text-slate-700 rounded-lg border-none">
+                    {item}
+                    <button type="button" onClick={() => removeItem('alimentos_excluidos', idx)} className="hover:text-red-500 transition-colors">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </div>
+        </section>
 
-        {/* Actions - Stick to bottom in Sheet, or normal in Page */}
+        {/* ── SECCIÓN 3: ANTECEDENTES Y SALUD ── */}
+        <section className="space-y-4">
+          <h2 className="text-sm font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+            <div className="h-px w-8 bg-slate-200" /> Antecedentes y Salud
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Patologías */}
+            <div className="space-y-2">
+              <Label>Patologías Preexistentes</Label>
+              <div className="flex gap-2">
+                <Input 
+                  value={newPathology} 
+                  onChange={e => setNewPathology(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addItem('patologias_preexistentes', newPathology, setNewPathology))}
+                  className="h-10 rounded-lg"
+                />
+                <Button type="button" size="icon" variant="outline" onClick={() => addItem('patologias_preexistentes', newPathology, setNewPathology)}>
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {formData.patologias_preexistentes.map((item, idx) => (
+                  <Badge key={idx} variant="secondary" className="pl-2 pr-1 py-1 gap-1 flex items-center bg-red-50 text-red-700 rounded-lg border-none">
+                    {item}
+                    <button type="button" onClick={() => removeItem('patologias_preexistentes', idx)} className="hover:text-red-500">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
+            {/* Medicación */}
+            <div className="space-y-2">
+              <Label>Medicación Habitual</Label>
+              <div className="flex gap-2">
+                <Input 
+                  value={newMedication} 
+                  onChange={e => setNewMedication(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addItem('medicacion_habitual', newMedication, setNewMedication))}
+                  className="h-10 rounded-lg"
+                />
+                <Button type="button" size="icon" variant="outline" onClick={() => addItem('medicacion_habitual', newMedication, setNewMedication)}>
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {formData.medicacion_habitual.map((item, idx) => (
+                  <Badge key={idx} variant="secondary" className="pl-2 pr-1 py-1 gap-1 flex items-center bg-blue-50 text-blue-700 rounded-lg border-none">
+                    {item}
+                    <button type="button" onClick={() => removeItem('medicacion_habitual', idx)} className="hover:text-red-500">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
+            {/* Antecedentes Familiares */}
+            <div className="space-y-2">
+              <Label>Antecedentes Familiares</Label>
+              <div className="flex gap-2">
+                <Input 
+                  value={newHistory} 
+                  onChange={e => setNewHistory(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addItem('antecedentes_familiares', newHistory, setNewHistory))}
+                  className="h-10 rounded-lg"
+                />
+                <Button type="button" size="icon" variant="outline" onClick={() => addItem('antecedentes_familiares', newHistory, setNewHistory)}>
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {formData.antecedentes_familiares.map((item, idx) => (
+                  <Badge key={idx} variant="secondary" className="pl-2 pr-1 py-1 gap-1 flex items-center bg-amber-50 text-amber-700 rounded-lg border-none">
+                    {item}
+                    <button type="button" onClick={() => removeItem('antecedentes_familiares', idx)} className="hover:text-red-500">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── BOTONES DE ACCIÓN ── */}
         <div className={cn(
           "flex justify-end gap-3",
           isInsideSheet 
-            ? "fixed bottom-0 right-0 left-0 p-6 bg-white border-t border-zinc-100 z-10 sm:left-auto sm:w-[450px]" 
-            : "mt-6"
+            ? "fixed bottom-0 right-0 p-6 bg-white border-t border-slate-100 z-50 w-full md:max-w-xl shadow-2xl" 
+            : "mt-12 bg-slate-50 p-6 rounded-2xl"
         )}>
           <Button
             type="button"
             variant="ghost"
-            onClick={handleCancelClick}
-            className="font-semibold text-zinc-500"
+            onClick={onCancel || (() => navigate('/patients'))}
+            className="font-bold text-slate-500 hover:bg-slate-100 h-12 px-8 rounded-xl"
           >
             Cancelar
           </Button>
           <Button
             type="submit"
-            className="bg-zinc-900 hover:bg-zinc-800 text-white font-bold h-10 px-6 rounded-xl"
+            className="bg-slate-900 hover:bg-slate-800 text-white font-black h-12 px-10 rounded-xl shadow-xl shadow-slate-200 transition-all flex items-center gap-2"
             disabled={saving}
           >
-            {saving ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-            ) : (
-              <Save className="h-4 w-4 mr-2" />
-            )}
-            {isEditing ? 'Guardar cambios' : 'Crear paciente'}
+            {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
+            {isEditing ? 'Actualizar Perfil' : 'Crear Registro'}
           </Button>
         </div>
       </form>
     </div>
   );
 }
+

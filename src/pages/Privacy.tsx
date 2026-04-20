@@ -66,7 +66,7 @@ const sections = [
     content: [
       {
         subtitle: '¿Usamos cookies?',
-        text: 'Nutrixa NO utiliza cookies de seguimiento, publicidad ni analítica de terceros. El único almacenamiento que realizamos en su navegador es el token de sesión en localStorage, estrictamente necesario para mantener su sesión iniciada.'
+        text: 'Senralis NO utiliza cookies de seguimiento, publicidad ni analítica de terceros. El único almacenamiento que realizamos en su navegador es el token de sesión en localStorage, estrictamente necesario para mantener su sesión iniciada.'
       },
       {
         subtitle: '¿Necesito aceptar cookies?',
@@ -80,7 +80,7 @@ const sections = [
     content: [
       {
         subtitle: 'Nunca vendemos sus datos:',
-        text: 'Nutrixa no vende, alquila ni cede información personal o clínica a terceros bajo ninguna circunstancia.'
+        text: 'Senralis no vende, alquila ni cede información personal o clínica a terceros bajo ninguna circunstancia.'
       },
       {
         subtitle: 'Proveedores de infraestructura:',
@@ -102,7 +102,7 @@ const sections = [
       },
       {
         subtitle: 'Datos de pacientes:',
-        text: 'El profesional es responsable del tratamiento de los datos de sus pacientes ingresados en la plataforma. Nutrixa actúa como plataforma técnica (encargado del tratamiento) y facilita las herramientas de rectificación y eliminación.'
+        text: 'El profesional es responsable del tratamiento de los datos de sus pacientes ingresados en la plataforma. Senralis actúa como plataforma técnica (encargado del tratamiento) y facilita las herramientas de rectificación y eliminación.'
       },
       {
         subtitle: 'Eliminación de cuenta:',
@@ -116,7 +116,7 @@ const sections = [
     content: [
       {
         subtitle: 'Canal de privacidad:',
-        text: 'Para ejercer sus derechos, reportar una incidencia de seguridad o realizar cualquier consulta sobre el tratamiento de datos, puede contactarnos en: legales@nutrixa.com'
+        text: 'Para ejercer sus derechos, reportar una incidencia de seguridad o realizar cualquier consulta sobre el tratamiento de datos, puede contactarnos en: legales@senralis.com'
       },
       {
         subtitle: 'Autoridad de control:',
@@ -128,29 +128,29 @@ const sections = [
 
 export function Privacy() {
   return (
-    <div className="min-h-screen bg-[#FAFAFA] font-sans">
+    <div className="min-h-screen bg-transparent font-sans">
 
       {/* Header */}
-      <div className="bg-white border-b border-zinc-200/80">
+      <div className="bg-white border-b border-slate-200/80">
         <div className="max-w-3xl mx-auto px-6 py-8">
-          <Link to="/" className="inline-flex items-center gap-2 text-sm font-semibold text-zinc-500 hover:text-nutri-forest transition-colors mb-6 group">
+          <Link to="/" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-senralis-dark transition-colors mb-6 group">
             <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
             Volver al inicio
           </Link>
           <div className="flex items-center gap-3 mb-3">
-            <div className="h-10 w-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center">
-              <Shield className="h-5 w-5 text-nutri-emerald" />
+            <div className="h-10 w-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center">
+              <Shield className="h-5 w-5 text-senralis-main" />
             </div>
-            <span className="text-xs font-bold uppercase tracking-widest text-nutri-emerald">Nutrixa · Legal</span>
+            <span className="text-xs font-bold uppercase tracking-widest text-senralis-main">Senralis · Legal</span>
           </div>
-          <h1 className="text-3xl md:text-4xl font-extrabold text-zinc-900 tracking-tight leading-tight mb-3">
+          <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight mb-3">
             Política de Privacidad
           </h1>
-          <p className="text-zinc-500 font-medium leading-relaxed max-w-2xl">
-            En Nutrixa la privacidad de los profesionales y la de sus pacientes es de máxima prioridad. Este documento describe de forma transparente cómo tratamos la información personal y clínica en nuestra plataforma.
+          <p className="text-slate-500 font-medium leading-relaxed max-w-2xl">
+            En Senralis la privacidad de los profesionales y la de sus pacientes es de máxima prioridad. Este documento describe de forma transparente cómo tratamos la información personal y clínica en nuestra plataforma.
           </p>
-          <p className="text-xs text-zinc-400 font-medium mt-4 border-t border-zinc-100 pt-4">
-            Última actualización: Abril 2026 · Aplica a todos los usuarios de Nutrixa en Latinoamérica
+          <p className="text-xs text-slate-400 font-medium mt-4 border-t border-slate-100 pt-4">
+            Última actualización: Abril 2026 · Aplica a todos los usuarios de Senralis en Latinoamérica
           </p>
         </div>
       </div>
@@ -158,18 +158,18 @@ export function Privacy() {
       {/* Content */}
       <div className="max-w-3xl mx-auto px-6 py-12 space-y-8">
         {sections.map(({ icon: Icon, title, content }, i) => (
-          <div key={i} className="bg-white border border-zinc-200/80 rounded-2xl p-6 md:p-8 shadow-sm">
+          <div key={i} className="bg-white border border-slate-200/80 rounded-2xl p-6 md:p-8 shadow-sm">
             <div className="flex items-center gap-3 mb-6">
-              <div className="h-9 w-9 rounded-xl bg-zinc-50 border border-zinc-100 flex items-center justify-center shrink-0">
-                <Icon className="h-4 w-4 text-zinc-500" />
+              <div className="h-9 w-9 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
+                <Icon className="h-4 w-4 text-slate-500" />
               </div>
-              <h2 className="text-lg font-bold text-zinc-900">{title}</h2>
+              <h2 className="text-lg font-bold text-slate-900">{title}</h2>
             </div>
             <div className="space-y-5">
               {content.map((item, j) => (
                 <div key={j}>
-                  <p className="text-xs font-extrabold uppercase tracking-widest text-nutri-forest mb-1.5">{item.subtitle}</p>
-                  <p className="text-sm font-medium text-zinc-500 leading-relaxed">{item.text}</p>
+                  <p className="text-xs font-extrabold uppercase tracking-widest text-senralis-dark mb-1.5">{item.subtitle}</p>
+                  <p className="text-sm font-medium text-slate-500 leading-relaxed">{item.text}</p>
                 </div>
               ))}
             </div>
@@ -177,18 +177,18 @@ export function Privacy() {
         ))}
 
         {/* Cookie summary callout */}
-        <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-6 flex gap-4">
-          <Cookie className="h-5 w-5 text-nutri-emerald shrink-0 mt-0.5" />
+        <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6 flex gap-4">
+          <Cookie className="h-5 w-5 text-senralis-main shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-bold text-nutri-forest mb-1">Resumen de cookies</p>
-            <p className="text-sm font-medium text-zinc-600 leading-relaxed">
-              Nutrixa <strong>no usa cookies de rastreo ni publicidad</strong>. Solo almacenamos un token de sesión técnico en su navegador para mantenerlo autenticado. No se requiere ningún banner de aceptación de cookies.
+            <p className="text-sm font-bold text-senralis-dark mb-1">Resumen de cookies</p>
+            <p className="text-sm font-medium text-slate-600 leading-relaxed">
+              Senralis <strong>no usa cookies de rastreo ni publicidad</strong>. Solo almacenamos un token de sesión técnico en su navegador para mantenerlo autenticado. No se requiere ningún banner de aceptación de cookies.
             </p>
           </div>
         </div>
 
-        <p className="text-center text-xs text-zinc-400 font-medium pb-8">
-          © {new Date().getFullYear()} Nutrixa · Todos los datos se tratan conforme a la <strong className="text-zinc-500">Ley 25.326</strong> de Protección de Datos Personales (Argentina) y normativas equivalentes de aplicación regional.
+        <p className="text-center text-xs text-slate-400 font-medium pb-8">
+          © {new Date().getFullYear()} Senralis · Todos los datos se tratan conforme a la <strong className="text-slate-500">Ley 25.326</strong> de Protección de Datos Personales (Argentina) y normativas equivalentes de aplicación regional.
         </p>
       </div>
     </div>

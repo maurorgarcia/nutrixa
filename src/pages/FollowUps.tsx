@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { useFollowUpStore } from '@/stores/followUpStore';
 import { usePatientStore } from '@/stores/patientStore';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -41,7 +40,8 @@ import {
   Download,
   Activity,
   History,
-  Target
+  Target,
+  Info
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -77,13 +77,13 @@ export function FollowUps() {
 
   const getPatientName = (patientId: string) => {
     const patient = patients.find(p => p.id === patientId);
-    return patient ? `${patient.first_name} ${patient.last_name}` : 'Paciente no encontrado';
+    return patient ? patient.nombre_completo : 'Paciente no encontrado';
   };
 
   const getInitials = (patientId: string) => {
     const patient = patients.find(p => p.id === patientId);
     if (!patient) return '?';
-    return `${patient.first_name[0]}${patient.last_name[0]}`.toUpperCase();
+    return patient.nombre_completo.substring(0, 2).toUpperCase();
   };
 
   const handleExport = (followUp: FollowUp) => {
@@ -97,108 +97,123 @@ export function FollowUps() {
   };
 
   const stats = [
-    { label: 'Total Controles', value: followUpsWithPatient.length, sub: 'Gestión Acumulada', icon: History, color: 'zinc' },
-    { label: 'Citas esta Semana', value: followUpsWithPatient.filter(fu => {
+    { label: 'Controles Realizados', value: followUpsWithPatient.length, sub: 'Historial total', icon: History, color: 'slate' },
+    { label: 'Agenda Semanal', value: followUpsWithPatient.filter(fu => {
       if (!fu.next_appointment) return false;
       const nextDate = new Date(fu.next_appointment);
       const today = new Date();
       const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
       return nextDate >= today && nextDate <= nextWeek;
-    }).length, sub: 'Agenda Próxima', icon: Calendar, color: 'emerald' },
-    { label: 'Pacientes Únicos', value: new Set(followUpsWithPatient.map(fu => fu.patient_id)).size, sub: 'Fidelización Activa', icon: Target, color: 'blue' },
+    }).length, sub: 'Próximos 7 días', icon: Calendar, color: 'emerald' },
+    { label: 'Fidelización', value: new Set(followUpsWithPatient.map(fu => fu.patient_id)).size, sub: 'Pacientes recurrentes', icon: Target, color: 'blue' },
   ];
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-500 max-w-7xl mx-auto pb-20">
+    <div className="clinical-page space-y-8 max-w-7xl mx-auto">
       
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 pb-8 border-b border-zinc-100">
-        <div className="space-y-1">
-          <h1 className="text-4xl font-black text-zinc-900 tracking-tighter uppercase">Bitácora de Evolución</h1>
-          <p className="text-zinc-500 font-bold text-xs uppercase tracking-widest">Seguimiento clínico y monitoreo de adherencia</p>
+      {/* ── PROFESSIONAL HEADER ── */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2">
+        <div>
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-1">
+            Seguimiento Clínico
+          </h1>
+          <p className="text-slate-500 font-medium text-sm">
+            Monitoreo de evolución, adherencia y parámetros antropométricos.
+          </p>
         </div>
-        <Button onClick={() => setIsAddingFollowUp(true)} className="h-12 px-8 rounded-2xl bg-zinc-900 text-white font-black uppercase tracking-widest text-[10px] shadow-2xl flex items-center gap-3 active:scale-95 transition-all">
-          <Plus className="h-4 w-4" /> Registrar Progreso
+        <Button
+          onClick={() => setIsAddingFollowUp(true)}
+          className="h-11 px-6 rounded-xl bg-[#09090b] text-white font-semibold hover:bg-[#18181b] shadow-lg shadow-slate-200 transition-all flex items-center gap-2"
+        >
+          <Plus className="h-4 w-4" /> Registrar Control
         </Button>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      {/* ── STATS GRID ── */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {stats.map((s, i) => (
-          <Card key={i} className="border-none shadow-sm rounded-3xl overflow-hidden bg-white border border-zinc-100/50">
-            <CardContent className="p-6 flex items-center gap-5">
-               <div className={cn("h-12 w-12 rounded-2xl flex items-center justify-center border", 
-                 s.color === 'emerald' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                 s.color === 'blue' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-zinc-50 text-zinc-500 border-zinc-100'
-               )}>
-                  <s.icon className="h-6 w-6" />
-               </div>
-               <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-0.5">{s.label}</p>
-                  <p className="text-2xl font-black text-zinc-900 tracking-tighter leading-none">{s.value}</p>
-                  <p className="text-[9px] font-bold text-zinc-400 uppercase mt-1.5">{s.sub}</p>
-               </div>
-            </CardContent>
-          </Card>
+          <div key={i} className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm flex items-center gap-5">
+             <div className={cn("h-12 w-12 rounded-xl flex items-center justify-center border", 
+               s.color === 'emerald' ? 'bg-slate-50 text-senralis-main border-slate-100' :
+               s.color === 'blue' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-slate-50 text-slate-500 border-slate-100'
+             )}>
+                <s.icon className="h-6 w-6" />
+             </div>
+             <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-0.5">{s.label}</p>
+                <div className="flex items-baseline gap-2">
+                   <p className="text-2xl font-extrabold text-slate-900 leading-none">{s.value}</p>
+                   <p className="text-[10px] font-bold text-slate-500 uppercase">{s.sub}</p>
+                </div>
+             </div>
+          </div>
         ))}
       </div>
 
-      {/* Follow Ups List */}
+      {/* ── FOLLOW UPS LIST ── */}
       {loading ? (
-        <div className="flex justify-center py-24">
-          <Loader2 className="h-10 w-10 animate-spin text-zinc-100" />
+        <div className="flex flex-col items-center justify-center py-40 gap-4">
+          <Loader2 className="h-10 w-10 text-senralis-main animate-spin" />
+          <p className="text-sm font-medium text-slate-500">Cargando registros...</p>
         </div>
       ) : followUpsWithPatient.length === 0 ? (
-        <div className="py-32 text-center bg-white rounded-[3rem] border border-zinc-100 shadow-sm">
-           <Activity className="h-16 w-16 text-zinc-100 mx-auto mb-6" />
-           <h3 className="text-xl font-black text-zinc-900 tracking-tighter uppercase mb-2">Sin registros de evolución</h3>
-           <p className="text-zinc-400 max-w-sm mx-auto text-xs font-bold uppercase tracking-widest mb-10 leading-relaxed">Comenzá registrando el peso y las observaciones clínicas para ver la curva de progreso.</p>
-           <Button onClick={() => setIsAddingFollowUp(true)} className="bg-zinc-900 text-white font-black uppercase tracking-widest h-12 px-10 rounded-2xl text-[10px] shadow-xl">
-             Registrar Primer Control
-           </Button>
+        <div className="py-24 text-center bg-slate-50/50 rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center">
+          <div className="h-16 w-16 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm border border-slate-100 text-slate-300">
+            <Activity className="h-8 w-8" />
+          </div>
+          <h3 className="text-lg font-bold text-slate-800">Sin registros de evolución</h3>
+          <p className="text-slate-500 text-sm mt-1 max-w-xs mx-auto mb-6">
+            Registrá la evolución de tus pacientes para ver sus curvas de progreso.
+          </p>
+          <Button
+            onClick={() => setIsAddingFollowUp(true)}
+            className="h-10 px-6 rounded-lg bg-slate-900 text-white font-bold text-xs"
+          >
+            Nuevo Registro
+          </Button>
         </div>
       ) : (
-        <div className="grid gap-4">
+        <div className="space-y-4">
           {followUpsWithPatient.map((followUp) => (
-            <Card key={followUp.id} className="group border-zinc-100 shadow-sm rounded-[2rem] overflow-hidden hover:shadow-xl transition-all duration-500 bg-white hover:border-zinc-200">
-              <CardContent className="p-8">
+            <div key={followUp.id} className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all group">
+              <div className="p-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
-                  <div className="flex items-center gap-6">
-                    <Avatar className="h-16 w-16 border-4 border-zinc-50 shadow-sm ring-1 ring-zinc-100">
-                      <AvatarFallback className="bg-zinc-900 text-white font-black uppercase text-xl">
+                  <div className="flex items-center gap-4">
+                    <Avatar className="h-14 w-14 rounded-xl border border-slate-200">
+                      <AvatarFallback className="bg-slate-900 text-white font-bold text-lg rounded-none">
                         {getInitials(followUp.patient_id)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
                       <div className="flex items-center gap-3">
-                         <p className="text-xl font-black text-zinc-900 tracking-tighter uppercase group-hover:text-emerald-700 transition-colors">
+                         <h3 className="text-lg font-bold text-slate-900 group-hover:text-senralis-dark transition-colors">
                            {getPatientName(followUp.patient_id)}
-                         </p>
+                         </h3>
                          <Badge variant="outline" className={cn(
-                           "rounded-lg h-6 px-3 text-[9px] font-black uppercase tracking-widest border",
-                           followUp.adherence === 'excellent' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 
-                           followUp.adherence === 'good' ? 'bg-blue-50 border-blue-100 text-blue-700' : 'bg-slate-50 border-slate-100 text-slate-500'
+                           "rounded-md border-none text-[9px] font-extrabold uppercase px-1.5",
+                           followUp.adherence === 'excellent' ? 'bg-slate-100 text-senralis-dark' : 
+                           followUp.adherence === 'good' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'
                          )}>
-                            {followUp.adherence || 'Sin adherencia'}
+                            {followUp.adherence || 'Pte'}
                          </Badge>
                       </div>
-                      <p className="text-xs font-black text-zinc-400 uppercase tracking-widest mt-1 flex items-center gap-2">
-                        <Calendar className="h-3 w-3" /> {format(new Date(followUp.date), "dd MMMM, yyyy", { locale: es })}
+                      <p className="text-xs font-semibold text-slate-400 mt-0.5 flex items-center gap-1.5">
+                        <Calendar className="h-3 w-3" /> {format(new Date(followUp.date), "dd 'de' MMMM, yyyy", { locale: es })}
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex flex-col md:flex-row md:items-center gap-8 md:gap-12 pl-22 md:pl-0">
+                  <div className="flex items-center gap-8 lg:gap-16">
                     <div className="text-center">
-                       <p className="text-[9px] font-black text-zinc-300 uppercase tracking-widest leading-none mb-2">Peso Actual</p>
-                       <p className="text-3xl font-black text-zinc-900 tracking-tighter leading-none">{followUp.weight} <span className="text-[10px] uppercase text-zinc-400">kg</span></p>
+                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Peso</p>
+                       <p className="text-2xl font-extrabold text-slate-900 leading-none">{followUp.weight} <span className="text-[10px] font-bold text-slate-400 uppercase">kg</span></p>
                     </div>
 
                     {followUp.next_appointment && (
-                      <div className="text-center hidden lg:block bg-zinc-50 px-6 py-3 rounded-2xl border border-zinc-100">
-                        <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1 underline underline-offset-4 decoration-emerald-500/30">Próximo Turno</p>
-                        <p className="text-sm font-black text-zinc-900 uppercase">
-                          {format(new Date(followUp.next_appointment), "dd MMM", { locale: es })}
+                      <div className="text-center hidden lg:block bg-slate-50 px-4 py-2 rounded-lg border border-slate-100">
+                        <p className="text-[9px] font-bold text-slate-400 uppercase mb-0.5">Siguiente Turno</p>
+                        <p className="text-xs font-bold text-slate-900 uppercase">
+                          {format(new Date(followUp.next_appointment), "dd 'de' MMM", { locale: es })}
                         </p>
                       </div>
                     )}
@@ -206,29 +221,29 @@ export function FollowUps() {
                     <div className="flex items-center gap-2">
                        <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-12 w-12 rounded-2xl border border-zinc-100 hover:bg-zinc-50 text-zinc-400 hover:text-zinc-900 transition-all opacity-0 group-hover:opacity-100">
+                            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-lg text-slate-300 hover:bg-slate-100 hover:text-slate-600">
                               <MoreVertical className="h-5 w-5" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-56 p-2 rounded-2xl border-zinc-100 shadow-2xl">
-                            <DropdownMenuItem onClick={() => { setSelectedFollowUpId(followUp.id); setIsAddingFollowUp(true); }} className="h-11 rounded-xl font-bold">
-                              <Edit className="h-4 w-4 mr-3" /> Editar Registro
+                          <DropdownMenuContent align="end" className="w-52 p-1 rounded-xl border-slate-200 shadow-xl font-sans">
+                            <DropdownMenuItem onClick={() => { setSelectedFollowUpId(followUp.id); setIsAddingFollowUp(true); }} className="rounded-lg font-bold py-2.5 text-slate-600 cursor-pointer">
+                              <Edit className="h-4 w-4 mr-2" /> Editar Registro
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleExport(followUp)} className="h-11 rounded-xl font-bold">
-                              <Download className="h-4 w-4 mr-3" /> Exportar Reporte
+                            <DropdownMenuItem onClick={() => handleExport(followUp)} className="rounded-lg font-bold py-2.5 text-slate-600 cursor-pointer">
+                              <Download className="h-4 w-4 mr-2" /> Exportar Reporte
                             </DropdownMenuItem>
                             <DropdownMenuItem 
-                              className="h-11 rounded-xl text-red-600 font-bold focus:bg-red-50 focus:text-red-700"
+                              className="rounded-lg font-bold py-2.5 text-red-600 focus:text-red-700 focus:bg-red-50 cursor-pointer"
                               onClick={() => {
                                 setFollowUpToDelete(followUp);
                                 setDeleteDialogOpen(true);
                               }}
                             >
-                              <Trash2 className="h-4 w-4 mr-3" /> Eliminar permanentemente
+                              <Trash2 className="h-4 w-4 mr-2" /> Eliminar
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                        </DropdownMenu>
-                       <Button variant="ghost" size="icon" className="h-12 w-12 rounded-2xl border border-zinc-100 hover:bg-zinc-50 text-zinc-400 group-hover:text-zinc-900 transition-all sm:hidden" onClick={() => navigate(`/patients/${followUp.patient_id}`)}>
+                       <Button variant="ghost" size="icon" className="h-10 w-10 lg:hidden rounded-lg border border-slate-100 text-slate-300 group-hover:text-slate-600" onClick={() => navigate(`/patients/${followUp.patient_id}`)}>
                           <ChevronRight className="h-5 w-5" />
                        </Button>
                     </div>
@@ -236,56 +251,60 @@ export function FollowUps() {
                 </div>
 
                 {(followUp.symptoms?.length > 0 || followUp.concerns?.length > 0 || followUp.notes) && (
-                  <div className="mt-8 pt-8 border-t border-zinc-50 grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="mt-6 pt-6 border-t border-slate-50 flex flex-col md:flex-row justify-between gap-6">
                     <div className="flex flex-wrap gap-2">
                        {followUp.symptoms?.map((s, i) => (
-                         <span key={i} className="px-3 py-1 bg-red-50 text-red-700 text-[9px] font-black uppercase tracking-widest border border-red-100 rounded-lg">{s}</span>
+                         <Badge key={i} variant="outline" className="bg-red-50 text-red-700 text-[9px] font-bold uppercase border-red-100 rounded-md">{s}</Badge>
                        ))}
                        {followUp.concerns?.map((c, i) => (
-                         <span key={i} className="px-3 py-1 bg-amber-50 text-amber-700 text-[9px] font-black uppercase tracking-widest border border-amber-100 rounded-lg">{c}</span>
+                         <Badge key={i} variant="outline" className="bg-blue-50 text-blue-700 text-[9px] font-bold uppercase border-blue-100 rounded-md">{c}</Badge>
                        ))}
                     </div>
                     {followUp.notes && (
-                      <p className="text-xs font-bold text-zinc-400 leading-relaxed italic border-l-2 border-zinc-100 pl-4">
-                        "{followUp.notes}"
-                      </p>
+                      <div className="flex items-start gap-2 max-w-md">
+                        <Info className="h-3.5 w-3.5 text-slate-300 mt-0.5 shrink-0" />
+                        <p className="text-xs font-semibold text-slate-500 leading-relaxed italic">
+                          {followUp.notes}
+                        </p>
+                      </div>
                     )}
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ))}
         </div>
       )}
 
-      {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent className="rounded-3xl border-none p-10">
+        <AlertDialogContent className="rounded-2xl border-slate-200 p-8 shadow-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-2xl font-black text-zinc-900 tracking-tighter uppercase">¿Eliminar control?</AlertDialogTitle>
-            <AlertDialogDescription className="text-zinc-500 font-medium text-base leading-relaxed">
-              Estás a punto de borrar definitivamente este registro clinico de <strong>{followUpToDelete ? getPatientName(followUpToDelete.patient_id) : ''}</strong>. Esta acción romperá la continuidad histórica de su peso.
+            <AlertDialogTitle className="text-xl font-bold text-slate-900 mb-2">¿Eliminar registro de evolución?</AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-500 font-medium leading-relaxed">
+              Borrarás el seguimiento clínico de <strong>{followUpToDelete ? getPatientName(followUpToDelete.patient_id) : ''}</strong> correspondiente a esta fecha. Esta acción no se puede deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="mt-8 gap-3">
-            <AlertDialogCancel className="h-12 rounded-2xl font-black uppercase text-[10px] tracking-widest border-zinc-200">Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="h-12 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-black uppercase text-[10px] tracking-widest shadow-xl">
-              Eliminar Definitivamente
-            </AlertDialogAction>
+          <AlertDialogFooter className="mt-8 gap-3 sm:gap-0">
+            <AlertDialogCancel className="rounded-xl border-slate-200 h-11 px-6 font-bold text-slate-500 hover:bg-slate-50 shadow-none">Descartar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="rounded-xl bg-red-600 text-white h-11 px-6 font-bold hover:bg-red-700 shadow-lg shadow-red-100 transition-all">Confirmar Baja</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Sheet for Adding/Editing Follow Up */}
       <Sheet open={isAddingFollowUp} onOpenChange={(v) => { setIsAddingFollowUp(v); if(!v) setSelectedFollowUpId(null); }}>
-        <SheetContent className="sm:max-w-[450px] p-0 overflow-hidden border-l border-zinc-100 shadow-2xl flex flex-col">
-          <SheetHeader className="p-8 border-b border-zinc-50 bg-zinc-50/50 shrink-0 text-left">
-            <SheetTitle className="text-2xl font-black text-zinc-900 tracking-tighter uppercase">{selectedFollowUpId ? 'Editar Evolución' : 'Ficha de Progreso'}</SheetTitle>
-            <SheetDescription className="font-bold text-zinc-400 text-[10px] uppercase tracking-widest mt-1">
-              Registro manual de parámetros clínico-nutricionales
+        <SheetContent className="sm:max-w-xl p-0 overflow-hidden border-l border-slate-200 shadow-2xl flex flex-col bg-white">
+          <SheetHeader className="p-8 border-b border-slate-100 bg-slate-50/50 shrink-0 text-left">
+            <Badge variant="outline" className="w-fit bg-slate-50 text-senralis-dark border-none px-2 rounded-md font-bold text-[10px] uppercase mb-4">
+              {selectedFollowUpId ? 'Actualización Clínica' : 'Alta de Seguimiento'}
+            </Badge>
+            <SheetTitle className="text-2xl font-extrabold text-slate-900 tracking-tight">
+              {selectedFollowUpId ? 'Modificar Evolución' : 'Registrar Nuevo Progreso'}
+            </SheetTitle>
+            <SheetDescription className="text-sm font-medium text-slate-500 mt-1">
+              Completá los parámetros antropométricos y observaciones de la consulta.
             </SheetDescription>
           </SheetHeader>
-          <div className="flex-1 overflow-y-auto p-8">
+          <div className="flex-1 overflow-y-auto p-8 no-scrollbar">
             <FollowUpForm 
               initialId={selectedFollowUpId || undefined}
               onSuccess={() => { setIsAddingFollowUp(false); setSelectedFollowUpId(null); if(user) fetchFollowUps(user.id); }}

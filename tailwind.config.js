@@ -5,8 +5,8 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-        display: ['Outfit', 'sans-serif'],
+        sans: ['Plus Jakarta Sans', 'sans-serif'],
+        display: ['Space Grotesk', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -14,13 +14,11 @@ module.exports = {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
-        nutri: {
-          lime: '#A5CC3D',
-          green: '#5DB347',
-          emerald: '#0E9D5A',
-          forest: '#0E6340',
-          orange: '#F49B2E',
-          orangeAlt: '#F4952F',
+        senralis: {
+          main: '#1D8D8E',
+          dark: '#0B3855',
+          mid: '#0A4D60',
+          soft: '#1D8D8E',
         },
         primary: {
           DEFAULT: "hsl(var(--primary))",

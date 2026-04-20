@@ -1,0 +1,4 @@
+-- OBSOLETO: el proyecto unificó el dueño como user_id en todas las tablas.
+-- Si tu tabla payments todavía tiene nutritionist_id, ejecutá:
+--   supabase/migrations/unify_owner_column_to_user_id.sql
+-- (renombra nutritionist_id → user_id en payments y appointments).

@@ -1,11 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { usePatientStore } from '@/stores/patientStore';
-import { useAnamnesisStore } from '@/stores/anamnesisStore';
+import { useConsultationStore } from '@/stores/consultationStore';
 import { useMealPlanStore } from '@/stores/mealPlanStore';
-import { useFollowUpStore } from '@/stores/followUpStore';
 import { usePaymentStore } from '@/stores/paymentStore';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -18,49 +16,24 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { 
-  ArrowLeft, 
-  Edit, 
-  FileText, 
-  TrendingUp, 
-  Utensils,
-  Plus,
-  Download,
-  Loader2,
-  Mail,
-  Phone,
-  Briefcase,
-  Clock,
-  Activity,
-  DollarSign,
-  AlertTriangle,
-  CheckCircle2,
-  ExternalLink,
-  MoreVertical,
-  ShieldAlert,
-  Zap,
-  Target,
-  Calendar,
-  ChevronRight,
-  Eye,
-  Trash2
+  ArrowLeft, Edit, Activity, Plus, Loader2,
+  Mail, Phone, Clock, DollarSign, Trash2, ArrowRight, User, Zap
 } from 'lucide-react';
-import { calculateAge, getBMICategory } from '@/utils/calculations';
-import { exportAnamnesisToPDF } from '@/utils/pdfExport';
+import { getBMICategory } from '@/utils/calculations';
 import { PatientForm } from './PatientForm';
 import { FollowUpForm } from './FollowUpForm';
 import { PaymentForm } from './PaymentForm';
-import { format } from 'date-fns';
+import { format, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import type { Anamnesis } from '@/types';
+import { toast } from 'sonner';
 
 export function PatientDetail() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const { selectedPatient, getPatientById, loading: patientLoading } = usePatientStore();
-  const { anamnesisList, fetchAnamnesisByPatient } = useAnamnesisStore();
+  const { consultations, fetchConsultationsByPatient } = useConsultationStore();
   const { mealPlans, fetchMealPlansByPatient } = useMealPlanStore();
-  const { followUps, fetchFollowUpsByPatient } = useFollowUpStore();
   const { payments, fetchPaymentsByPatient, deletePayment } = usePaymentStore();
 
   const [activeTab, setActiveTab] = useState('overview');
@@ -72,640 +45,347 @@ export function PatientDetail() {
   useEffect(() => {
     if (id) {
       getPatientById(id);
-      fetchAnamnesisByPatient(id);
+      fetchConsultationsByPatient(id);
       fetchMealPlansByPatient(id);
-      fetchFollowUpsByPatient(id);
       fetchPaymentsByPatient(id);
     }
   }, [id]);
 
-  const getInitials = (firstName: string, lastName: string) => {
-    return `${firstName[0]}${lastName[0]}`.toUpperCase();
-  };
+  const getInitials = (name: string) => name.substring(0, 2).toUpperCase();
 
-  const getStressLevelBadge = (level: string | null) => {
+  const getStressLevelBadge = useCallback((level: string | null) => {
     if (!level) return null;
-    const configs = {
-      low: { label: 'Bajo', className: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
-      moderate: { label: 'Moderado', className: 'bg-amber-50 text-amber-700 border-amber-100' },
-      high: { label: 'Alto', className: 'bg-red-50 text-red-700 border-red-100' },
+    const configs: Record<string, string> = {
+      'Bajo': 'bg-slate-50 text-slate-500 border-slate-100',
+      'Moderado': 'bg-amber-50 text-amber-600 border-amber-100',
+      'Alto': 'bg-rose-50 text-rose-600 border-rose-100',
     };
-    const config = configs[level as keyof typeof configs] || configs.moderate;
-    return <Badge variant="secondary" className={cn("rounded-lg font-black text-[10px] uppercase tracking-wider", config.className)}>{config.label}</Badge>;
-  };
-
-  const onEditSuccess = () => {
-    setIsEditingPatient(false);
-    if (id) getPatientById(id);
-  };
-
-  const handleExportAnamnesis = (anamnesis: Anamnesis) => {
-    if (selectedPatient) exportAnamnesisToPDF(selectedPatient, anamnesis);
-  };
+    const cls = configs[level] || configs['Moderado'];
+    return <Badge variant="outline" className={cn("text-[10px] font-bold uppercase tracking-tight border-none", cls)}>{level}</Badge>;
+  }, []);
 
   if (patientLoading || !selectedPatient) {
-    return <div className="flex justify-center py-24"><Loader2 className="h-8 w-8 animate-spin text-zinc-200" /></div>;
+    return (
+      <div className="flex items-center justify-center p-20">
+        <Loader2 className="h-8 w-8 animate-spin text-senralis-main" />
+      </div>
+    );
   }
 
-  const latestAnamnesis = anamnesisList[0];
+  const latestConsultation = consultations[0];
   const activeMealPlan = mealPlans.find(mp => mp.is_active);
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 pb-6 border-b border-zinc-200">
-        <div className="flex items-center gap-5">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/patients')} className="rounded-xl h-10 w-10 hover:bg-zinc-50 border border-transparent hover:border-zinc-100">
-            <ArrowLeft className="h-5 w-5 text-zinc-400" />
+    <div className="clinical-page animate-in fade-in duration-500 space-y-8 max-w-full">
+      
+      {/* ── HEADER CLINICO ── */}
+      <div className="clinical-panel p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
+        <div className="flex items-center gap-6 w-full md:w-auto">
+          <Button variant="outline" size="icon" onClick={() => navigate('/patients')} className="h-10 w-10 border-slate-200">
+            <ArrowLeft className="h-4 w-4" />
           </Button>
-          <div className="flex items-center gap-5">
-            <Avatar className="h-20 w-20 border-4 border-white shadow-xl ring-1 ring-zinc-100 shrink-0">
-              <AvatarFallback className="bg-zinc-900 text-white text-2xl font-black uppercase">
-                {getInitials(selectedPatient.first_name, selectedPatient.last_name)}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-3xl font-black text-zinc-900 tracking-tight">
-                  {selectedPatient.first_name} {selectedPatient.last_name}
-                </h1>
-                {selectedPatient.email && <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-100 uppercase text-[9px] font-black h-5 px-2">Activo</Badge>}
-              </div>
-              <div className="flex flex-wrap items-center gap-3 mt-2">
-                <span className="text-xs font-black text-zinc-400 uppercase tracking-widest bg-zinc-50 px-2 py-0.5 rounded border border-zinc-100 flex items-center gap-2">
-                  {calculateAge(selectedPatient.birth_date)} años <span className="opacity-40">/</span> {selectedPatient.gender === 'male' ? 'Masc' : selectedPatient.gender === 'female' ? 'Fem' : 'Otro'}
-                </span>
-                {getStressLevelBadge(selectedPatient.stress_level)}
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Desde {format(new Date(selectedPatient.created_at), 'MMMM yyyy', { locale: es })}</span>
-              </div>
-            </div>
+          <div className="flex items-center gap-4">
+             <Avatar className="h-14 w-14 rounded-xl border border-slate-100 ring-4 ring-slate-50">
+                <AvatarFallback className="bg-slate-900 text-white font-bold text-sm uppercase">{getInitials(selectedPatient.nombre_completo)}</AvatarFallback>
+             </Avatar>
+             <div>
+                <h1 className="text-2xl font-bold text-slate-900 tracking-tight leading-none mb-2">{selectedPatient.nombre_completo}</h1>
+                <div className="flex items-center gap-3">
+                   <p className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5 leading-none">
+                      <User className="w-3.5 h-3.5" /> {selectedPatient.edad} AÑOS · {selectedPatient.sexo === 'M' || selectedPatient.sexo === 'Masculino' ? 'Masculino' : selectedPatient.sexo === 'F' || selectedPatient.sexo === 'Femenino' ? 'Femenino' : 'Otro'}
+                   </p>
+                   {getStressLevelBadge(selectedPatient.nivel_estres)}
+                </div>
+             </div>
           </div>
         </div>
-        <div className="flex gap-2 self-center md:self-auto">
-          <Button 
-            variant="outline" 
-            onClick={() => setIsEditingPatient(true)}
-            className="rounded-xl font-black text-[10px] uppercase tracking-widest border-zinc-200 h-10 px-6 shadow-sm active:scale-95 transition-all bg-white hover:bg-zinc-50"
-          >
-            <Edit className="h-3.5 w-3.5 mr-2" /> Editar Perfil
+        <div className="flex items-center gap-3 shrink-0">
+          <Button variant="outline" onClick={() => setIsEditingPatient(true)} className="gap-2">
+            <Edit className="h-4 w-4" /> Editar Perfil
           </Button>
-          <Button 
-            className="rounded-xl font-black text-[10px] uppercase tracking-widest bg-zinc-900 text-white h-10 px-6 shadow-xl active:scale-95 transition-all flex items-center gap-2"
-          >
-            <Plus className="h-3.5 w-3.5" /> Nueva Cita
+          <Button className="bg-slate-900 hover:bg-slate-800 gap-2" onClick={() => setIsAddingFollowUp(true)}>
+            <Plus className="h-4 w-4" /> Nueva Evolución
           </Button>
         </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="mb-8 overflow-x-auto pb-1 no-scrollbar sticky top-0 z-10 bg-zinc-50/80 backdrop-blur-md pt-2">
-          <TabsList className="bg-zinc-200/50 p-1.5 rounded-2xl w-auto inline-flex border border-zinc-200/50 shadow-inner">
-            <TabsTrigger value="overview" className="rounded-xl font-black text-[10px] uppercase tracking-widest px-8 h-10 data-[state=active]:bg-white data-[state=active]:text-zinc-900 data-[state=active]:shadow-lg">Resumen</TabsTrigger>
-            <TabsTrigger value="anamnesis" className="rounded-xl font-black text-[10px] uppercase tracking-widest px-8 h-10 data-[state=active]:bg-white data-[state=active]:text-zinc-900 data-[state=active]:shadow-lg">Anamnesis</TabsTrigger>
-            <TabsTrigger value="meal-plans" className="rounded-xl font-black text-[10px] uppercase tracking-widest px-8 h-10 data-[state=active]:bg-white data-[state=active]:text-zinc-900 data-[state=active]:shadow-lg">Planes</TabsTrigger>
-            <TabsTrigger value="follow-ups" className="rounded-xl font-black text-[10px] uppercase tracking-widest px-8 h-10 data-[state=active]:bg-white data-[state=active]:text-zinc-900 data-[state=active]:shadow-lg">Seguimiento</TabsTrigger>
-            <TabsTrigger value="payments" className="rounded-xl font-black text-[10px] uppercase tracking-widest px-8 h-10 data-[state=active]:bg-white data-[state=active]:text-zinc-900 data-[state=active]:shadow-lg flex items-center gap-2">
-              <DollarSign className="h-3 w-3" /> Cobros
+        <TabsList className="bg-slate-100/50 p-1 rounded-xl h-auto flex mb-8 gap-1 max-w-2xl">
+          {[
+            { v: 'overview', l: 'Epicrisis' },
+            { v: 'meal-plans', l: 'Tratamiento' },
+            { v: 'follow-ups', l: 'Evolución' },
+            { v: 'payments', l: 'Honorarios' }
+          ].map(t => (
+            <TabsTrigger key={t.v} value={t.v} className="flex-1 rounded-lg py-2.5 font-bold text-xs uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm">
+              {t.l}
             </TabsTrigger>
-          </TabsList>
-        </div>
+          ))}
+        </TabsList>
 
-        {/* ── OVERVIEW TAB ── */}
+        {/* ── OVERVIEW ── */}
         <TabsContent value="overview" className="space-y-6 outline-none">
-           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                {[
-                 { icon: Mail, label: 'Email', value: selectedPatient.email, color: 'text-blue-600 bg-blue-50 border-blue-100' },
-                 { icon: Phone, label: 'Teléfono', value: selectedPatient.phone, color: 'text-emerald-600 bg-emerald-50 border-emerald-100' },
-                 { icon: Briefcase, label: 'Ocupación', value: selectedPatient.occupation, color: 'text-amber-600 bg-amber-50 border-amber-100' },
-                 { icon: Clock, label: 'Disponibilidad', value: selectedPatient.work_schedule, color: 'text-purple-600 bg-purple-50 border-purple-100' }
+                 { icon: Mail, label: 'Email Institucional', value: selectedPatient.correo },
+                 { icon: Phone, label: 'Contacto Directo', value: selectedPatient.telefono },
+                 { icon: Clock, label: 'Fecha de Alta', value: format(new Date(selectedPatient.created_at), 'dd/MM/yy') },
+                 { icon: Activity, label: 'IMC de Control', value: latestConsultation?.imc || '--' }
                ].map((item, i) => (
-                 <Card key={i} className="border-zinc-100 shadow-none rounded-2xl overflow-hidden hover:border-zinc-200 transition-colors">
-                    <CardContent className="p-4 flex items-center gap-4">
-                       <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border", item.color)}>
-                         <item.icon className="h-5 w-5" />
-                       </div>
-                       <div className="min-w-0">
-                          <p className="text-[10px] uppercase font-black tracking-widest text-zinc-400 mb-0.5">{item.label}</p>
-                          <p className="text-sm font-bold text-zinc-900 truncate">{item.value || '-'}</p>
-                       </div>
-                    </CardContent>
-                 </Card>
+                 <div key={i} className="clinical-panel p-5">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">{item.label}</p>
+                    <p className="text-sm font-bold text-slate-800 truncate">{item.value || '-'}</p>
+                 </div>
                ))}
-          </div>
+           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-             {/* Estado Clínico */}
-             <Card className="lg:col-span-2 border-zinc-100 shadow-sm rounded-3xl overflow-hidden bg-white">
-                <CardHeader className="flex flex-row items-center justify-between border-b border-zinc-50 bg-zinc-50/30 px-8 py-5">
-                  <div>
-                    <CardTitle className="text-sm font-black uppercase tracking-widest text-zinc-900 flex items-center gap-2">
-                       <ShieldAlert className="h-4 w-4 text-emerald-600" /> Estado Clínico
-                    </CardTitle>
-                    <p className="text-xs font-bold text-zinc-400 mt-1 uppercase tracking-tighter">Resumen de última anamnesis</p>
-                  </div>
-                  {latestAnamnesis && (
-                    <Button variant="ghost" size="sm" className="h-9 rounded-xl font-bold text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 border border-emerald-100" onClick={() => handleExportAnamnesis(latestAnamnesis)}>
-                      <Download className="h-4 w-4 mr-2" /> PDF Reporte
-                    </Button>
-                  )}
-                </CardHeader>
-                <CardContent className="p-8">
-                  {latestAnamnesis ? (
-                    <div className="space-y-10">
-                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                          <div className="text-center p-6 bg-zinc-50 rounded-3xl border border-zinc-100/60 shadow-inner">
-                             <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-2">IMC Actual</p>
-                             <p className="text-4xl font-black text-zinc-900 tracking-tighter">{latestAnamnesis.anthropometric_data.bmi}</p>
-                             <p className={cn("text-[11px] font-black uppercase mt-2 px-3 py-1 rounded-full border inline-block", 
-                               getBMICategory(latestAnamnesis.anthropometric_data.bmi) === 'Normal' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-amber-50 border-amber-100 text-amber-700'
-                             )}>
-                               {getBMICategory(latestAnamnesis.anthropometric_data.bmi)}
-                             </p>
+           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 clinical-panel overflow-hidden">
+                 <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Evaluación Clínica Reciente</h3>
+                 </div>
+                 <div className="p-8 space-y-8">
+                    {/* Antecedentes y Salud (Siempre visibles) */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pb-8 border-b border-slate-100">
+                       <div className="space-y-3">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Patologías</p>
+                          <div className="flex flex-wrap gap-2">
+                             {selectedPatient.patologias_preexistentes?.length > 0 ? selectedPatient.patologias_preexistentes.map((p: string) => (
+                               <Badge key={p} variant="outline" className="text-[10px] font-bold uppercase tracking-tight bg-rose-50 text-rose-600 border-rose-100">{p}</Badge>
+                             )) : <span className="text-xs text-slate-300 italic">Ninguna</span>}
                           </div>
-                          <div className="md:col-span-2 space-y-6">
-                             <div className="bg-zinc-50/50 p-6 rounded-3xl border border-zinc-100">
-                                <p className="text-[11px] font-black uppercase tracking-widest text-zinc-400 mb-3 flex items-center gap-2">
-                                   <Target className="h-3.5 w-3.5" /> Motivo Primario
-                                </p>
-                                <p className="text-lg font-bold text-zinc-900 leading-tight">
-                                   {latestAnamnesis.consultation_reason}
-                                </p>
-                             </div>
-                             <div className="flex flex-wrap gap-2">
-                                {latestAnamnesis.diseases.map((d, i) => (
-                                  <span key={i} className="px-3 py-1.5 bg-red-50 text-red-700 text-[10px] font-black rounded-xl border border-red-100 uppercase tracking-wider flex items-center gap-2">
-                                    <ShieldAlert className="h-3 w-3" /> {d}
-                                  </span>
-                                ))}
-                             </div>
+                       </div>
+                       <div className="space-y-3">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Medicación</p>
+                          <div className="flex flex-wrap gap-2">
+                             {selectedPatient.medicacion_habitual?.length > 0 ? selectedPatient.medicacion_habitual.map((p: string) => (
+                               <Badge key={p} variant="outline" className="text-[10px] font-bold uppercase tracking-tight bg-blue-50 text-blue-600 border-blue-100">{p}</Badge>
+                             )) : <span className="text-xs text-slate-300 italic">Ninguna</span>}
+                          </div>
+                       </div>
+                       <div className="space-y-3">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Alimentos Excluidos</p>
+                          <div className="flex flex-wrap gap-2">
+                             {selectedPatient.alimentos_excluidos?.length > 0 ? selectedPatient.alimentos_excluidos.map((p: string) => (
+                               <Badge key={p} variant="outline" className="text-[10px] font-bold uppercase tracking-tight bg-slate-100 text-slate-600 border-slate-200">{p}</Badge>
+                             )) : <span className="text-xs text-slate-300 italic">Sin restricciones</span>}
                           </div>
                        </div>
                     </div>
-                  ) : (
-                    <div className="text-center py-12 px-6 border-2 border-dashed border-zinc-100 rounded-3xl">
-                       <div className="w-16 h-16 bg-zinc-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                         <Activity className="h-8 w-8 text-zinc-300" />
+
+                    {latestConsultation ? (
+                      <div className="flex flex-col md:flex-row items-start gap-10 pt-4">
+                          <div className="text-center bg-slate-50 p-6 rounded-2xl border border-slate-100 min-w-[140px]">
+                             <p className="text-[10px] font-bold text-slate-400 uppercase mb-3">Índice IMC</p>
+                             <p className="text-5xl font-bold text-slate-900 tracking-tighter leading-none">{latestConsultation.imc}</p>
+                             <p className="text-[10px] font-bold text-senralis-main mt-3 uppercase tracking-widest">{getBMICategory(latestConsultation.imc).label}</p>
+                          </div>
+                          <div className="flex-1 space-y-6">
+                             <div>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Diagnóstico / Motivo de Consulta</p>
+                                <p className="text-base font-medium text-slate-700 leading-relaxed italic">"{latestConsultation.motivo_consulta}"</p>
+                             </div>
+                          </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-20 bg-slate-50/50 rounded-2xl border-2 border-dashed border-slate-100">
+                         <Activity className="h-10 w-10 text-slate-200 mx-auto mb-4" />
+                         <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Sin sesiones clínicas activas</p>
+                      </div>
+                    )}
+                 </div>
+              </div>
+
+              <div className="bg-slate-900 rounded-2xl p-8 text-white space-y-8 relative overflow-hidden shadow-xl">
+                 <div className="absolute top-0 right-0 w-32 h-32 bg-senralis-main/20 blur-3xl pointer-events-none" />
+                 {activeMealPlan ? (
+                    <div className="space-y-6">
+                       <div>
+                          <p className="text-2xl font-bold tracking-tight">{activeMealPlan.name}</p>
+                          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Estatus: Activo</p>
                        </div>
-                       <h3 className="text-sm font-black text-zinc-900 uppercase">Sin expediente clínico</h3>
-                       <p className="text-xs font-bold text-zinc-400 mt-2 uppercase max-w-xs mx-auto">No hay datos antropométricos registrados para este paciente.</p>
-                       <Button variant="outline" className="mt-6 rounded-xl font-bold border-zinc-200" onClick={() => navigate(`/patients/${id}/anamnesis/new`)}>
-                         Comenzar Anamnesis
+                       <div className="grid grid-cols-2 gap-3">
+                          <div className="bg-white/5 border border-white/10 p-4 rounded-xl text-center">
+                             <p className="text-[9px] font-bold text-slate-500 mb-2 uppercase tracking-widest">Target Calorías</p>
+                             <p className="text-xl font-bold">{activeMealPlan.daily_calories}</p>
+                          </div>
+                          <div className="bg-white/5 border border-white/10 p-4 rounded-xl text-center flex flex-col justify-center">
+                             <p className="text-[9px] font-bold text-slate-500 mb-2 uppercase tracking-widest">Evolución</p>
+                             <div className="flex items-center justify-center gap-1.5">
+                                <div className="w-1.5 h-1.5 rounded-full bg-senralis-main animate-pulse" />
+                                <span className="text-xs font-bold uppercase">En Curso</span>
+                             </div>
+                          </div>
+                       </div>
+                       <Button variant="outline" className="w-full border-white/10 text-white hover:bg-white hover:text-slate-900 h-10 font-bold text-xs" onClick={() => setActiveTab('meal-plans')}>
+                         Ver Protocolo <ArrowRight className="w-4 h-4 ml-2" />
                        </Button>
                     </div>
-                  )}
-                </CardContent>
-             </Card>
-
-             {/* Plan Activo Preview */}
-             <div className="space-y-6">
-               <Card className="border-zinc-100 shadow-xl rounded-3xl overflow-hidden bg-zinc-900 text-white border-none">
-                  <CardHeader className="border-b border-white/10 bg-white/5 py-4 px-6">
-                    <CardTitle className="text-[11px] font-black uppercase tracking-widest text-emerald-400 flex items-center gap-2">
-                       <Utensils className="h-4 w-4" /> Plan Nutricional Activo
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-8 space-y-8">
-                     {activeMealPlan ? (
-                       <div className="space-y-6">
-                          <div>
-                            <h3 className="text-2xl font-black tracking-tight">{activeMealPlan.name}</h3>
-                            <div className="flex items-center gap-3 mt-2">
-                               <span className="text-xl font-black text-emerald-400">{activeMealPlan.daily_calories} <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Kcal / día</span></span>
-                               <span className="h-1 w-1 rounded-full bg-white/20" />
-                               <span className="text-[10px] font-bold text-white/60 uppercase tracking-widest">Iniciado {format(new Date(activeMealPlan.start_date), 'dd MMM', { locale: es })}</span>
-                            </div>
-                          </div>
-                          
-                          <div className="grid grid-cols-3 gap-3">
-                             {[
-                               { l: 'Prot', v: activeMealPlan.macros.protein, c: 'bg-emerald-500/20 text-emerald-400' },
-                               { l: 'Carb', v: activeMealPlan.macros.carbs, c: 'bg-blue-500/20 text-blue-400' },
-                               { l: 'Gras', v: activeMealPlan.macros.fats, c: 'bg-amber-500/20 text-amber-400' }
-                             ].map((m, i) => (
-                               <div key={i} className={cn("rounded-2xl p-4 text-center border border-white/5", m.c)}>
-                                  <p className="text-[10px] font-black uppercase mb-1 opacity-60 font-mono">{m.l}</p>
-                                  <p className="text-lg font-black">{m.v}%</p>
-                               </div>
-                             ))}
-                          </div>
-
-                          <Button 
-                            variant="outline" 
-                            className="w-full h-12 bg-white/5 hover:bg-white/10 border-white/10 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg"
-                            onClick={() => setActiveTab('meal-plans')}
-                          >
-                            Ver Plan Completo <ArrowUpRight className="ml-2 h-4 w-4" />
-                          </Button>
-                       </div>
-                     ) : (
-                       <div className="text-center py-8">
-                          <Utensils className="h-10 w-10 text-white/10 mx-auto mb-4" />
-                          <p className="text-white/40 text-[10px] font-black uppercase tracking-widest">Sin plan asignado</p>
-                          <Button 
-                            variant="outline" 
-                            className="mt-6 w-full h-12 bg-white/5 border-white/10 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest"
-                            onClick={() => navigate(`/patients/${id}/meal-plans/new`)}
-                          >
-                            Crear Primer Plan
-                          </Button>
-                       </div>
-                     )}
-                  </CardContent>
-               </Card>
-             </div>
-          </div>
-        </TabsContent>
-
-        {/* ── ANAMNESIS TAB ── */}
-        <TabsContent value="anamnesis" className="space-y-6 outline-none">
-           {latestAnamnesis ? (
-             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                {/* Insights de IA (Sidebar left) */}
-                <div className="lg:col-span-1 space-y-6">
-                   <div className="bg-emerald-900 rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden ring-4 ring-emerald-500/10">
-                      <div className="absolute top-0 right-0 p-8 opacity-10"><Zap className="h-20 w-20" /></div>
-                      <div className="relative z-10 space-y-8">
-                         <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 bg-emerald-500/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-emerald-500/30">
-                               <Zap className="h-5 w-5 text-emerald-400" />
-                            </div>
-                            <span className="text-xs font-black uppercase tracking-widest text-emerald-400">Clinical AI Insights</span>
-                         </div>
-                         
-                         <div className="space-y-2">
-                            <h4 className="text-[10px] font-black uppercase tracking-widest text-white/40">Conclusión Directa</h4>
-                            <p className="text-sm font-semibold leading-relaxed text-zinc-100">
-                               {latestAnamnesis.physical_activity ? "Paciente con perfil metabólico adaptable pero requiere ajuste urgente en densidad calórica por sedentarismo detectado." : "Pendiente de análisis profundo."}
-                            </p>
-                         </div>
-
-                         <div className="space-y-4">
-                            <h4 className="text-[10px] font-black uppercase tracking-widest text-white/40">Prioridades Nutricionales</h4>
-                            <div className="space-y-3">
-                               {['Ajuste de Sodio', 'Distribución Protéica 1.6g', 'Fibra Soluble +25g'].map((p, i) => (
-                                 <div key={i} className="flex items-center gap-3 bg-white/5 border border-white/5 px-4 py-3 rounded-2xl hover:bg-white/10 transition-colors cursor-default">
-                                    <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-                                    <span className="text-[11px] font-bold tracking-tight">{p}</span>
-                                 </div>
-                               ))}
-                            </div>
-                         </div>
-
-                         <Button className="w-full h-12 bg-white text-emerald-950 hover:bg-zinc-100 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl">
-                            Generar Plan IA <ChevronRight className="ml-2 h-4 w-4" />
-                         </Button>
-                      </div>
-                   </div>
-                </div>
-
-                {/* Full Anamnesis Data (Grid right) */}
-                <div className="lg:col-span-3">
-                   <Card className="border-zinc-100 shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
-                      <div className="p-10 space-y-12">
-                         {/* Sección: Hábitos Alimenticios */}
-                         <div className="space-y-6">
-                            <div className="flex items-center gap-4">
-                               <div className="h-1 w-12 bg-zinc-900 rounded-full" />
-                               <h3 className="text-base font-black text-zinc-900 uppercase tracking-widest">Patrones de Consumo</h3>
-                            </div>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                               <div className="p-6 bg-zinc-50 rounded-3xl border border-zinc-100">
-                                  <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1">Frecuencia</p>
-                                  <p className="text-xl font-black text-zinc-900">{latestAnamnesis.eating_habits.meal_frequency} <span className="text-[10px] opacity-40">comidas</span></p>
-                               </div>
-                               <div className="p-6 bg-zinc-50 rounded-3xl border border-zinc-100">
-                                  <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1">Actividad</p>
-                                  <p className="text-xl font-black text-zinc-900 uppercase truncate">{latestAnamnesis.physical_activity?.level || 'Sin datos'}</p>
-                               </div>
-                               <div className="md:col-span-2 p-6 bg-zinc-900 rounded-3xl flex items-center justify-between text-white border-zinc-800">
-                                  <div>
-                                     <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">Preferencia Principal</p>
-                                     <p className="text-sm font-bold truncate max-w-[150px]">{latestAnamnesis.eating_habits.food_preferences?.[0] || 'No especificado'}</p>
-                                  </div>
-                                  <Utensils className="h-6 w-6 text-emerald-400" />
-                               </div>
-                            </div>
-                         </div>
-
-                         {/* Sección: Restricciones */}
-                         <div className="space-y-6">
-                            <div className="flex items-center gap-4">
-                               <div className="h-1 w-12 bg-zinc-900 rounded-full" />
-                               <h3 className="text-base font-black text-zinc-900 uppercase tracking-widest">Restricciones y Alergias</h3>
-                            </div>
-                            <div className="flex flex-wrap gap-3">
-                               {latestAnamnesis.eating_habits.allergies.length > 0 ? latestAnamnesis.eating_habits.allergies.map((a, i) => (
-                                 <span key={i} className="px-5 py-3 bg-red-50 text-red-700 text-xs font-black rounded-2xl border border-red-100 flex items-center gap-3">
-                                    <AlertTriangle className="h-4 w-4" /> {a}
-                                 </span>
-                               )) : <p className="text-sm font-medium text-zinc-400">Sin alergias declaradas.</p>}
-                            </div>
-                         </div>
-
-                         {/* Sección: Historial */}
-                         <div className="space-y-6">
-                            <div className="flex items-center gap-4">
-                               <div className="h-1 w-12 bg-zinc-900 rounded-full" />
-                               <h3 className="text-base font-black text-zinc-900 uppercase tracking-widest">Seguimiento de Versiones</h3>
-                            </div>
-                            <div className="divide-y divide-zinc-50 border border-zinc-100 rounded-3xl overflow-hidden">
-                               {anamnesisList.map((a, i) => (
-                                 <div key={a.id} className="flex items-center justify-between p-5 hover:bg-zinc-50 transition-colors group">
-                                    <div className="flex items-center gap-4">
-                                       <div className="h-12 w-12 rounded-2xl bg-white border border-zinc-100 flex flex-col items-center justify-center">
-                                          <span className="text-[9px] font-black text-zinc-400 uppercase">{format(new Date(a.created_at), 'MMM', { locale: es })}</span>
-                                          <span className="text-lg font-black text-zinc-900 leading-none">{format(new Date(a.created_at), 'd')}</span>
-                                       </div>
-                                       <div>
-                                          <p className="text-sm font-bold text-zinc-900">Anamnesis #{(anamnesisList.length - i).toString().padStart(2, '0')}</p>
-                                          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{a.anthropometric_data.weight} kg — IMC {a.anthropometric_data.bmi}</p>
-                                       </div>
-                                    </div>
-                                    <Button variant="ghost" size="icon" className="rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleExportAnamnesis(a)}>
-                                       <Download className="h-4 w-4 text-zinc-400" />
-                                    </Button>
-                                 </div>
-                               ))}
-                            </div>
-                         </div>
-                      </div>
-                   </Card>
-                </div>
-             </div>
-           ) : (
-             <div className="text-center py-32 bg-white rounded-[3rem] border border-zinc-100 shadow-sm">
-                <Activity className="h-16 w-16 text-zinc-100 mx-auto mb-6" />
-                <h3 className="text-2xl font-black text-zinc-900 tracking-tighter uppercase mb-4">Comenzar Proceso Clínico</h3>
-                <p className="text-zinc-500 max-w-sm mx-auto font-medium mb-10 leading-relaxed text-lg">Iniciá la toma de datos estructurales para habilitar el análisis por Inteligencia Artificial.</p>
-                <Button className="bg-zinc-900 text-white font-black uppercase tracking-widest h-14 px-12 rounded-2xl text-[10px] shadow-2xl hover:-translate-y-1 transition-all" onClick={() => navigate(`/patients/${id}/anamnesis/new`)}>
-                   Abrir Wizard Clínico
-                </Button>
-             </div>
-           )}
-        </TabsContent>
-
-        {/* ── MEAL PLANS TAB ── */}
-        <TabsContent value="meal-plans" className="space-y-8 outline-none">
-           <div className="flex items-center justify-between">
-              <div>
-                 <h2 className="text-2xl font-black text-zinc-900 tracking-tight">Planes Alimentarios</h2>
-                 <p className="text-sm font-bold text-zinc-400 mt-1 uppercase tracking-tighter">Historial de dietoterapia y estados de adherencia</p>
-              </div>
-              <Button onClick={() => navigate(`/patients/${id}/meal-plans/new`)} className="bg-zinc-900 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] h-12 px-8 shadow-xl active:scale-95 transition-all">
-                 <Plus className="h-4 w-4 mr-2" /> Nuevo Plan
-              </Button>
-           </div>
-
-           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {mealPlans.length === 0 ? (
-                <div className="col-span-full py-20 text-center border-2 border-dashed border-zinc-200 rounded-[3rem] bg-zinc-50/50">
-                   <Utensils className="h-16 w-16 text-zinc-200 mx-auto mb-4" />
-                   <h4 className="text-sm font-black text-zinc-400 uppercase tracking-widest">Sin planes registrados</h4>
-                </div>
-              ) : mealPlans.map(plan => (
-                <Card key={plan.id} className={cn(
-                  "border shadow-sm rounded-3xl overflow-hidden hover:shadow-xl transition-all duration-500 flex flex-col group",
-                  plan.is_active ? "border-emerald-200 ring-2 ring-emerald-50 relative bg-white" : "border-zinc-100 opacity-80"
-                )}>
-                  {plan.is_active && <span className="absolute top-4 right-4 bg-zinc-900 text-emerald-400 text-[8px] font-black uppercase px-2 py-1 rounded-lg tracking-widest shadow-xl">Activo</span>}
-                  <CardHeader className="pt-8 px-8 pb-4">
-                     <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2 font-mono flex items-center gap-2">
-                        <Clock className="h-3 w-3" /> Inició {format(new Date(plan.start_date), 'dd MMM yyyy', { locale: es })}
-                     </p>
-                     <CardTitle className="text-2xl font-black tracking-tighter leading-tight text-zinc-900 group-hover:text-emerald-700 transition-colors">{plan.name}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="px-8 flex-1 flex flex-col gap-6">
-                     <p className="text-xs font-semibold text-zinc-500 line-clamp-2 leading-relaxed h-10">{plan.description || 'Sin notas descriptivas.'}</p>
-                     
-                     <div className="grid grid-cols-2 gap-3 py-6 border-y border-zinc-50">
-                        <div>
-                           <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest leading-none mb-2 font-mono">Energía</p>
-                           <p className="text-xl font-black text-zinc-900">{plan.daily_calories} <span className="text-[9px] opacity-40">kcal</span></p>
-                        </div>
-                        <div>
-                           <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest leading-none mb-2 font-mono">Macros</p>
-                           <p className="text-xl font-black text-zinc-900">{plan.macros.protein}/{plan.macros.carbs}/{plan.macros.fats}</p>
-                        </div>
-                     </div>
-
-                     <div className="pt-2 pb-8 flex gap-2">
-                        <Button variant="outline" size="sm" className="flex-1 rounded-xl font-black uppercase text-[9px] h-10 border-zinc-200 hover:bg-zinc-50" onClick={() => navigate(`/meal-plans/${plan.id}`)}><Eye className="h-3.5 w-3.5 mr-2" /> Abrir</Button>
-                        <Button variant="outline" size="sm" className="h-10 w-10 rounded-xl border-zinc-200 hover:bg-zinc-50 flex items-center justify-center p-0"><Download className="h-3.5 w-3.5" /></Button>
-                        <Button variant="outline" size="sm" className="h-10 w-10 rounded-xl border-zinc-200 hover:bg-zinc-50 flex items-center justify-center p-0"><MoreVertical className="h-3.5 w-3.5" /></Button>
-                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-           </div>
-        </TabsContent>
-
-        {/* ── FOLLOW UPS TAB ── */}
-        <TabsContent value="follow-ups" className="space-y-8 outline-none">
-           <div className="flex items-center justify-between">
-              <div>
-                 <h2 className="text-2xl font-black text-zinc-900 tracking-tight">Registro de Seguimiento</h2>
-                 <p className="text-sm font-bold text-zinc-400 mt-1 uppercase tracking-tighter">Monitoreo de parámetros antropométricos y evolución</p>
-              </div>
-              <Button onClick={() => setIsAddingFollowUp(true)} className="bg-zinc-900 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] h-12 px-8 shadow-xl active:scale-95 transition-all">
-                 <Plus className="h-4 w-4 mr-2" /> Nuevo Control
-              </Button>
-           </div>
-
-           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-              {/* Sidebar Left: Stats de Evolución */}
-              <div className="lg:col-span-1 space-y-4">
-                 <Card className="border-none shadow-xl rounded-[2.5rem] bg-gradient-to-br from-zinc-900 to-zinc-800 text-white overflow-hidden p-8">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-1">Diferencia de Peso</p>
-                    <div className="flex items-end gap-3 mb-6">
-                       <p className="text-6xl font-black tracking-tighter">{followUps.length > 1 ? (followUps[0].weight - followUps[followUps.length - 1].weight).toFixed(1) : '0'}</p>
-                       <p className="text-sm font-black text-emerald-400 pb-2 flex items-center gap-1 uppercase tracking-widest">kg <TrendingUp className="h-4 w-4" /></p>
-                    </div>
-                    <div className="space-y-3 pb-4">
-                       {[
-                         { l: 'Controles', v: followUps.length },
-                         { l: 'Último Peso', v: `${followUps[0]?.weight || '0'} kg` },
-                         { l: 'Hace', v: followUps[0] ? differenceInDays(new Date(), new Date(followUps[0].date)) + ' días' : '-' }
-                       ].map((s, i) => (
-                         <div key={i} className="flex items-center justify-between text-xs py-3 border-t border-white/5">
-                            <span className="font-extrabold text-white/40 uppercase tracking-widest">{s.l}</span>
-                            <span className="font-black text-white">{s.v}</span>
-                         </div>
-                       ))}
-                    </div>
-                 </Card>
-              </div>
-
-              {/* Timeline Center: Liste de Controles */}
-              <div className="lg:col-span-3">
-                 {followUps.length === 0 ? (
-                    <div className="py-20 text-center border-2 border-dashed border-zinc-100 rounded-[3rem] bg-zinc-50/50">
-                       <Activity className="h-16 w-16 text-zinc-100 mx-auto mb-4" />
-                       <p className="text-xs font-black text-zinc-400 uppercase tracking-widest">Aún no se han registrado pesajes de control</p>
-                    </div>
                  ) : (
-                    <div className="space-y-4">
-                       {followUps.map(fu => (
-                          <div key={fu.id} className="group relative bg-white border border-zinc-100 p-6 rounded-[2rem] hover:shadow-2xl transition-all duration-500 hover:border-zinc-200">
-                             <div className="flex items-center gap-8">
-                                <div className="text-center w-20 shrink-0">
-                                   <p className="text-[10px] font-black text-zinc-400 uppercase leading-none mb-1 font-mono">{format(new Date(fu.date), 'MMM', { locale: es })}</p>
-                                   <p className="text-3xl font-black text-zinc-900 tracking-tighter leading-none">{format(new Date(fu.date), 'dd')}</p>
-                                   <p className="text-[10px] font-bold text-zinc-500 mt-1 uppercase tracking-widest">{format(new Date(fu.date), 'yyyy')}</p>
-                                </div>
-                                
-                                <div className="flex-1 flex items-center justify-between">
-                                   <div className="space-y-1">
-                                      <div className="flex items-center gap-3">
-                                         <p className="text-2xl font-black text-zinc-900 tracking-tighter">{fu.weight} <span className="text-[10px] font-black uppercase text-zinc-400">kg</span></p>
-                                         <span className={cn("px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest border", 
-                                           fu.adherence === 'excellent' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 
-                                           fu.adherence === 'good' ? 'bg-blue-50 border-blue-100 text-blue-700' : 'bg-slate-50 border-slate-100 text-slate-500'
-                                         )}>{fu.adherence || 'No indicado'}</span>
-                                      </div>
-                                      <p className="text-sm font-semibold text-zinc-500 line-clamp-1">{fu.notes || 'Sin observaciones descriptivas.'}</p>
-                                   </div>
-                                   
-                                   <div className="flex items-center gap-2">
-                                      {fu.symptoms.length > 0 && <Badge variant="secondary" className="bg-red-50 text-red-700 border-red-100 text-[8px] font-black uppercase h-5 px-2">{fu.symptoms.length} Síntoma/s</Badge>}
-                                      <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl opacity-20 group-hover:opacity-100 transition-opacity" onClick={() => { setSelectedFollowUpId(fu.id); setIsAddingFollowUp(true); }}>
-                                         <Edit className="h-4 w-4" />
-                                      </Button>
-                                   </div>
-                                </div>
-                             </div>
-                          </div>
-                       ))}
+                    <div className="text-center py-10 border border-dashed border-white/10 rounded-2xl">
+                       <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Sin Esquema Asignado</p>
+                       <Button variant="link" className="text-senralis-main mt-4 h-auto p-0 text-xs font-bold uppercase tracking-widest" onClick={() => setActiveTab('meal-plans')}>Configurar Ahora</Button>
                     </div>
                  )}
               </div>
            </div>
         </TabsContent>
 
-        {/* ── PAYMENTS TAB ── */}
-        <TabsContent value="payments" className="space-y-6 outline-none">
-           <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden border border-zinc-100">
-              <CardHeader className="flex flex-row items-center justify-between border-b border-zinc-50 bg-zinc-50/50 px-10 py-7">
-                 <div>
-                   <CardTitle className="text-base font-black uppercase tracking-widest text-zinc-900 flex items-center gap-3">
-                      <DollarSign className="h-5 w-5 text-zinc-900" /> Historial de Cobros
-                   </CardTitle>
-                   <p className="text-xs font-bold text-zinc-400 mt-1 uppercase tracking-tighter">Facturación y estados de cobro por servicios nutricionales</p>
-                 </div>
-                 <Button onClick={() => setIsAddingPayment(true)} className="bg-zinc-900 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] h-11 px-8 shadow-2xl active:scale-95 transition-all">
-                   <Plus className="h-4 w-4 mr-2" /> Nuevo Cobro
+        {/* ── MEAL PLANS ── */}
+        <TabsContent value="meal-plans" className="space-y-6 outline-none animate-in slide-in-from-bottom-2">
+           <div className="clinical-panel overflow-hidden pb-4">
+              <div className="p-6 flex items-center justify-between border-b border-slate-100 mb-4">
+                 <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Historial de Tratamientos</h3>
+                 <Button 
+                    onClick={() => navigate(`/meal-plans/new?patient_id=${id}`)}
+                    className="h-9 px-4 bg-slate-900 hover:bg-slate-800 gap-2"
+                 >
+                    <Plus className="w-4 h-4" /> Nuevo Protocolo
                  </Button>
-              </CardHeader>
-              <CardContent className="p-0">
-                 {payments.length === 0 ? (
-                   <div className="py-24 text-center px-6">
-                      <div className="w-16 h-16 bg-zinc-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-zinc-100 shadow-inner">
-                        <DollarSign className="h-8 w-8 text-zinc-200" />
-                      </div>
-                      <h3 className="text-sm font-black text-zinc-900 uppercase">Sin movimientos registrados</h3>
-                      <p className="text-xs font-bold text-zinc-400 mt-2 uppercase tracking-tighter max-w-xs mx-auto">Emití órdenes de cobro por transferencia, efectivo o plataformas digitales.</p>
-                   </div>
-                 ) : (
-                   <div className="divide-y divide-zinc-50">
-                      {payments.map(payment => (
-                        <div key={payment.id} className="grid grid-cols-12 px-10 py-6 hover:bg-zinc-50/70 transition-all group">
-                           <div className="col-span-4 flex items-center gap-5">
-                              <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center border", 
-                                payment.status === 'paid' ? 'bg-emerald-50 text-emerald-600 border-emerald-100 shadow-[0_0_15px_rgba(52,211,153,0.1)]' : 'bg-amber-50 text-amber-600 border-amber-100 shadow-[0_0_15px_rgba(245,158,11,0.1)]'
-                              )}>
-                                 {payment.status === 'paid' ? <CheckCircle2 className="h-5 w-5" /> : <Clock className="h-5 w-5" />}
-                              </div>
-                              <div className="min-w-0">
-                                 <p className="text-sm font-black text-zinc-900 leading-tight truncate">{payment.description}</p>
-                                 <p className="text-[10px] font-bold text-zinc-400 uppercase mt-1 flex items-center gap-2">
-                                    <Calendar className="h-3 w-3" /> {format(new Date(payment.created_at), 'dd MMM, yyyy', { locale: es })}
-                                 </p>
-                              </div>
-                           </div>
-                           <div className="col-span-3 flex flex-col justify-center pl-4">
-                              <p className="text-lg font-black text-zinc-900 tracking-tighter">${payment.amount.toLocaleString('es-AR')}</p>
-                              <p className="text-[10px] font-black uppercase text-zinc-400 tracking-widest font-mono">{payment.method}</p>
-                           </div>
-                           <div className="col-span-3 flex items-center">
-                              <span className={cn("px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest border shadow-sm", 
-                                payment.status === 'paid' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-amber-50 border-amber-100 text-amber-700')}>
-                                {payment.status === 'paid' ? 'Recibido' : 'Pendiente'}
-                              </span>
-                           </div>
-                           <div className="col-span-2 flex justify-end items-center gap-3">
-                              {payment.status !== 'paid' && (
-                                <Button variant="ghost" size="icon" className="h-10 w-10 text-emerald-600 bg-emerald-50 hover:bg-emerald-100 hover:text-emerald-700 rounded-xl" title="Enviar enlace de pago"><ExternalLink className="h-4 w-4" /></Button>
-                              )}
-                              <Button variant="ghost" size="icon" className="h-10 w-10 text-zinc-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all" onClick={() => deletePayment(payment.id)}><Trash2 className="h-4 w-4" /></Button>
-                           </div>
-                        </div>
-                      ))}
-                   </div>
+              </div>
+              <div className="px-4 space-y-3">
+                 {mealPlans.length === 0 ? (
+                    <div className="p-20 text-center text-xs font-bold text-slate-300 uppercase italic">Sin registros de tratamiento</div>
+                 ) : mealPlans.map(plan => (
+                    <div key={plan.id} className="p-5 flex items-center justify-between rounded-xl border border-slate-100 hover:border-senralis-main/30 hover:bg-slate-50 transition-all group">
+                       <div className="flex items-center gap-4">
+                          <div className={cn("h-11 w-11 rounded-xl flex items-center justify-center font-bold transition-all", plan.is_active ? "bg-slate-900 text-white shadow-lg" : "bg-white text-slate-300 border border-slate-200")}>
+                             <Zap className="h-5 w-5" />
+                          </div>
+                          <div>
+                             <p className="text-base font-bold text-slate-900">{plan.name}</p>
+                             <p className="text-xs font-medium text-slate-400 capitalize">{format(new Date(plan.start_date), 'dd MMMM yyyy', { locale: es })}</p>
+                          </div>
+                       </div>
+                       <div className="flex items-center gap-6">
+                          <div className="text-right hidden sm:block">
+                             <p className="text-sm font-bold text-slate-900">{plan.daily_calories} KCAL</p>
+                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Régimen Diario</p>
+                          </div>
+                          <Button variant="ghost" size="icon" className="h-10 w-10 text-slate-300 hover:text-slate-900"><ChevronRight className="w-5 h-5" /></Button>
+                       </div>
+                    </div>
+                 ))}
+              </div>
+           </div>
+        </TabsContent>
+
+        {/* ── FOLLOW UPS ── */}
+        <TabsContent value="follow-ups" className="space-y-6 outline-none animate-in slide-in-from-bottom-2">
+           <div className="flex flex-col lg:flex-row gap-8">
+              <div className="lg:w-72 shrink-0">
+                 <div className="clinical-panel p-8 text-center bg-white shadow-sm border-slate-200">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Δ Variación de Peso</p>
+                    <p className="text-5xl font-bold text-slate-900 tracking-tighter leading-none mb-2">
+                       {consultations.length > 1 ? (Number(consultations[0].peso_actual) - Number(consultations[consultations.length - 1].peso_actual)).toFixed(1) : '0'}
+                       <span className="text-lg ml-1.5 text-slate-300 font-bold tracking-tight">KG</span>
+                    </p>
+                    <div className="mt-8 pt-8 border-t border-slate-100 space-y-4">
+                       <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                         <p>Sesiones</p><p className="text-slate-900 font-bold">{consultations.length}</p>
+                       </div>
+                       <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                         <p>Evolución</p><p className="text-teal-600 font-bold">Activa</p>
+                       </div>
+                    </div>
+                 </div>
+              </div>
+              <div className="flex-1 space-y-4">
+                 {consultations.length > 0 ? consultations.map((fu) => (
+                    <div key={fu.id} className="clinical-panel p-6 flex items-center justify-between hover:border-senralis-main/30 hover:shadow-md transition-all group">
+                       <div className="flex items-center gap-8">
+                          <div className="text-center px-5 border-r border-slate-100 w-24">
+                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{format(new Date(fu.fecha_consulta), 'MMM', { locale: es })}</p>
+                             <p className="text-3xl font-bold text-slate-900 tracking-tighter leading-none">{format(new Date(fu.fecha_consulta), 'dd')}</p>
+                          </div>
+                          <div className="space-y-1">
+                             <p className="text-xl font-bold text-slate-900 tracking-tight">{fu.peso_actual} <span className="text-sm text-slate-300 font-bold">KG</span></p>
+                             <p className="text-sm font-medium text-slate-500 italic line-clamp-1 max-w-sm">"{fu.notas_seguimiento || 'Sin observaciones registradas'}"</p>
+                          </div>
+                       </div>
+                       <div className="flex items-center gap-3">
+                          <Button variant="ghost" size="icon" onClick={() => { setSelectedFollowUpId(fu.id); setIsAddingFollowUp(true); }} className="h-10 w-10 text-slate-200 hover:text-slate-900 group-hover:bg-slate-50"><Edit className="h-4 w-4" /></Button>
+                       </div>
+                    </div>
+                 )) : (
+                   <div className="p-20 text-center border-2 border-dashed border-slate-100 rounded-2xl text-slate-300 font-bold uppercase tracking-widest text-xs">Sin registros de evolución</div>
                  )}
-              </CardContent>
-           </Card>
+              </div>
+           </div>
+        </TabsContent>
+
+        {/* ── PAYMENTS ── */}
+        <TabsContent value="payments" className="space-y-6 outline-none animate-in slide-in-from-bottom-2">
+           <div className="clinical-panel overflow-hidden pb-4">
+              <div className="p-6 flex items-center justify-between border-b border-slate-100 mb-4">
+                 <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Registro de Honorarios</h3>
+                 <Button onClick={() => setIsAddingPayment(true)} className="h-9 px-4 bg-slate-900 hover:bg-slate-800 gap-2">
+                    <Plus className="w-4 h-4" /> Registrar Cobro
+                 </Button>
+              </div>
+              <div className="px-4 space-y-3">
+                 {payments.length === 0 ? (
+                    <div className="p-20 text-center text-xs font-bold text-slate-300 uppercase italic">Sin movimientos financieros</div>
+                 ) : payments.map(p => (
+                    <div key={p.id} className="p-5 flex items-center justify-between rounded-xl border border-slate-100 hover:border-slate-300 transition-all bg-white shadow-sm">
+                       <div className="flex items-center gap-4">
+                          <div className={cn("h-11 w-11 rounded-xl flex items-center justify-center font-bold border shadow-sm transition-all", p.status === 'paid' ? "bg-slate-900 text-white border-slate-900" : "bg-white text-slate-300 border-slate-100")}>
+                             <DollarSign className="h-5 w-5" />
+                          </div>
+                          <div>
+                             <p className="text-lg font-bold text-slate-900">${p.amount.toLocaleString('es-AR')}</p>
+                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{p.description}</p>
+                          </div>
+                       </div>
+                       <div className="flex items-center gap-6">
+                          <Badge className={cn("text-[10px] font-bold tracking-widest px-3 py-1 rounded-md border-none", p.status === 'paid' ? "bg-teal-50 text-teal-700" : "bg-amber-50 text-amber-600")}>
+                             {p.status === 'paid' ? 'CONSOLIDADO' : 'PENDIENTE'}
+                          </Badge>
+                          <Button variant="ghost" size="icon" onClick={() => deletePayment(p.id)} className="h-10 w-10 text-slate-200 hover:text-rose-500"><Trash2 className="h-5 w-5" /></Button>
+                       </div>
+                    </div>
+                 ))}
+              </div>
+           </div>
         </TabsContent>
       </Tabs>
 
       {/* ── SHEETS ── */}
-      
-      {/* Editar Paciente */}
       <Sheet open={isEditingPatient} onOpenChange={setIsEditingPatient}>
-        <SheetContent className="sm:max-w-[450px] p-0 overflow-hidden border-l border-zinc-100 shadow-2xl flex flex-col">
-          <SheetHeader className="p-8 border-b border-zinc-50 bg-zinc-50/50 shrink-0 text-left">
-            <SheetTitle className="text-2xl font-black text-zinc-900 tracking-tighter uppercase">Perfil Maestro</SheetTitle>
-            <SheetDescription className="font-bold text-zinc-400 text-[10px] uppercase tracking-widest mt-1">
-              Información estructural del paciente
-            </SheetDescription>
+        <SheetContent className="sm:max-w-xl p-0 border-none shadow-2xl flex flex-col bg-white">
+          <SheetHeader className="p-8 border-b border-slate-100 bg-slate-900 text-left shrink-0">
+            <SheetTitle className="text-xl font-bold text-white tracking-tight leading-none mb-2">Perfil Clínico</SheetTitle>
+            <SheetDescription className="font-medium text-slate-400 text-xs">Actualización de datos institucionales del paciente.</SheetDescription>
           </SheetHeader>
-          <div className="flex-1 overflow-y-auto p-8">
-            <PatientForm 
-              initialId={id} 
-              onSuccess={onEditSuccess} 
-              onCancel={() => setIsEditingPatient(false)} 
-            />
+          <div className="flex-1 overflow-y-auto p-8 no-scrollbar">
+            <PatientForm initialId={id} onSuccess={() => { setIsEditingPatient(false); if(id) getPatientById(id); }} onCancel={() => setIsEditingPatient(false)} />
           </div>
         </SheetContent>
       </Sheet>
 
-      {/* Agregar/Editar Seguimiento */}
       <Sheet open={isAddingFollowUp} onOpenChange={(v) => { setIsAddingFollowUp(v); if(!v) setSelectedFollowUpId(null); }}>
-        <SheetContent className="sm:max-w-[450px] p-0 overflow-hidden border-l border-zinc-100 shadow-2xl flex flex-col">
-          <SheetHeader className="p-8 border-b border-zinc-50 bg-zinc-50/50 shrink-0 text-left">
-            <SheetTitle className="text-2xl font-black text-zinc-900 tracking-tighter uppercase">{selectedFollowUpId ? 'Editar Control' : 'Ficha de Control'}</SheetTitle>
-            <SheetDescription className="font-bold text-zinc-400 text-[10px] uppercase tracking-widest mt-1">
-              Registro del progreso clínico y antropométrico
-            </SheetDescription>
+        <SheetContent className="sm:max-w-xl p-0 border-none shadow-2xl flex flex-col bg-white">
+          <SheetHeader className="p-8 border-b border-slate-100 bg-slate-900 text-left shrink-0">
+            <SheetTitle className="text-xl font-bold text-white tracking-tight leading-none mb-2">{selectedFollowUpId ? 'Editar Sesión' : 'Evolución Clínica'}</SheetTitle>
+            <SheetDescription className="font-medium text-slate-400 text-xs">Registro detallado de parámetros y observaciones de la sesión.</SheetDescription>
           </SheetHeader>
-          <div className="flex-1 overflow-y-auto p-8">
-            <FollowUpForm 
-              initialPatientId={id}
-              initialId={selectedFollowUpId || undefined}
-              onSuccess={() => { setIsAddingFollowUp(false); setSelectedFollowUpId(null); if(id) fetchFollowUpsByPatient(id); }}
-              onCancel={() => { setIsAddingFollowUp(false); setSelectedFollowUpId(null); }}
-            />
+          <div className="flex-1 overflow-y-auto p-8 no-scrollbar">
+            <FollowUpForm initialPatientId={id} initialId={selectedFollowUpId || undefined} onSuccess={() => { setIsAddingFollowUp(false); setSelectedFollowUpId(null); if(id) fetchConsultationsByPatient(id); }} onCancel={() => { setIsAddingFollowUp(false); setSelectedFollowUpId(null); }} />
           </div>
         </SheetContent>
       </Sheet>
 
-      {/* Agregar Pago */}
       <Sheet open={isAddingPayment} onOpenChange={setIsAddingPayment}>
-        <SheetContent className="sm:max-w-[450px] p-0 overflow-hidden border-l border-zinc-100 shadow-2xl flex flex-col">
-          <SheetHeader className="p-8 border-b border-zinc-50 bg-zinc-50/50 shrink-0 text-left">
-            <SheetTitle className="text-2xl font-black text-zinc-900 tracking-tighter uppercase">Orden de Cobro</SheetTitle>
-            <SheetDescription className="font-bold text-zinc-400 text-[10px] uppercase tracking-widest mt-1">
-              Emitir nueva boleta de cargo o registrar pago
-            </SheetDescription>
+        <SheetContent className="sm:max-w-xl p-0 border-none shadow-2xl flex flex-col bg-white">
+          <SheetHeader className="p-8 border-b border-slate-100 bg-slate-900 text-left shrink-0">
+            <SheetTitle className="text-xl font-bold text-white tracking-tight leading-none mb-2">Orden de Cobro</SheetTitle>
+            <SheetDescription className="font-medium text-slate-400 text-xs">Gestión y registro de honorarios profesionales.</SheetDescription>
           </SheetHeader>
-          <div className="flex-1 overflow-y-auto p-8">
-            <PaymentForm 
-              initialPatientId={id}
-              onSuccess={() => { setIsAddingPayment(false); if(id) fetchPaymentsByPatient(id); }}
-              onCancel={() => setIsAddingPayment(false)}
-            />
+          <div className="flex-1 overflow-y-auto p-8 no-scrollbar">
+            <PaymentForm initialPatientId={id} onSuccess={() => { setIsAddingPayment(false); if(id) fetchPaymentsByPatient(id); }} onCancel={() => setIsAddingPayment(false)} />
           </div>
         </SheetContent>
       </Sheet>
-
     </div>
   );
 }

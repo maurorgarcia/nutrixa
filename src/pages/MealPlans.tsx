@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { useMealPlanStore } from '@/stores/mealPlanStore';
 import { usePatientStore } from '@/stores/patientStore';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -11,6 +10,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
 import {
   AlertDialog,
@@ -27,12 +27,14 @@ import {
   MoreVertical, 
   Edit, 
   Trash2, 
-  Calendar,
-  Check,
-  Loader2,
-  ChevronRight,
-  Download,
-  Utensils
+  Check, 
+  Loader2, 
+  ChevronRight, 
+  Download, 
+  FileText, 
+  Zap,
+  AlertTriangle,
+  Users
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -65,7 +67,7 @@ export function MealPlans() {
 
   const getPatientName = (patientId: string) => {
     const patient = patients.find(p => p.id === patientId);
-    return patient ? `${patient.first_name} ${patient.last_name}` : 'Paciente no encontrado';
+    return patient ? patient.nombre_completo : 'Paciente';
   };
 
   const handleExport = (plan: MealPlan) => {
@@ -75,129 +77,121 @@ export function MealPlans() {
     }
   };
 
+  if (loading && mealPlans.length === 0) {
+    return (
+      <div className="flex items-center justify-center p-20">
+        <Loader2 className="h-8 w-8 animate-spin text-senralis-main" />
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-10 animate-in fade-in duration-500 max-w-7xl mx-auto pb-20">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 pb-8 border-b border-zinc-100">
+    <div className="clinical-page space-y-6 max-w-full">
+      
+      {/* ── HEADER (Standard Pattern) ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200">
         <div className="space-y-1">
-          <h1 className="text-4xl font-black text-zinc-900 tracking-tighter uppercase">Planes Nutricionales</h1>
-          <p className="text-zinc-500 font-bold text-xs uppercase tracking-widest">Estrategias de dietoterapia y prescripción calórica</p>
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-senralis-main" />
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Directorio de Tratamientos</p>
+          </div>
+          <h1 className="text-2xl font-black text-slate-900">Protocolos Clínicos</h1>
+          <p className="text-sm font-bold text-slate-500 opacity-80">{mealPlans.length} planes operativos activos</p>
         </div>
-        <Button onClick={() => navigate('/meal-plans/new')} className="h-12 px-8 rounded-2xl bg-zinc-900 text-white font-black uppercase tracking-widest text-[10px] shadow-2xl flex items-center gap-3 active:scale-95 transition-all">
-          <Plus className="h-4 w-4" /> Nuevo Plan Maestro
+        <Button
+          onClick={() => navigate('/meal-plans/new')}
+          className="h-10 px-4 rounded-xl bg-senralis-main text-white font-bold text-xs uppercase tracking-widest"
+        >
+          <Plus className="w-4 h-4 mr-2" /> Nuevo Protocolo
         </Button>
       </div>
 
-      {/* Plans List */}
-      {loading ? (
-        <div className="flex justify-center py-24">
-          <Loader2 className="h-10 w-10 animate-spin text-zinc-200" />
-        </div>
-      ) : mealPlans.length === 0 ? (
-        <div className="py-32 text-center bg-white rounded-[3rem] border border-zinc-100 shadow-sm">
-           <Utensils className="h-16 w-16 text-zinc-100 mx-auto mb-6" />
-           <h3 className="text-xl font-black text-zinc-900 tracking-tighter uppercase mb-2">Sin prescripciones activas</h3>
-           <p className="text-zinc-400 max-w-xs mx-auto text-xs font-bold uppercase tracking-widest mb-10">Comenzá diseñando un plan basado en los requerimientos de la anamnesis.</p>
-           <Button onClick={() => navigate('/meal-plans/new')} className="bg-zinc-900 text-white font-black uppercase tracking-widest h-12 px-10 rounded-2xl text-[10px] shadow-xl">
-             Crear Primer Plan
-           </Button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {mealPlans.map((plan) => (
-            <Card key={plan.id} className={cn(
-              "group border-zinc-100 shadow-sm rounded-[2.5rem] overflow-hidden hover:shadow-2xl transition-all duration-500 flex flex-col bg-white relative",
-              plan.is_active && "ring-2 ring-emerald-500/20 border-emerald-100"
-            )}>
-              {plan.is_active && (
-                <div className="absolute top-6 right-6 z-10">
-                   <Badge className="bg-emerald-900 text-emerald-400 border-none text-[8px] font-black uppercase tracking-widest px-2.5 h-6 rounded-lg shadow-xl">Activo</Badge>
+      {/* ── PLANS LIST (Compact Table Style) ── */}
+      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+        {mealPlans.length === 0 ? (
+          <div className="p-20 text-center">
+             <FileText className="h-10 w-10 text-slate-200 mx-auto mb-4" />
+             <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Sin protocolos registrados</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-slate-50">
+            {mealPlans.map((plan) => (
+              <div 
+                key={plan.id} 
+                className="px-6 py-4 flex items-center justify-between hover:bg-slate-50 transition-all cursor-pointer group"
+                onClick={() => navigate(`/meal-plans/${plan.id}`)}
+              >
+                <div className="flex items-center gap-4 min-w-0">
+                  <div className={cn(
+                    "h-10 w-10 rounded-xl flex items-center justify-center transition-colors",
+                    plan.is_active ? "bg-slate-900 text-white" : "bg-slate-50 text-slate-400 border border-slate-100"
+                  )}>
+                    <Zap className={cn("w-4 h-4", plan.is_active ? "text-senralis-soft" : "text-slate-300")} />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-black text-slate-900 truncate mb-1">{plan.name}</h3>
+                    <div className="flex items-center gap-3">
+                       <p className="text-[10px] font-bold text-slate-400 flex items-center gap-1.5 uppercase tracking-widest">
+                          <Users className="w-3 h-3" /> {getPatientName(plan.patient_id)}
+                       </p>
+                       <span className="h-1 w-1 rounded-full bg-slate-200" />
+                       <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-[8px] font-black tracking-widest border-slate-100">{plan.daily_calories} KCAL</Badge>
+                          <Badge variant="outline" className="text-[8px] font-black tracking-widest border-slate-100">P: {plan.macros.protein}G</Badge>
+                       </div>
+                    </div>
+                  </div>
                 </div>
-              )}
-              <CardHeader className="p-8 pb-3">
-                 <div className="flex flex-col gap-1">
-                    <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest font-mono flex items-center gap-2">
-                       <Calendar className="h-3 w-3" /> {format(new Date(plan.start_date), "dd MMM yyyy", { locale: es })}
-                    </p>
-                    <CardTitle className="text-2xl font-black tracking-tighter leading-tight text-zinc-900 group-hover:text-emerald-700 transition-colors cursor-pointer" onClick={() => navigate(`/meal-plans/${plan.id}`)}>
-                       {plan.name}
-                    </CardTitle>
-                    <p className="text-xs font-bold text-zinc-400 uppercase tracking-tighter mt-1">
-                       {getPatientName(plan.patient_id)}
-                    </p>
-                 </div>
-              </CardHeader>
 
-              <CardContent className="p-8 pt-0 flex-1 flex flex-col">
-                 <div className="grid grid-cols-3 gap-3 py-6 my-4 border-y border-zinc-50">
-                    <div className="text-center">
-                       <p className="text-[9px] font-black text-zinc-300 uppercase mb-1">Calorías</p>
-                       <p className="text-lg font-black text-zinc-900">{plan.daily_calories}</p>
-                    </div>
-                    <div className="text-center col-span-2">
-                       <p className="text-[9px] font-black text-zinc-300 uppercase mb-1">Macros (P/C/G)</p>
-                       <p className="text-lg font-black text-zinc-900">{plan.macros.protein}/{plan.macros.carbs}/{plan.macros.fats}</p>
-                    </div>
-                 </div>
+                <div className="flex items-center gap-2">
+                   {plan.is_active && (
+                     <Badge className="hidden sm:flex bg-senralis-main text-white text-[8px] font-black uppercase px-2 py-0.5 rounded-md">Certificado</Badge>
+                   )}
+                   <DropdownMenu>
+                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                         <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-300 hover:text-slate-900 rounded-lg"><MoreVertical className="h-4 w-4" /></Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48 rounded-xl border-slate-100 shadow-xl">
+                         <DropdownMenuItem onClick={() => navigate(`/meal-plans/${plan.id}`)} className="text-xs font-bold py-2.5">Editar Plan</DropdownMenuItem>
+                         <DropdownMenuItem onClick={() => handleExport(plan)} className="text-xs font-bold py-2.5">Exportar PDF</DropdownMenuItem>
+                         {!plan.is_active && (
+                           <DropdownMenuItem onClick={() => activateMealPlan(plan.id)} className="text-xs font-bold py-2.5 text-senralis-main">Activar</DropdownMenuItem>
+                         )}
+                         <DropdownMenuSeparator />
+                         <DropdownMenuItem 
+                           className="text-xs font-bold py-2.5 text-rose-500"
+                           onClick={(e) => {
+                             e.stopPropagation();
+                             setPlanToDelete(plan);
+                             setDeleteDialogOpen(true);
+                           }}
+                         >
+                           Eliminar
+                         </DropdownMenuItem>
+                      </DropdownMenuContent>
+                   </DropdownMenu>
+                   <ChevronRight className="w-4 h-4 text-slate-200 group-hover:text-senralis-main transition-all" />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
-                 <div className="flex items-center gap-2 mt-auto">
-                    <Button 
-                      variant="outline" 
-                      className="flex-1 h-12 rounded-2xl font-black uppercase text-[9px] tracking-widest border-zinc-200 hover:bg-zinc-50 shadow-sm"
-                      onClick={() => navigate(`/meal-plans/${plan.id}`)}
-                    >
-                      Abrir Ficha <ChevronRight className="h-4 w-4 ml-2" />
-                    </Button>
-                    <DropdownMenu>
-                       <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-12 w-12 rounded-2xl border border-zinc-100 hover:bg-zinc-50 flex items-center justify-center p-0">
-                             <MoreVertical className="h-4 w-4 text-zinc-400" />
-                          </Button>
-                       </DropdownMenuTrigger>
-                       <DropdownMenuContent align="end" className="w-56 p-2 rounded-2xl border-zinc-100 shadow-2xl">
-                          {!plan.is_active && (
-                            <DropdownMenuItem onClick={() => activateMealPlan(plan.id)} className="h-11 rounded-xl text-emerald-600 font-bold focus:bg-emerald-50">
-                               <Check className="h-4 w-4 mr-3" /> Establecer Activo
-                            </DropdownMenuItem>
-                          )}
-                          <DropdownMenuItem onClick={() => handleExport(plan)} className="h-11 rounded-xl font-bold">
-                             <Download className="h-4 w-4 mr-3" /> Exportar PDF
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => navigate(`/meal-plans/${plan.id}`)} className="h-11 rounded-xl font-bold">
-                             <Edit className="h-4 w-4 mr-3" /> Editar Plan
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            className="h-11 rounded-xl text-red-600 font-bold focus:bg-red-50 focus:text-red-700"
-                            onClick={() => {
-                              setPlanToDelete(plan);
-                              setDeleteDialogOpen(true);
-                            }}
-                          >
-                             <Trash2 className="h-4 w-4 mr-3" /> Eliminar Permanentemente
-                          </DropdownMenuItem>
-                       </DropdownMenuContent>
-                    </DropdownMenu>
-                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent className="rounded-3xl border-none p-10">
+        <AlertDialogContent className="rounded-2xl border-slate-100 p-8 shadow-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-2xl font-black text-zinc-900 tracking-tighter uppercase">¿Eliminar plan?</AlertDialogTitle>
-            <AlertDialogDescription className="text-zinc-500 font-medium text-base">
-              Estas a punto de eliminar el plan <strong>{planToDelete?.name}</strong>. Esta acción no se puede deshacer y el paciente perderá el acceso a esta prescripción.
+            <div className="h-10 w-10 bg-rose-50 rounded-xl flex items-center justify-center mb-4">
+               <AlertTriangle className="h-5 w-5 text-rose-500" />
+            </div>
+            <AlertDialogTitle className="text-lg font-black text-slate-900 tracking-tight uppercase">¿Dar de baja protocolo?</AlertDialogTitle>
+            <AlertDialogDescription className="text-xs font-bold text-slate-400 leading-relaxed mb-4">
+              Esta acción eliminará definitivamente el plan de intervención. El paciente dejará de tener acceso de forma inmediata.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="mt-8 gap-3">
-            <AlertDialogCancel className="h-12 rounded-2xl font-black uppercase text-[10px] tracking-widest border-zinc-200">Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="h-12 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-black uppercase text-[10px] tracking-widest shadow-xl">
-              Eliminar Definitivamente
-            </AlertDialogAction>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel className="rounded-xl border-slate-100 h-10 px-6 font-black text-[10px] uppercase tracking-widest text-slate-400">Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="rounded-xl bg-rose-600 text-white h-10 px-6 font-black text-[10px] uppercase tracking-widest hover:bg-rose-700">Eliminar</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -1,12 +1,17 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { format, parseISO } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuthStore } from '@/stores/authStore';
-import { Save, Plus, Trash2, Clock, Globe, Copy, ExternalLink, Loader2, List } from 'lucide-react';
+import { Save, Plus, Trash2, Clock, Globe, Copy, ExternalLink, Loader2, List, Settings as SettingsIcon, Shield } from 'lucide-react';
 import { toast } from 'sonner';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 import type { NutritionService } from '@/types';
+import { cn } from '@/lib/utils';
 
 export function Settings() {
   const { user, updateProfile } = useAuthStore();
@@ -17,6 +22,8 @@ export function Settings() {
     working_hours_end: '',
     working_days: [] as number[],
     services: [] as NutritionService[],
+    bio: '',
+    specialty: '',
   });
 
   const daysOfWeek = [
@@ -30,8 +37,6 @@ export function Settings() {
   ];
 
   useEffect(() => {
-    // Solo sincronizamos con el store si hay usuario y NO estamos en medio de un guardado
-    // Esto evita que al guardar, el estado local "parpadee" o se sobrescriba.
     if (user && !saving) {
       setFormData({
         slug: user.slug || '',
@@ -39,6 +44,8 @@ export function Settings() {
         working_hours_end: user.working_hours_end?.substring(0, 5) || '18:00',
         working_days: user.working_days || [1, 2, 3, 4, 5],
         services: user.services || [],
+        bio: user.bio || '',
+        specialty: user.specialty || '',
       });
     }
   }, [user, saving]);
@@ -53,7 +60,6 @@ export function Settings() {
   };
 
   const addService = () => {
-    // Generate a secure unique ID compatible across all devices
     const uniqueId = typeof crypto !== 'undefined' && crypto.randomUUID 
       ? crypto.randomUUID() 
       : Date.now().toString(36) + Math.random().toString(36).substring(2);
@@ -83,18 +89,14 @@ export function Settings() {
 
   const handleSave = async () => {
     if (!user) return;
-    
-    console.log('[Settings] Iniciando guardado de configuración...');
     setSaving(true);
     
     try {
-      // Validate services
       const hasInvalidService = formData.services.some(s => 
         !s || typeof s.name !== 'string' || !s.name.trim() || s.price < 0 || s.duration <= 0
       );
 
       if (hasInvalidService) {
-        console.warn('[Settings] Validación fallida: servicios inválidos detected');
         toast.error('Revisa que todos los servicios tengan nombre, precio y duración válidos.');
         setSaving(false);
         return;
@@ -113,17 +115,15 @@ export function Settings() {
         working_hours_end: formData.working_hours_end,
         working_days: formData.working_days,
         services: formData.services,
+        bio: formData.bio || null,
+        specialty: formData.specialty || null,
       };
-
-      console.log('[Settings] Enviando payload a updateProfile:', payload);
 
       const result = await updateProfile(payload as any);
 
-      console.log('[Settings] Resultado del guardado:', result);
-
       if (result && result.error) {
         if (typeof result.error === 'string' && result.error.includes('duplicate key') && result.error.includes('slug')) {
-          toast.error('Este link personalizado ya está siendo usado por otro nutricionista.');
+          toast.error('Este link personalizado ya está siendo usado por otro profesional.');
         } else {
           toast.error(typeof result.error === 'string' ? result.error : 'Error al guardar configuración');
         }
@@ -134,10 +134,8 @@ export function Settings() {
         }
       }
     } catch (err: any) {
-      console.error('[Settings] Error crítico en handleSave:', err);
       toast.error('Ocurrió un error inesperado al intentar guardar.');
     } finally {
-      console.log('[Settings] Finalizando guardado (saving = false)');
       setSaving(false);
     }
   };
@@ -145,114 +143,167 @@ export function Settings() {
   const domainUrl = window.location.origin;
 
   return (
-    <div className="space-y-10 max-w-6xl mx-auto animate-in fade-in duration-700">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pb-2 border-b border-zinc-100">
-        <div className="space-y-1.5">
-          <h1 className="text-4xl font-extrabold text-nutri-forest tracking-tight">Configuración</h1>
-          <p className="text-zinc-500 text-lg font-medium">Administra tu disponibilidad y los servicios de tu Turnera Pública</p>
+    <div className="clinical-page space-y-8 max-w-7xl mx-auto">
+      
+      {/* ── PROFESSIONAL HEADER ── */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2">
+        <div>
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-1">
+            Configuración Profesional
+          </h1>
+          <p className="text-slate-500 font-medium text-sm">
+            Personalizá tu consultorio digital, agenda pública y catálogo de servicios.
+          </p>
         </div>
-        <Button onClick={handleSave} disabled={saving} className="bg-nutri-emerald hover:bg-nutri-forest hover:-translate-y-0.5 hover:shadow-lg text-white shadow-md transition-all duration-300 px-6 h-12 rounded-xl text-base shrink-0">
-          {saving ? <Loader2 className="h-5 w-5 mr-2 animate-spin" /> : <Save className="h-5 w-5 mr-2" />}
-          Guardar Integración
+        <Button 
+          onClick={handleSave} 
+          disabled={saving}
+          className="h-11 px-6 rounded-xl bg-[#09090b] text-white font-semibold hover:bg-[#18181b] shadow-lg shadow-slate-200 transition-all flex items-center gap-2"
+        >
+          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+          Guardar Cambios
         </Button>
       </div>
 
-      <div className="space-y-12 divide-y divide-zinc-200 mt-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-8">
         
-        {/* Connection Setup */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 pt-8">
-          <div className="md:col-span-1 space-y-4">
-            <div className="p-3 bg-emerald-50 rounded-2xl w-fit">
-              <Globe className="h-6 w-6 text-nutri-emerald" />
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-nutri-forest tracking-tight">Tu Turnera Pública</h3>
-              <p className="text-sm font-medium text-zinc-500 mt-2 leading-relaxed">
-                Define el identificador digital donde tus pacientes podrán agendar consultas directamente vía online.
+        {/* ── LEFT COLUMN: Navigation/Info ── */}
+        <div className="lg:col-span-4 space-y-6">
+           {user && (
+             <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">
+               <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Plan de cuenta</p>
+               <p className="font-bold text-slate-900 capitalize">{user.plan ?? 'trial'}</p>
+               {user.trial_ends_at && (
+                 <p className="text-xs text-slate-500 mt-1">
+                   Prueba hasta {format(parseISO(user.trial_ends_at), 'd MMM yyyy', { locale: es })}
+                 </p>
+               )}
+             </div>
+           )}
+           <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 bg-slate-50 rounded-lg">
+                  <Globe className="h-5 w-5 text-senralis-main" />
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 tracking-tight">Presencia Digital</h3>
+              </div>
+              <p className="text-sm font-medium text-slate-500 mb-6 leading-relaxed">
+                Este identificador define tu dirección web personalizada para que pacientes externos agenden turnos.
               </p>
-            </div>
-          </div>
+              
+              {formData.slug ? (
+                <div className="space-y-4">
+                  <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 group transition-all">
+                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">URL Pública Activa</p>
+                     <div className="flex items-center justify-between bg-white px-3 py-2.5 rounded-md border border-slate-200 text-xs font-bold text-slate-600 shadow-sm">
+                        <span className="truncate max-w-[180px]">{formData.slug}</span>
+                        <ExternalLink className="h-3.5 w-3.5 text-slate-300 group-hover:text-senralis-main cursor-pointer" onClick={() => window.open(`${domainUrl}/book/${formData.slug}`, '_blank')} />
+                     </div>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    className="w-full h-10 text-xs font-bold border-slate-200 text-slate-600 hover:bg-slate-100 rounded-lg"
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${domainUrl}/book/${formData.slug}`);
+                      toast.success('¡Enlace copiado! Listo para compartir');
+                    }}
+                  >
+                    <Copy className="h-4 w-4 mr-2" /> Copiar Link Público
+                  </Button>
+                </div>
+              ) : (
+                <div className="bg-amber-50 p-4 rounded-lg border border-amber-100">
+                  <p className="text-xs text-amber-700 font-bold leading-relaxed">Definí un slug para activar tu agenda online.</p>
+                </div>
+              )}
+           </div>
+
+           <div className="bg-slate-900 rounded-xl p-6 text-white shadow-xl">
+              <div className="flex items-center gap-3 mb-4">
+                <Shield className="h-5 w-5 text-senralis-soft" />
+                <h3 className="text-lg font-bold tracking-tight">Seguridad</h3>
+              </div>
+              <p className="text-sm text-slate-400 font-medium leading-relaxed mb-6">
+                Tus datos de facturación y pacientes están protegidos con encriptación de grado médico.
+              </p>
+              <Button variant="ghost" className="w-full h-10 bg-white/5 border border-white/10 text-white font-bold text-xs hover:bg-white/10 rounded-lg">
+                Revisar Logs de Acceso
+              </Button>
+           </div>
+        </div>
+
+        {/* ── RIGHT COLUMN: Main Settings ── */}
+        <div className="lg:col-span-8 space-y-8">
           
-          <div className="md:col-span-2">
-            <Card className="border-zinc-200 shadow-sm transition-all duration-300 rounded-3xl overflow-hidden">
-              <CardContent className="p-6 sm:p-8 space-y-5 bg-white">
+          {/* Perfil Profesional */}
+          <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+            <div className="px-6 py-4 bg-slate-50/50 border-b border-slate-100">
+               <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Perfil Público</h3>
+            </div>
+            <div className="p-8 space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="slug" className="text-sm font-bold text-zinc-700">Identificador (Slug)</Label>
+                  <Label htmlFor="specialty" className="text-xs font-bold text-slate-500 uppercase tracking-wider">Especialidad Clínica</Label>
+                  <Input 
+                    id="specialty" 
+                    value={formData.specialty} 
+                    onChange={e => setFormData({...formData, specialty: e.target.value})}
+                    placeholder="Ej: Psicología / Kinesiología / Medicina Clínica" 
+                    className="h-11 bg-slate-50 border-slate-200 focus:bg-white transition-all font-semibold rounded-lg"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="slug" className="text-xs font-bold text-slate-500 uppercase tracking-wider">Identificador (Slug)</Label>
                   <Input 
                     id="slug" 
                     value={formData.slug} 
                     onChange={e => setFormData({...formData, slug: e.target.value})}
                     placeholder="ej-lic-maria-perez" 
-                    className="h-12 border-zinc-200 focus:ring-nutri-emerald focus:border-nutri-emerald rounded-xl shadow-sm transition-all duration-200"
+                    className="h-11 bg-slate-50 border-slate-200 focus:bg-white transition-all font-semibold rounded-lg"
                   />
                 </div>
-                
-                {formData.slug ? (
-                  <div className="bg-zinc-50 p-5 rounded-2xl border border-zinc-200 space-y-4 shadow-inner">
-                    <p className="text-xs font-black text-zinc-400 uppercase tracking-widest">Enlace Activo</p>
-                    <a 
-                      href={`${domainUrl}/book/${formData.slug}`} 
-                      target="_blank" 
-                      rel="noreferrer"
-                      className="flex items-center justify-between bg-white px-4 py-3 rounded-xl border border-zinc-200 text-sm font-bold text-nutri-forest hover:text-nutri-forest hover:border-emerald-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 group cursor-pointer shadow-sm"
-                    >
-                      <span className="truncate">{domainUrl}/book/{formData.slug}</span>
-                      <ExternalLink className="h-4 w-4 ml-2 flex-shrink-0 text-nutri-green opacity-50 group-hover:opacity-100 transition-opacity" />
-                    </a>
-                    <Button 
-                      variant="outline" 
-                      className="w-full mt-2 h-11 text-sm font-bold border-zinc-200 text-zinc-700 hover:bg-zinc-100 rounded-xl"
-                      onClick={() => {
-                        navigator.clipboard.writeText(`${domainUrl}/book/${formData.slug}`);
-                        toast.success('¡Enlace copiado! Listo para compartir en tus redes');
-                      }}
-                    >
-                      <Copy className="h-4 w-4 mr-2" /> Copiar Link Público
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="bg-amber-50 p-5 rounded-2xl border border-amber-200 shadow-sm">
-                    <p className="text-sm text-amber-800 font-medium">Crea tu identificador ahora para activar tu agenda visible al público.</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+              </div>
 
-        {/* Agenda Setup */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 pt-12">
-          <div className="md:col-span-1 space-y-4">
-            <div className="p-3 bg-zinc-100 rounded-2xl w-fit">
-              <Clock className="h-6 w-6 text-zinc-700" />
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-nutri-forest tracking-tight">Horarios Disponibles</h3>
-              <p className="text-sm font-medium text-zinc-500 mt-2 leading-relaxed">
-                Establece la franja horaria y los días específicos en los que aceptarás nuevas reservas automáticas.
-              </p>
+              <div className="space-y-2">
+                <Label htmlFor="bio" className="text-xs font-bold text-slate-500 uppercase tracking-wider">Biografía Profesional</Label>
+                <Textarea 
+                  id="bio" 
+                  value={formData.bio} 
+                  onChange={e => setFormData({...formData, bio: e.target.value})}
+                  placeholder="Contanos sobre tu formación y experiencia..." 
+                  className="min-h-[120px] bg-slate-50 border-slate-200 focus:bg-white transition-all font-semibold rounded-lg pt-3"
+                />
+              </div>
             </div>
           </div>
-          
-          <div className="md:col-span-2">
-            <Card className="border-zinc-200 shadow-sm transition-all duration-300 rounded-3xl overflow-hidden p-6 sm:p-8 space-y-8 bg-white">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="start_time" className="text-sm font-bold text-zinc-700">Horario Apertura</Label>
+
+          {/* Disponibilidad Agenda */}
+          <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+            <div className="px-6 py-4 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between">
+               <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Disponibilidad de Agenda</h3>
+               <div className="flex items-center gap-2">
+                 <Clock className="h-3.5 w-3.5 text-slate-400" />
+                 <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">{formData.working_hours_start} - {formData.working_hours_end}</span>
+               </div>
+            </div>
+            <div className="p-8 space-y-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                <div className="space-y-3">
+                  <Label htmlFor="start_time" className="text-xs font-bold text-slate-500 uppercase tracking-wider">Horario de Apertura</Label>
                   <Input 
                     id="start_time" 
                     type="time" 
-                    className="h-14 bg-zinc-50 border-zinc-200 focus:ring-nutri-emerald focus:border-nutri-emerald rounded-xl shadow-sm hover:bg-white transition-all duration-200 text-base"
+                    className="h-12 bg-slate-50 border-slate-200 font-bold text-base rounded-lg"
                     value={formData.working_hours_start}
                     onChange={e => setFormData({...formData, working_hours_start: e.target.value})}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="end_time" className="text-sm font-bold text-zinc-700">Horario Cierre</Label>
+                <div className="space-y-3">
+                  <Label htmlFor="end_time" className="text-xs font-bold text-slate-500 uppercase tracking-wider">Horario de Cierre</Label>
                   <Input 
                     id="end_time" 
                     type="time" 
-                    className="h-14 bg-zinc-50 border-zinc-200 focus:ring-nutri-emerald focus:border-nutri-emerald rounded-xl shadow-sm hover:bg-white transition-all duration-200 text-base"
+                    className="h-12 bg-slate-50 border-slate-200 font-bold text-base rounded-lg"
                     value={formData.working_hours_end}
                     onChange={e => setFormData({...formData, working_hours_end: e.target.value})}
                   />
@@ -260,9 +311,7 @@ export function Settings() {
               </div>
 
               <div className="space-y-4">
-                <Label className="flex items-center gap-2 text-sm font-bold text-zinc-700">
-                  Días Habilitados para Consultas
-                </Label>
+                <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Días Laborales</Label>
                 <div className="flex flex-wrap gap-2.5">
                   {daysOfWeek.map(day => {
                     const isActive = formData.working_days.includes(day.value);
@@ -271,11 +320,12 @@ export function Settings() {
                         key={day.value}
                         type="button"
                         onClick={() => toggleDay(day.value)}
-                        className={`px-4 py-2.5 text-sm font-bold rounded-xl transition-all duration-300 border ${
+                        className={cn(
+                          "px-4 py-2 text-xs font-bold rounded-lg border transition-all",
                           isActive
-                            ? 'bg-nutri-emerald text-white border-nutri-forest shadow-md hover:-translate-y-0.5'
-                            : 'bg-white text-zinc-600 border-zinc-200 hover:bg-zinc-50 hover:border-zinc-300 hover:-translate-y-0.5 shadow-sm'
-                        }`}
+                            ? "bg-senralis-main text-white border-senralis-dark shadow-md shadow-slate-100"
+                            : "bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-100 hover:text-slate-600"
+                        )}
                       >
                         {day.label}
                       </button>
@@ -283,101 +333,73 @@ export function Settings() {
                   })}
                 </div>
               </div>
-            </Card>
-          </div>
-        </div>
-
-        {/* Services Manager */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 pt-12">
-          <div className="md:col-span-1 space-y-4">
-            <div className="p-3 bg-zinc-100 rounded-2xl w-fit">
-              <List className="h-6 w-6 text-zinc-700" />
             </div>
-            <div>
-               <h3 className="text-xl font-bold text-nutri-forest tracking-tight">Catálogo de Servicios</h3>
-               <p className="text-sm font-medium text-zinc-500 mt-2 leading-relaxed">
-                 Ofrece el detalle de lo que cobras. Los pacientes tendrán que seleccionar un servicio para poder finalizar su reserva.
-               </p>
-            </div>
-            <Button onClick={addService} variant="outline" className="w-full mt-4 border-emerald-200 text-nutri-forest hover:bg-emerald-50 font-bold rounded-xl h-12 shadow-sm hover:-translate-y-0.5 transition-all">
-              <Plus className="h-5 w-5 mr-2" />
-              Añadir Nuevo Servicio
-            </Button>
           </div>
 
-          <div className="md:col-span-2">
-            <Card className="border-zinc-200 shadow-sm transition-all duration-300 rounded-3xl overflow-hidden bg-white">
-              <CardContent className="p-6 sm:p-8">
-                {formData.services.length === 0 ? (
-                  <div className="text-center py-16 px-4 rounded-2xl border-2 border-dashed border-zinc-200 bg-zinc-50/50">
-                    <div className="h-16 w-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-sm border border-zinc-100">
-                      <List className="h-8 w-8 text-zinc-300" />
-                    </div>
-                    <h3 className="text-xl font-black text-nutri-forest mb-2 tracking-tight">Tu catálogo está vacío</h3>
-                    <p className="text-sm font-medium text-zinc-500 max-w-sm mx-auto">
-                      Los pacientes no podrán reservar turnos hasta que agregues al menos un servicio con su precio y duración.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {formData.services.map((service) => (
-                      <div key={service.id} className="group flex flex-col sm:flex-row gap-5 p-5 bg-white border border-zinc-200 shadow-sm hover:shadow-md hover:border-emerald-300 rounded-2xl transition-all duration-300 relative">
-                        
-                        <div className="flex-1 space-y-2">
-                          <Label className="text-xs font-black text-zinc-400 uppercase tracking-widest">Servicio</Label>
+          {/* Catálogo de Servicios */}
+          <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+            <div className="px-6 py-4 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between">
+               <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Catálogo de Servicios</h3>
+               <Button onClick={addService} variant="ghost" size="sm" className="h-8 px-3 text-senralis-main font-bold hover:bg-slate-50 hover:text-senralis-dark">
+                  <Plus className="h-3.5 w-3.5 mr-1" /> Nuevo Servicio
+               </Button>
+            </div>
+            <div className="p-6">
+              {formData.services.length === 0 ? (
+                <div className="text-center py-12 px-4 rounded-xl border-2 border-dashed border-slate-100 bg-slate-50/30">
+                  <List className="h-10 w-10 text-slate-200 mx-auto mb-3" />
+                  <p className="text-sm font-bold text-slate-400">No tenés servicios configurados.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {formData.services.map((service) => (
+                    <div key={service.id} className="group flex flex-col sm:flex-row gap-4 p-4 bg-white border border-slate-200 rounded-xl hover:shadow-md transition-all relative">
+                      <div className="flex-1 space-y-1.5">
+                        <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nombre del Servicio</Label>
+                        <Input 
+                          placeholder="Consulta Clínica..."
+                          value={service.name}
+                          onChange={e => updateService(service.id, 'name', e.target.value)}
+                          className="h-10 text-sm font-bold bg-slate-50 border-slate-100 focus:bg-white rounded-lg"
+                        />
+                      </div>
+                      <div className="w-full sm:w-32 space-y-1.5">
+                        <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Arancel</Label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 text-xs font-bold">$</span>
                           <Input 
-                            placeholder="Ej. Consulta Primera Vez..."
-                            value={service.name}
-                            onChange={e => updateService(service.id, 'name', e.target.value)}
-                            className="h-12 text-base font-bold text-nutri-forest bg-zinc-50/50 focus:bg-white focus:ring-nutri-emerald focus:border-nutri-emerald rounded-xl"
+                            type="number"
+                            value={service.price === 0 ? '' : service.price}
+                            onChange={e => updateService(service.id, 'price', e.target.value ? Number(e.target.value) : 0)}
+                            className="h-10 pl-7 text-sm font-bold bg-slate-50 border-slate-100 focus:bg-white rounded-lg"
                           />
                         </div>
-                        
-                        <div className="w-full sm:w-36 space-y-2">
-                          <Label className="text-xs font-black text-zinc-400 uppercase tracking-widest">Precio</Label>
-                          <div className="relative">
-                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 text-sm font-bold">$</span>
-                            <Input 
-                              type="number"
-                              min="0"
-                              step="1000"
-                              value={service.price === 0 ? '' : service.price}
-                              onChange={e => updateService(service.id, 'price', e.target.value ? Number(e.target.value) : 0)}
-                              className="h-12 pl-8 text-base font-bold text-nutri-forest bg-zinc-50/50 focus:bg-white focus:ring-nutri-emerald focus:border-nutri-emerald rounded-xl"
-                            />
-                          </div>
-                        </div>
-                        
-                        <div className="w-full sm:w-32 space-y-2">
-                          <Label className="text-xs font-black text-zinc-400 uppercase tracking-widest">Duración</Label>
-                          <div className="relative">
-                            <Input 
-                              type="number"
-                              min="15"
-                              step="15"
-                              value={service.duration || ''}
-                              onChange={e => updateService(service.id, 'duration', e.target.value ? Number(e.target.value) : 0)}
-                              className="h-12 pr-12 text-base font-bold text-nutri-forest bg-zinc-50/50 focus:bg-white focus:ring-nutri-emerald focus:border-nutri-emerald rounded-xl"
-                            />
-                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 text-sm font-bold">min</span>
-                          </div>
-                        </div>
-
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="opacity-0 group-hover:opacity-100 text-red-300 hover:text-red-700 hover:bg-red-50 transition-all sm:mt-7 shrink-0 rounded-xl h-12 w-12"
-                          onClick={() => removeService(service.id)}
-                          title="Eliminar servicio"
-                        >
-                          <Trash2 className="h-6 w-6" />
-                        </Button>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                      <div className="w-full sm:w-28 space-y-1.5">
+                        <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Duración</Label>
+                        <div className="relative">
+                          <Input 
+                            type="number"
+                            value={service.duration || ''}
+                            onChange={e => updateService(service.id, 'duration', e.target.value ? Number(e.target.value) : 0)}
+                            className="h-10 pr-9 text-sm font-bold bg-slate-50 border-slate-100 focus:bg-white rounded-lg"
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 text-[10px] font-bold uppercase">min</span>
+                        </div>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all shrink-0 rounded-lg mt-5"
+                        onClick={() => removeService(service.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

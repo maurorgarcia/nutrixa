@@ -13,6 +13,7 @@ import { MealPlans } from '@/pages/MealPlans';
 import { MealPlanForm } from '@/pages/MealPlanForm';
 import { FollowUps } from '@/pages/FollowUps';
 import { FollowUpForm } from '@/pages/FollowUpForm';
+import { Turnera } from '@/pages/Turnera';
 import { Profile } from '@/pages/Profile';
 import { Settings } from '@/pages/Settings';
 import { Landing } from '@/pages/Landing';
@@ -41,7 +42,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
  */
 function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuthStore();
-  if (loading) return null;
+  // While initializing auth, we allow rendering public pages (Landing) 
+  // to avoid the splash screen on initial home visit.
+  if (loading && !user) return <>{children}</>;
   if (user) return <Navigate to="/dashboard" replace />;
   return <>{children}</>;
 }
@@ -78,6 +81,11 @@ function AnimatedRoutes({ user }: { user: any }) {
         {/* ── PROTECTED ── */}
         <Route path="/dashboard" element={
           <ProtectedRoute><MainLayout><Dashboard /></MainLayout></ProtectedRoute>
+        } />
+
+        {/* Turnera */}
+        <Route path="/turnera" element={
+          <ProtectedRoute><MainLayout><Turnera /></MainLayout></ProtectedRoute>
         } />
 
         {/* Patients */}
@@ -177,26 +185,11 @@ function AnimatedRoutes({ user }: { user: any }) {
 // ── APP ─────────────────────────────────────────────────────────────────────
 
 function App() {
-  const { initializeAuth, loading, user } = useAuthStore();
+  const { initializeAuth, user } = useAuthStore();
 
   useEffect(() => {
     initializeAuth();
   }, []);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA]">
-        <div className="flex flex-col items-center gap-5 animate-in fade-in duration-500">
-          <img src="/logoNutrixa.png" alt="Nutrixa" className="h-14 w-auto opacity-80" />
-          <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-nutri-emerald animate-bounce" style={{ animationDelay: '0ms' }} />
-            <div className="w-1.5 h-1.5 rounded-full bg-nutri-emerald animate-bounce" style={{ animationDelay: '150ms' }} />
-            <div className="w-1.5 h-1.5 rounded-full bg-nutri-emerald animate-bounce" style={{ animationDelay: '300ms' }} />
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <BrowserRouter>

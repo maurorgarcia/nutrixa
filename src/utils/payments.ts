@@ -19,7 +19,7 @@ export type PaymentMethod = 'cash' | 'transfer' | 'card' | 'mercadopago';
 
 export interface Payment {
   id: string;
-  nutritionist_id: string;
+  user_id: string;
   patient_id: string | null;
   patient_name: string;
   patient_email: string;
@@ -28,7 +28,7 @@ export interface Payment {
   currency: string;
   status: PaymentStatus;
   method: PaymentMethod;
-  appointment_id: string | null;
+  appointment_id?: string | null;
   notes: string;
   created_at: string;
   paid_at: string | null;
@@ -47,12 +47,12 @@ export interface PaymentFormData {
 
 // ─── FUNCIONES DE BASE DE DATOS ─────────────────────────────────────────────
 
-export async function fetchPayments(nutritionistId: string): Promise<Payment[]> {
+export async function fetchPayments(ownerUserId: string): Promise<Payment[]> {
   try {
     const { data, error } = await (supabase as any)
       .from('payments')
       .select('*')
-      .eq('nutritionist_id', nutritionistId)
+      .eq('user_id', ownerUserId)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -63,14 +63,14 @@ export async function fetchPayments(nutritionistId: string): Promise<Payment[]> 
 }
 
 export async function createPayment(
-  nutritionistId: string,
+  ownerUserId: string,
   formData: PaymentFormData
 ): Promise<{ data: Payment | null; error: string | null }> {
   try {
     const { data, error } = await (supabase as any)
       .from('payments')
       .insert([{
-        nutritionist_id: nutritionistId,
+        user_id: ownerUserId,
         patient_id: formData.patient_id || null,
         patient_name: formData.patient_name,
         patient_email: formData.patient_email,
@@ -79,7 +79,6 @@ export async function createPayment(
         currency: 'ARS',
         status: 'pending',
         method: formData.method,
-        appointment_id: formData.appointment_id || null,
         notes: formData.notes,
         paid_at: null,
       }])
@@ -151,7 +150,7 @@ export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
 
 export const PAYMENT_STATUS_CONFIG: Record<PaymentStatus, { label: string; cls: string }> = {
   pending:   { label: 'Pendiente',  cls: 'bg-amber-50 text-amber-700 border-amber-200' },
-  paid:      { label: 'Pagado',     cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  paid:      { label: 'Pagado',     cls: 'bg-slate-50 text-senralis-dark border-emerald-200' },
   partial:   { label: 'Parcial',    cls: 'bg-blue-50 text-blue-700 border-blue-200' },
   cancelled: { label: 'Cancelado',  cls: 'bg-red-50 text-red-600 border-red-200' },
 };

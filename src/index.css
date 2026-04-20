@@ -4,98 +4,169 @@
 
 @layer base {
   :root {
-    /* BOUTIQUE PALETTE: Stone & Forest */
-    --background: 30 20% 98%; /* Warm Stone White */
-    --foreground: 155 50% 10%; /* Deep Charcoal-Forest */
+    /* CLINICAL CORE PALETTE: Enterprise Healthcare */
+    --background: 210 20% 98.5%; /* Clean, bright clinical wash */
+    --foreground: 222 47% 11%;
     
     --card: 0 0% 100%;
-    --card-foreground: 155 50% 10%;
+    --card-foreground: 222 47% 11%;
     
     --popover: 0 0% 100%;
-    --popover-foreground: 155 50% 10%;
+    --popover-foreground: 222 47% 11%;
     
-    --primary: 155 70% 16%; /* Dark Forest Green */
-    --primary-foreground: 0 0% 100%;
+    --primary: 181 66% 33%; /* Senralis Main Teal (#1D8D8E) */
+    --primary-foreground: 210 40% 98%;
     
-    --secondary: 155 20% 92%; /* Soft Sage Sage */
-    --secondary-foreground: 155 50% 10%;
+    --secondary: 215 25% 27%; /* Professional Slate */
+    --secondary-foreground: 210 40% 98%;
     
-    --muted: 155 10% 94%;
-    --muted-foreground: 155 10% 40%;
+    --muted: 210 20% 96%;
+    --muted-foreground: 215 16% 47%;
     
-    --accent: 33 100% 96%; /* Hint of Warm Sand */
-    --accent-foreground: 33 80% 30%;
+    --accent: 181 66% 45%; 
+    --accent-foreground: 210 40% 98%;
     
     --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive-foreground: 210 40% 98%;
     
-    --border: 155 15% 88%;
-    --input: 155 15% 88%;
-    --ring: 155 70% 16%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 181 66% 33%;
     
-    --radius: 1rem; /* Softer, Boutique Corner */
-    
-    --sidebar-background: 155 15% 98%;
-    --sidebar-foreground: 155 50% 20%;
-    --sidebar-primary: 155 70% 16%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 155 20% 94%;
-    --sidebar-accent-foreground: 155 70% 16%;
-    --sidebar-border: 155 15% 90%;
-    --sidebar-ring: 155 70% 16%;
+    --radius: 0.75rem; /* Professional 12px rounding */
   }
 
-  .dark {
-    --background: 155 40% 4%;
-    --foreground: 0 0% 98%;
-    --card: 155 40% 4%;
-    --card-foreground: 0 0% 98%;
-    /* ... rest remains same or darkens based on pure charcoal */
+  html {
+    scroll-behavior: smooth;
   }
 }
 
 @layer base {
   * {
     @apply border-border;
-    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
-    transition-duration: 200ms;
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Outfit', sans-serif;
-    font-feature-settings: "ss01", "ss02", "cv01", "cv11";
+    min-height: 100vh;
+    position: relative;
+    isolation: isolate;
+    overflow-x: hidden;
+    font-family: 'Inter', 'Plus Jakarta Sans', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    letter-spacing: -0.01em;
+    text-rendering: optimizeLegibility;
+    letter-spacing: -0.011em;
+    background-color: #f8fafc; /* Solid, clean medical background */
+  }
+
+  /* Subtle background depth without being "AI-gimmicky" */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image: radial-gradient(at 0% 0%, rgba(29, 141, 142, 0.03) 0px, transparent 50%),
+                      radial-gradient(at 100% 100%, rgba(15, 23, 42, 0.02) 0px, transparent 50%);
+    z-index: -1;
+  }
+
+  #root {
+    min-height: 100vh;
   }
 }
 
-/* Custom refine — precision over bulk */
+/* Scrollbar Refinement */
 ::-webkit-scrollbar {
-  width: 4px;
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--border));
-  border-radius: 20px;
+  background: rgba(15, 23, 42, 0.1);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(15, 23, 42, 0.2);
 }
 
-/* Designed headings — variable weights for "human" feel */
-h1, h2, h3, h4 {
-  font-weight: 800;
-  letter-spacing: -0.04em;
-  line-height: 1;
+::selection {
+  background: rgba(29, 141, 142, 0.15);
+  color: #0f172a;
 }
 
-/* Subtle organic grain effect for background — adds that "designed" touch */
-body::before {
-  content: "";
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  opacity: 0.02;
-  pointer-events: none;
-  z-index: 9999;
-  background-image: url("https://www.transparenttextures.com/patterns/natural-paper.png");
+/* Professional Data Table Patterns */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Animation for Clean Transitions */
+.page-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Clinical Subtitle Utility */
+.label-caps {
+  @apply text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500;
+}
+
+/* Data Row Utility */
+.data-row {
+  @apply px-6 py-4 flex items-center justify-between hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0;
+}
+
+.surface-card {
+  @apply rounded-xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md;
+}
+
+@layer components {
+  .clinical-page {
+    @apply page-fade-in pb-12 pt-6;
+  }
+
+  .clinical-panel {
+    @apply surface-card p-6;
+  }
+
+  .clinical-toolbar {
+    @apply surface-card flex items-center justify-between px-6 py-4 mb-6;
+  }
+
+  .clinical-hero {
+    @apply relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-8 md:p-10;
+  }
+
+  .clinical-kicker {
+    @apply inline-flex items-center gap-2 rounded-full border border-slate-100 bg-slate-50 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-600;
+  }
+
+  .clinical-stat {
+    @apply rounded-xl border border-slate-100 bg-slate-50/50 p-5;
+  }
+
+  .clinical-title {
+    @apply font-semibold tracking-tight text-slate-900;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  }
+
+  .clinical-input {
+    @apply w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm focus:border-senralis-main focus:ring-1 focus:ring-senralis-main outline-none transition-all;
+  }
+
+  .clinical-button-primary {
+    @apply inline-flex items-center justify-center rounded-lg bg-senralis-main px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-senralis-mid focus:outline-none focus:ring-2 focus:ring-senralis-main focus:ring-offset-2;
+  }
+
+  .clinical-button-secondary {
+    @apply inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200 focus:ring-offset-2;
+  }
 }

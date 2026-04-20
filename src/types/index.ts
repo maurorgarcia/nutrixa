@@ -11,6 +11,8 @@ export interface NutritionService {
 }
 
 // --- USUARIO Y AUTENTICACIÓN ---
+export type UserPlan = 'trial' | 'free' | 'pro' | 'demo' | 'enterprise';
+
 export interface User {
   id: string;
   email: string;
@@ -21,6 +23,12 @@ export interface User {
   working_hours_start: string;
   working_hours_end: string;
   services: NutritionService[];
+  bio?: string;
+  specialty?: string;
+  avatar_url?: string;
+  /** Plan comercial; default trial en nuevas cuentas */
+  plan?: UserPlan;
+  trial_ends_at?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -28,7 +36,8 @@ export interface User {
 // --- TURNOS (APPOINTMENTS) ---
 export interface Appointment {
   id: string;
-  nutritionist_id: string;
+  /** Profesional dueño del turno (= public.users.id / auth) */
+  user_id: string;
   patient_id: string | null;
   guest_name: string | null;
   guest_email: string | null;
@@ -45,116 +54,87 @@ export interface Appointment {
   updated_at: string;
 }
 
-// --- PACIENTES ---
+// --- PACIENTES (PERFIL ESTÁTICO) ---
 export interface Patient {
   id: string;
   user_id: string;
-  first_name: string;
-  last_name: string;
-  email: string | null;
-  phone: string | null;
-  birth_date: string;
-  gender: 'male' | 'female' | 'other';
-  occupation: string | null;
-  work_schedule: string | null;
-  stress_level: 'low' | 'moderate' | 'high' | null;
+  nombre_completo: string;
+  sexo: string;
+  fecha_nacimiento: string;
+  edad: number;
+  telefono: string;
+  correo: string;
+  ocupacion: string;
+  nivel_estres: string;
+  patologias_preexistentes: string[];
+  medicacion_habitual: string[];
+  antecedentes_familiares: string[];
+  tipo_dieta: string;
+  alimentos_excluidos: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+// --- HISTORIAL DE CONSULTAS Y PLAN NUTRICIONAL (DYNAMIC DATA) ---
+export interface LaboratoryData {
+  colesterol?: string;
+  glucemia?: string;
+  insulina?: string;
+  b12?: string;
+  vitamina_d?: string;
+  otros?: string;
+  fecha_laboratorio: string;
+}
+
+export interface CurrentHabits {
+  actividad_fisica: string;
+  horas_descanso: string;
+  nivel_hidratacion: string;
+}
+
+export interface Anamnesis24hs {
+  desayuno: string;
+  almuerzo: string;
+  merienda: string;
+  cena: string;
+  tipo_dia: 'semana' | 'fin_de_semana';
+}
+
+export interface Supplement {
+  nombre_suplemento: string;
+  dosis: string;
+  estado_consumo: 'activo' | 'suspendido' | 'finalizado';
+}
+
+export interface Consultation {
+  id: string;
+  patient_id: string;
+  user_id: string;
+  fecha_consulta: string;
+  motivo_consulta: string;
+  peso_actual: number;
+  talla: number;
+  imc: number;
+  sumatoria_pliegues: number;
+  circunferencia_cintura: number;
+  circunferencia_cadera: number;
+  laboratorios: LaboratoryData;
+  habitos_actuales: CurrentHabits;
+  anamnesis_24hs: {
+    semana: Anamnesis24hs;
+    fin_de_semana: Anamnesis24hs;
+  };
+  // Plan Nutricional / Tratamiento
+  estrategia_etapa: string;
+  estructura_platos: string;
+  suplementacion_recetada: Supplement[];
+  notas_seguimiento: string;
   created_at: string;
   updated_at: string;
 }
 
 export interface PatientWithAge extends Patient {
-  age: number;
-}
-
-// --- ANAMNESIS ---
-export interface Anamnesis {
-  id: string;
-  patient_id: string;
-  user_id: string;
-  
-  // Actividad física
-  physical_activity: {
-    level: 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active';
-    activities: string[];
-    frequency: string;
-    duration: string;
-  } | null;
-  
-  // Motivo de consulta
-  consultation_reason: string;
-  
-  // Datos antropométricos
-  anthropometric_data: {
-    weight: number;
-    height: number;
-    bmi: number;
-    waist_circumference?: number;
-    hip_circumference?: number;
-    arm_circumference?: number;
-    body_fat_percentage?: number;
-    muscle_mass?: number;
-  };
-  
-  // Enfermedades y medicación
-  diseases: string[];
-  medications: {
-    name: string;
-    dosage: string;
-    frequency: string;
-  }[];
-  
-  // Antecedentes familiares
-  family_history: {
-    condition: string;
-    relationship: string;
-  }[];
-  
-  // Hábitos alimentarios
-  eating_habits: {
-    meal_frequency: number;
-    meal_times: {
-      breakfast: string;
-      mid_morning: string;
-      lunch: string;
-      snack: string;
-      dinner: string;
-    };
-    cooking_methods: string[];
-    food_preferences: string[];
-    food_dislikes: string[];
-    allergies: string[];
-    intolerances: string[];
-  };
-  
-  // Recordatorio 24h
-  recall_24h: {
-    weekday: {
-      breakfast: string;
-      mid_morning: string;
-      lunch: string;
-      snack: string;
-      dinner: string;
-    };
-    weekend: {
-      breakfast: string;
-      mid_morning: string;
-      lunch: string;
-      snack: string;
-      dinner: string;
-    };
-  };
-  
-  // Análisis clínicos
-  lab_results: {
-    test_name: string;
-    value: string;
-    unit: string;
-    reference_range: string;
-    date: string;
-  }[];
-  
-  created_at: string;
-  updated_at: string;
+  // En la nueva estructura 'edad' ya es parte de Patient, pero mantenemos por compatibilidad si es necesario
 }
 
 // --- RECETAS ---
@@ -277,83 +257,66 @@ export interface DashboardStats {
 }
 
 // --- FORMULARIOS ---
-export interface PatientFormData {
-  first_name: string;
-  last_name: string;
-  email: string;
-  phone: string;
-  birth_date: string;
-  gender: 'male' | 'female' | 'other';
-  occupation: string;
-  work_schedule: string;
-  stress_level: 'low' | 'moderate' | 'high' | '';
+export interface PatientProfileFormData {
+  nombre_completo: string;
+  sexo: string;
+  fecha_nacimiento: string;
+  edad: string;
+  telefono: string;
+  correo: string;
+  ocupacion: string;
+  nivel_estres: string;
+  patologias_preexistentes: string[];
+  medicacion_habitual: string[];
+  antecedentes_familiares: string[];
+  tipo_dieta: string;
+  alimentos_excluidos: string[];
 }
 
-export interface AnamnesisFormData {
-  physical_activity: {
-    level: 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active' | '';
-    activities: string[];
-    frequency: string;
-    duration: string;
+export interface ConsultationFormData {
+  fecha_consulta: string;
+  motivo_consulta: string;
+  peso_actual: string;
+  talla: string;
+  sumatoria_pliegues: string;
+  circunferencia_cintura: string;
+  circunferencia_cadera: string;
+  laboratorios: {
+    colesterol: string;
+    glucemia: string;
+    insulina: string;
+    b12: string;
+    vitamina_d: string;
+    otros: string;
+    fecha_laboratorio: string;
   };
-  consultation_reason: string;
-  anthropometric_data: {
-    weight: string;
-    height: string;
-    waist_circumference: string;
-    hip_circumference: string;
-    arm_circumference: string;
-    body_fat_percentage: string;
-    muscle_mass: string;
+  habitos_actuales: {
+    actividad_fisica: string;
+    horas_descanso: string;
+    nivel_hidratacion: string;
   };
-  diseases: string[];
-  medications: {
-    name: string;
-    dosage: string;
-    frequency: string;
-  }[];
-  family_history: {
-    condition: string;
-    relationship: string;
-  }[];
-  eating_habits: {
-    meal_frequency: string;
-    meal_times: {
-      breakfast: string;
-      mid_morning: string;
-      lunch: string;
-      snack: string;
-      dinner: string;
-    };
-    cooking_methods: string[];
-    food_preferences: string[];
-    food_dislikes: string[];
-    allergies: string[];
-    intolerances: string[];
-  };
-  recall_24h: {
-    weekday: {
-      breakfast: string;
-      mid_morning: string;
-      lunch: string;
-      snack: string;
-      dinner: string;
+  anamnesis_24hs: {
+    semana: {
+      desayuno: string;
+      almuerzo: string;
+      merienda: string;
+      cena: string;
     };
     weekend: {
-      breakfast: string;
-      mid_morning: string;
-      lunch: string;
-      snack: string;
-      dinner: string;
+      desayuno: string;
+      almuerzo: string;
+      merienda: string;
+      cena: string;
     };
   };
-  lab_results: {
-    test_name: string;
-    value: string;
-    unit: string;
-    reference_range: string;
-    date: string;
+  estrategia_etapa: string;
+  estructura_platos: string;
+  suplementacion_recetada: {
+    nombre_suplemento: string;
+    dosis: string;
+    estado_consumo: 'activo' | 'suspendido' | 'finalizado';
   }[];
+  notas_seguimiento: string;
 }
 
 export interface RecipeFormData {
@@ -412,18 +375,29 @@ export interface FilterState {
     to: Date | null;
   };
 }
-// --- PAGOS Y COBROS ---
+// --- PAGOS Y COBROS (tabla public.payments en Supabase) ---
+export type PaymentStatus = 'pending' | 'paid' | 'partial' | 'cancelled';
+export type PaymentMethod = 'cash' | 'transfer' | 'card' | 'mercadopago';
+
 export interface Payment {
   id: string;
-  patient_id: string;
-  nutritionist_id: string;
-  amount: number;
-  status: 'pending' | 'paid' | 'cancelled' | 'refunded';
-  method: 'cash' | 'transfer' | 'mercadopago' | 'stripe' | 'other';
+  /** Profesional dueño del cobro (= auth.users.id) */
+  user_id: string;
+  patient_id: string | null;
+  patient_name: string;
+  patient_email: string;
   description: string;
-  external_reference: string | null;
-  payment_url: string | null;
+  amount: number;
+  currency: string;
+  status: PaymentStatus;
+  method: PaymentMethod;
+  /** Solo presente si la tabla en Supabase tiene esta columna (migración opcional). */
+  appointment_id?: string | null;
+  notes: string;
   paid_at: string | null;
   created_at: string;
   updated_at: string;
 }
+
+/** Fila lista para insertar (sin columnas generadas por la BD). */
+export type PaymentInsert = Omit<Payment, 'id' | 'created_at' | 'updated_at'>;

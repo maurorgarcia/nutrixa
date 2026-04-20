@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { useFollowUpStore } from '@/stores/followUpStore';
@@ -108,8 +109,10 @@ export function FollowUpForm({ onSuccess, onCancel, initialId, initialPatientId 
 
       if (isEditing && id) {
         await updateFollowUp(id, dataToSave);
+        toast.success('Evolución actualizada correctamente');
       } else {
         await createFollowUp(user.id, formData.patient_id, dataToSave);
+        toast.success('Nueva evolución registrada con éxito');
       }
 
       if (onSuccess) onSuccess();
@@ -163,7 +166,7 @@ export function FollowUpForm({ onSuccess, onCancel, initialId, initialPatientId 
   if (isEditing && loading) {
     return (
       <div className="flex justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-zinc-200" />
+        <Loader2 className="h-8 w-8 animate-spin text-slate-200" />
       </div>
     );
   }
@@ -176,7 +179,7 @@ export function FollowUpForm({ onSuccess, onCancel, initialId, initialPatientId 
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-3xl font-black text-zinc-900 tracking-tight">
+            <h1 className="text-3xl font-black text-slate-900 tracking-tight">
               {isEditing ? 'Editar Control' : 'Nuevo Control'}
             </h1>
           </div>
@@ -185,23 +188,23 @@ export function FollowUpForm({ onSuccess, onCancel, initialId, initialPatientId 
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className={cn("grid grid-cols-1 gap-6", !isInsideSheet && "lg:grid-cols-2")}>
-          <Card className={isInsideSheet ? "border-0 shadow-none bg-transparent" : "border-zinc-200"}>
+          <Card className={isInsideSheet ? "border-0 shadow-none bg-transparent" : "border-slate-200"}>
             <CardContent className={cn("space-y-4", isInsideSheet && "p-0")}>
               {!initialPatientId && !isEditing && (
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500">Paciente *</Label>
+                  <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Paciente *</Label>
                   <Select
                     value={formData.patient_id}
                     onValueChange={(value) => setFormData(prev => ({ ...prev, patient_id: value }))}
                     required
                   >
-                    <SelectTrigger className="h-12 border-zinc-200 rounded-xl">
+                    <SelectTrigger className="h-12 border-slate-200 rounded-xl">
                       <SelectValue placeholder="Seleccionar paciente..." />
                     </SelectTrigger>
                     <SelectContent>
                       {patients.map((patient) => (
                         <SelectItem key={patient.id} value={patient.id}>
-                          {patient.first_name} {patient.last_name}
+                          {patient.nombre_completo}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -211,17 +214,17 @@ export function FollowUpForm({ onSuccess, onCancel, initialId, initialPatientId 
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500">Fecha *</Label>
+                  <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Fecha *</Label>
                   <Input
                     type="date"
                     value={formData.date}
                     onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
                     required
-                    className="h-12 border-zinc-200 rounded-xl"
+                    className="h-12 border-slate-200 rounded-xl"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500">Peso (kg) *</Label>
+                  <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Peso (kg) *</Label>
                   <Input
                     type="number"
                     step="0.1"
@@ -229,18 +232,18 @@ export function FollowUpForm({ onSuccess, onCancel, initialId, initialPatientId 
                     onChange={(e) => setFormData(prev => ({ ...prev, weight: e.target.value }))}
                     required
                     placeholder="70.5"
-                    className="h-12 border-zinc-200 rounded-xl"
+                    className="h-12 border-slate-200 rounded-xl"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500">Adherencia</Label>
+                <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Adherencia</Label>
                 <Select
                   value={formData.adherence}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, adherence: value }))}
                 >
-                  <SelectTrigger className="h-12 border-zinc-200 rounded-xl text-sm font-semibold">
+                  <SelectTrigger className="h-12 border-slate-200 rounded-xl text-sm font-semibold">
                     <SelectValue placeholder="Seleccionar..." />
                   </SelectTrigger>
                   <SelectContent>
@@ -255,10 +258,10 @@ export function FollowUpForm({ onSuccess, onCancel, initialId, initialPatientId 
             </CardContent>
           </Card>
 
-          <Card className={isInsideSheet ? "border-0 shadow-none bg-transparent" : "border-zinc-200"}>
+          <Card className={isInsideSheet ? "border-0 shadow-none bg-transparent" : "border-slate-200"}>
             <CardContent className={cn("space-y-4", isInsideSheet && "p-0")}>
                <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500">Síntomas</Label>
+                <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Síntomas</Label>
                 <div className="flex gap-2">
                   <Input
                     placeholder="Agregar síntoma..."
@@ -270,7 +273,7 @@ export function FollowUpForm({ onSuccess, onCancel, initialId, initialPatientId 
                         addSymptom();
                       }
                     }}
-                    className="h-10 border-zinc-200 rounded-xl"
+                    className="h-10 border-slate-200 rounded-xl"
                   />
                   <Button type="button" variant="outline" onClick={addSymptom} className="rounded-xl h-10">
                     <Plus className="h-4 w-4" />
@@ -287,7 +290,7 @@ export function FollowUpForm({ onSuccess, onCancel, initialId, initialPatientId 
               </div>
 
               <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500">Inquietudes</Label>
+                <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Inquietudes</Label>
                 <div className="flex gap-2">
                   <Input
                     placeholder="Agregar inquietud..."
@@ -299,7 +302,7 @@ export function FollowUpForm({ onSuccess, onCancel, initialId, initialPatientId 
                         addConcern();
                       }
                     }}
-                    className="h-10 border-zinc-200 rounded-xl"
+                    className="h-10 border-slate-200 rounded-xl"
                   />
                   <Button type="button" variant="outline" onClick={addConcern} className="rounded-xl h-10">
                     <Plus className="h-4 w-4" />
@@ -318,22 +321,22 @@ export function FollowUpForm({ onSuccess, onCancel, initialId, initialPatientId 
           </Card>
 
           <div className={cn("space-y-2", !isInsideSheet && "lg:col-span-2")}>
-            <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500">Notas de evolución</Label>
+            <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Notas de evolución</Label>
             <Textarea
               value={formData.notes}
               onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
               placeholder="Describí los cambios observados en este control..."
-              className={cn("min-h-[100px] border-zinc-200 rounded-2xl", isInsideSheet && "bg-zinc-50/50")}
+              className={cn("min-h-[100px] border-slate-200 rounded-2xl", isInsideSheet && "bg-slate-50/50")}
             />
           </div>
 
           <div className={cn("space-y-2", !isInsideSheet && "lg:col-span-2")}>
-            <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500">Próxima cita sugerida</Label>
+            <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Próxima cita sugerida</Label>
             <Input
               type="date"
               value={formData.next_appointment}
               onChange={(e) => setFormData(prev => ({ ...prev, next_appointment: e.target.value }))}
-              className="h-12 border-zinc-200 rounded-xl"
+              className="h-12 border-slate-200 rounded-xl"
             />
           </div>
         </div>
@@ -341,15 +344,15 @@ export function FollowUpForm({ onSuccess, onCancel, initialId, initialPatientId 
         <div className={cn(
           "flex justify-end gap-3",
           isInsideSheet 
-            ? "fixed bottom-0 right-0 left-0 p-6 bg-white border-t border-zinc-100 z-10 sm:left-auto sm:w-[450px]" 
+            ? "fixed bottom-0 right-0 left-0 p-6 bg-white border-t border-slate-100 z-10 sm:left-auto sm:w-[450px]" 
             : "mt-6"
         )}>
-          <Button type="button" variant="ghost" onClick={handleCancelClick} className="font-bold text-zinc-500 h-11 px-6">
+          <Button type="button" variant="ghost" onClick={handleCancelClick} className="font-bold text-slate-500 h-11 px-6">
             Cancelar
           </Button>
           <Button
             type="submit"
-            className="bg-zinc-900 hover:bg-zinc-800 text-white font-black uppercase tracking-widest text-[10px] h-11 px-8 rounded-xl shadow-lg active:scale-95 transition-all"
+            className="bg-slate-900 hover:bg-slate-800 text-white font-black uppercase tracking-widest text-[10px] h-11 px-8 rounded-xl shadow-lg active:scale-95 transition-all"
             disabled={saving || (!isEditing && !formData.patient_id) || !formData.weight}
           >
             {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}

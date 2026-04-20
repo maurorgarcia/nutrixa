@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { useRecipeStore } from '@/stores/recipeStore';
@@ -107,8 +108,10 @@ export function RecipeForm({ onSuccess, onCancel, initialId }: RecipeFormProps) 
 
       if (isEditing && id) {
         await updateRecipe(id, cleanedData);
+        toast.success('Receta actualizada correctamente');
       } else {
         await createRecipe(user.id, cleanedData);
+        toast.success('Nueva receta creada con éxito');
       }
       
       if (onSuccess) {
@@ -182,7 +185,7 @@ export function RecipeForm({ onSuccess, onCancel, initialId }: RecipeFormProps) 
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-nutri-forest">
+            <h1 className="text-3xl font-bold text-senralis-dark">
               {isEditing ? 'Editar Receta' : 'Nueva Receta'}
             </h1>
           </div>
@@ -192,31 +195,31 @@ export function RecipeForm({ onSuccess, onCancel, initialId }: RecipeFormProps) 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className={cn("grid grid-cols-1 gap-6", !isInsideSheet && "lg:grid-cols-3")}>
           <div className={cn("space-y-6", !isInsideSheet && "lg:col-span-2")}>
-            <Card className={isInsideSheet ? "border-0 shadow-none bg-transparent" : "border-zinc-200"}>
+            <Card className={isInsideSheet ? "border-0 shadow-none bg-transparent" : "border-slate-200"}>
               {!isInsideSheet && <CardHeader><CardTitle className="text-lg font-semibold">Información Básica</CardTitle></CardHeader>}
               <CardContent className={cn("space-y-4", isInsideSheet && "p-0")}>
                 <div className="space-y-2">
                   <Label htmlFor="name">Nombre de la receta *</Label>
-                  <Input id="name" value={formData.name} onChange={(e) => handleChange('name', e.target.value)} required className="h-10 border-zinc-200" />
+                  <Input id="name" value={formData.name} onChange={(e) => handleChange('name', e.target.value)} required className="h-10 border-slate-200" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="description">Descripción</Label>
-                  <Textarea id="description" value={formData.description} onChange={(e) => handleChange('description', e.target.value)} className="border-zinc-200" rows={3} />
+                  <Textarea id="description" value={formData.description} onChange={(e) => handleChange('description', e.target.value)} className="border-slate-200" rows={3} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="prep_time">Prep. (min)</Label>
-                    <Input id="prep_time" type="number" value={formData.prep_time} onChange={(e) => handleChange('prep_time', e.target.value)} className="h-10 border-zinc-200" />
+                    <Input id="prep_time" type="number" value={formData.prep_time} onChange={(e) => handleChange('prep_time', e.target.value)} className="h-10 border-slate-200" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="cook_time">Cocción (min)</Label>
-                    <Input id="cook_time" type="number" value={formData.cook_time} onChange={(e) => handleChange('cook_time', e.target.value)} className="h-10 border-zinc-200" />
+                    <Input id="cook_time" type="number" value={formData.cook_time} onChange={(e) => handleChange('cook_time', e.target.value)} className="h-10 border-slate-200" />
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className={isInsideSheet ? "border-0 shadow-none bg-transparent" : "border-zinc-200"}>
+            <Card className={isInsideSheet ? "border-0 shadow-none bg-transparent" : "border-slate-200"}>
               <CardHeader className="flex flex-row items-center justify-between px-0 py-4">
                 <CardTitle className="text-lg font-semibold">Ingredientes</CardTitle>
                 <Button type="button" variant="outline" size="sm" onClick={addIngredient} className="rounded-xl font-bold">
@@ -226,10 +229,10 @@ export function RecipeForm({ onSuccess, onCancel, initialId }: RecipeFormProps) 
               <CardContent className="px-0">
                 <div className="space-y-3">
                   {formData.ingredients.map((ing, i) => (
-                    <div key={i} className="flex gap-2 p-3 bg-zinc-50 rounded-xl border border-zinc-100">
-                      <Input placeholder="Harina" value={ing.name} onChange={(e) => updateIngredient(i, 'name', e.target.value)} className="flex-1 h-9 border-zinc-200" />
-                      <Input type="number" placeholder="100" value={ing.quantity || ''} onChange={(e) => updateIngredient(i, 'quantity', parseFloat(e.target.value) || 0)} className="w-20 h-9 border-zinc-200" />
-                      <Button type="button" variant="ghost" size="icon" onClick={() => removeIngredient(i)} className="text-zinc-400 hover:text-red-500"><Trash2 className="h-4 w-4"/></Button>
+                    <div key={i} className="flex gap-2 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                      <Input placeholder="Harina" value={ing.name} onChange={(e) => updateIngredient(i, 'name', e.target.value)} className="flex-1 h-9 border-slate-200" />
+                      <Input type="number" placeholder="100" value={ing.quantity || ''} onChange={(e) => updateIngredient(i, 'quantity', parseFloat(e.target.value) || 0)} className="w-20 h-9 border-slate-200" />
+                      <Button type="button" variant="ghost" size="icon" onClick={() => removeIngredient(i)} className="text-slate-400 hover:text-red-500"><Trash2 className="h-4 w-4"/></Button>
                     </div>
                   ))}
                 </div>
@@ -238,12 +241,12 @@ export function RecipeForm({ onSuccess, onCancel, initialId }: RecipeFormProps) 
           </div>
           
           <div className="space-y-6">
-             <Card className={isInsideSheet ? "border-0 shadow-none bg-transparent" : "border-zinc-200"}>
-               <CardHeader className="px-0 py-4"><CardTitle className="text-sm font-black uppercase tracking-widest text-zinc-400">Etiquetas</CardTitle></CardHeader>
+             <Card className={isInsideSheet ? "border-0 shadow-none bg-transparent" : "border-slate-200"}>
+               <CardHeader className="px-0 py-4"><CardTitle className="text-sm font-black uppercase tracking-widest text-slate-400">Etiquetas</CardTitle></CardHeader>
                <CardContent className="px-0">
                   <div className="flex flex-wrap gap-2">
                     {recipeTags.map(tag => (
-                      <button key={tag.value} type="button" onClick={() => toggleTag(tag.value)} className={cn("px-3 py-1.5 rounded-xl text-xs font-bold transition-all border", formData.tags.includes(tag.value) ? "bg-zinc-900 border-zinc-900 text-white" : "bg-white border-zinc-200 text-zinc-600 hover:border-zinc-400")}>
+                      <button key={tag.value} type="button" onClick={() => toggleTag(tag.value)} className={cn("px-3 py-1.5 rounded-xl text-xs font-bold transition-all border", formData.tags.includes(tag.value) ? "bg-slate-900 border-slate-900 text-white" : "bg-white border-slate-200 text-slate-600 hover:border-slate-400")}>
                         {tag.label}
                       </button>
                     ))}
@@ -253,13 +256,13 @@ export function RecipeForm({ onSuccess, onCancel, initialId }: RecipeFormProps) 
 
              <div className={cn(
               "flex flex-col gap-3",
-              isInsideSheet && "fixed bottom-0 right-0 left-0 p-6 bg-white border-t border-zinc-100 sm:left-auto sm:w-[450px]"
+              isInsideSheet && "fixed bottom-0 right-0 left-0 p-6 bg-white border-t border-slate-100 sm:left-auto sm:w-[450px]"
              )}>
-                <Button type="submit" className="w-full bg-zinc-900 hover:bg-zinc-800 text-white font-bold h-10 px-6 rounded-xl" disabled={saving}>
+                <Button type="submit" className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold h-10 px-6 rounded-xl" disabled={saving}>
                   {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
                   {isEditing ? 'Guardar cambios' : 'Crear receta'}
                 </Button>
-                <Button type="button" variant="ghost" className="w-full font-semibold text-zinc-500" onClick={handleCancelClick}>
+                <Button type="button" variant="ghost" className="w-full font-semibold text-slate-500" onClick={handleCancelClick}>
                   Cancelar
                 </Button>
              </div>

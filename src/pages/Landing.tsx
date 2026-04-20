@@ -1,9 +1,33 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate, Link } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 import { 
   Menu, X, Shield, ChevronDown, Check, ArrowUp, ArrowRight,
-  Monitor, Activity, FileText
+  Monitor, Activity, FileText, User, Users, Mail, Globe, Phone, Calendar, Zap, Sparkles,
+  ClipboardList, CreditCard, Layout, Layers, ShieldCheck, Database, Headphones, Stethoscope
 } from 'lucide-react';
+
+// ── CUSTOM HOOK FOR SCROLL REVEAL ──
+function useScrollReveal() {
+  const [isVisible, setIsVisible] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+        }
+      },
+      { threshold: 0.1 }
+    );
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, []);
+
+  return { ref, isVisible };
+}
 
 export function Landing() {
   const navigate = useNavigate();
@@ -11,405 +35,427 @@ export function Landing() {
   const [scrolled, setScrolled] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
+  // Demo Modal State
+  const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
+  const [demoStep, setDemoStep] = useState(1);
+  const [demoData, setDemoData] = useState({ name: '', email: '', phone: '' });
+  
+  // Custom Calendar State
+  const [selectedMonthIndex, setSelectedMonthIndex] = useState(0); 
+  const [selectedDateIndex, setSelectedDateIndex] = useState<number | null>(null);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
+
+  const months = ["Abril 2026", "Mayo 2026", "Junio 2026"];
+  const handleNextMonth = () => setSelectedMonthIndex(p => Math.min(p + 1, months.length - 1));
+  const handlePrevMonth = () => setSelectedMonthIndex(p => Math.max(p - 1, 0));
+
+  const handleOpenDemoModal = () => {
+    setIsDemoModalOpen(true);
+    setDemoStep(1);
+    setDemoData({ name: '', email: '', phone: '' });
+    setSelectedMonthIndex(0);
+    setSelectedDateIndex(null);
+    setSelectedTimeSlot(null);
+  };
+
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
       setShowScrollTop(window.scrollY > 500);
     };
     window.addEventListener('scroll', handleScroll);
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('demo') === 'true') {
+      handleOpenDemoModal();
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   return (
-    <div className="min-h-screen bg-white text-[#0F172A] font-sans selection:bg-emerald-100 selection:text-emerald-900">
+    <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-teal-50 selection:text-senralis-main overflow-x-hidden">
 
-      {/* ── CORPORATE NAVBAR ── */}
-      <nav className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 bg-white ${scrolled ? 'border-b border-gray-200 shadow-sm' : 'border-b border-gray-100'}`}>
+      {/* ── NAVIGATION ── */}
+      <nav className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white/95 backdrop-blur-md border-b border-slate-200' : 'bg-transparent border-transparent'}`}>
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <button 
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="outline-none flex items-center"
+            className="flex items-center gap-2 group"
           >
-            <img src="/logoNutrixa.png" alt="Nutrixa" className="h-7 w-auto" />
+            <img src="/logoTexto.png" alt="Senralis" className="h-6 w-auto group-hover:scale-105 transition-transform" />
           </button>
 
           <div className="hidden md:flex items-center gap-8">
-            <a href="#infraestructura" className="text-sm font-semibold text-slate-600 hover:text-emerald-600 transition-colors">Infraestructura</a>
-            <a href="#flujos" className="text-sm font-semibold text-slate-600 hover:text-emerald-600 transition-colors">Sistema Operativo</a>
-            <a href="#licencias" className="text-sm font-semibold text-slate-600 hover:text-emerald-600 transition-colors">Licencias Corporativas</a>
-          </div>
-
-          <div className="hidden md:flex items-center gap-4">
-            <button
+            <a href="#soluciones" className="text-sm font-bold text-slate-600 hover:text-senralis-main transition-colors">Ecosistema</a>
+            <a href="#especialidades" className="text-sm font-bold text-slate-600 hover:text-senralis-main transition-colors">Especialidades</a>
+            <a href="#tecnologia" className="text-sm font-bold text-slate-600 hover:text-senralis-main transition-colors">Tecnología</a>
+            
+            <div className="h-4 w-px bg-slate-200 mx-2" />
+            
+            <button 
               onClick={() => navigate('/login')}
-              className="text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors px-3 py-2"
+              className="text-sm font-bold text-slate-600 hover:text-slate-900 transition-colors"
             >
-              Acceso Institucional
+               Acceso Profesional
             </button>
-            <button
-              onClick={() => navigate('/login?signup=true')}
-              className="bg-[#0F172A] hover:bg-slate-800 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
+            <button 
+              onClick={handleOpenDemoModal}
+              className="bg-slate-900 text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-slate-800 transition-all shadow-sm active:scale-95"
             >
-              Comenzar prueba
+              Agendar Demo
             </button>
           </div>
 
-          <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2 md:hidden text-slate-600">
+          <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2 md:hidden text-slate-600 focus:outline-none">
             {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
 
         {/* Mobile menu */}
-        <div className={`md:hidden absolute top-20 inset-x-0 bg-white border-b border-gray-200 transition-all duration-300 overflow-hidden ${isMenuOpen ? 'max-h-96' : 'max-h-0'}`}>
-          <div className="px-6 py-4 flex flex-col gap-4">
-            <a href="#infraestructura" onClick={() => setIsMenuOpen(false)} className="text-base font-semibold text-slate-700 py-2">Infraestructura</a>
-            <a href="#flujos" onClick={() => setIsMenuOpen(false)} className="text-base font-semibold text-slate-700 py-2">Sistema Operativo</a>
-            <a href="#licencias" onClick={() => setIsMenuOpen(false)} className="text-base font-semibold text-slate-700 py-2">Licencias Corporativas</a>
-            <div className="h-px bg-gray-100 my-2"></div>
-            <button onClick={() => navigate('/login')} className="w-full text-left text-base font-semibold text-slate-700 py-2">Acceso Institucional</button>
-            <button onClick={() => navigate('/login?signup=true')} className="w-full bg-[#0F172A] text-white rounded-lg py-3 text-base font-semibold mt-2">Comenzar prueba</button>
+        <div className={`md:hidden absolute top-20 inset-x-0 bg-white border-b border-slate-200 transition-all duration-300 overflow-hidden ${isMenuOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'}`}>
+          <div className="px-6 py-8 flex flex-col gap-6">
+            <a href="#soluciones" onClick={() => setIsMenuOpen(false)} className="text-lg font-bold text-slate-700">Ecosistema</a>
+            <a href="#especialidades" onClick={() => setIsMenuOpen(false)} className="text-lg font-bold text-slate-700">Especialidades</a>
+            <button 
+              onClick={() => { setIsMenuOpen(false); navigate('/login'); }} 
+              className="w-full text-center text-lg font-bold text-slate-900 py-3"
+            >
+              Acceso Profesional
+            </button>
+            <button 
+              onClick={() => { setIsMenuOpen(false); handleOpenDemoModal(); }} 
+              className="w-full bg-senralis-main text-white rounded-xl py-4 text-lg font-bold"
+            >
+              Solicitar Demostración
+            </button>
           </div>
         </div>
       </nav>
 
-      {/* ── B2B HERO SECTION ── */}
-      <section className="pt-40 pb-24 md:pt-52 md:pb-32 px-6">
-        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-16">
-          <div className="flex-1 space-y-8 text-center lg:text-left">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-[4rem] font-black tracking-tighter text-[#0F172A] leading-[1.1]">
-              Sistema centralizado <br className="hidden lg:block"/> de gestión clínica.
+      {/* ── HERO SECTION ── */}
+      <section className="pt-40 pb-24 md:pt-52 md:pb-32 px-6 relative overflow-hidden bg-white">
+        <div className="absolute top-20 left-[-10%] w-[40%] h-[400px] bg-teal-50/40 rounded-full blur-[100px] pointer-events-none" />
+        
+        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-20 relative z-10">
+          <div className="flex-1 space-y-10 text-center lg:text-left animate-in fade-in slide-in-from-left duration-1000">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-slate-50 border border-slate-100 rounded-full text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+               <ShieldCheck className="w-3.5 h-3.5 text-teal-500" /> Infraestructura Médica Certificada
+            </div>
+            <h1 className="text-5xl font-extrabold tracking-tight text-slate-900 leading-[1] sm:text-6xl md:text-7xl lg:text-8xl">
+              El Cerebro Digital de tu <span className="text-senralis-main">Consultorio</span>.
             </h1>
-            <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto lg:mx-0 font-medium leading-relaxed">
-              Infraestructura de alto rendimiento para profesionales de la nutrición. 
-              Centralice expedientes, dietoterapia automatizada y agendas web en un entorno seguro y nativo.
+            <p className="text-lg md:text-xl text-slate-500 max-w-2xl mx-auto lg:mx-0 font-medium leading-relaxed">
+              Senralis unifica la agenda asistencial, el historial clínico y la gestión financiera en una sola infraestructura de alto rendimiento.
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-4">
+            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-5 pt-4">
               <button
-                onClick={() => navigate('/login?signup=true')}
-                className="w-full sm:w-auto bg-[#10B981] hover:bg-emerald-600 text-white px-8 py-4 rounded-xl font-bold text-base transition-colors flex items-center justify-center gap-2"
+                onClick={handleOpenDemoModal}
+                className="group w-full sm:w-auto bg-senralis-main hover:bg-slate-900 text-white px-10 py-5 rounded-2xl font-bold text-lg transition-all flex items-center justify-center gap-3 shadow-2xl hover:shadow-teal-900/20 active:scale-95"
               >
-                Configurar mi espacio <ArrowRight className="w-4 h-4" />
+                Comenzar ahora
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
-              <button
-                 onClick={() => navigate('/login')}
-                 className="w-full sm:w-auto text-slate-700 bg-slate-50 hover:bg-slate-100 border border-slate-200 px-8 py-4 rounded-xl font-semibold text-base transition-colors"
+              <button 
+                onClick={() => navigate('/login')}
+                className="w-full sm:w-auto px-8 py-4 font-bold text-slate-600 hover:text-slate-900 transition-colors flex items-center justify-center gap-2"
               >
-                 Contactar ventas
+                Acceso Profesional <ArrowUp className="w-4 h-4 rotate-45 text-slate-300" />
               </button>
             </div>
           </div>
           
-          <div className="flex-1 w-full lg:w-auto">
-             <div className="bg-white rounded-2xl border border-gray-200 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] overflow-hidden">
-               <div className="bg-slate-50 border-b border-gray-100 px-4 py-3 flex items-center gap-2">
-                 <div className="w-3 h-3 rounded-full bg-red-400"></div>
-                 <div className="w-3 h-3 rounded-full bg-amber-400"></div>
-                 <div className="w-3 h-3 rounded-full bg-emerald-400"></div>
+          <div className="flex-1 w-full lg:w-auto relative animate-in fade-in slide-in-from-right duration-1000">
+             <div className="bg-slate-900 rounded-[2rem] border border-slate-800 shadow-[0_40px_80px_rgba(0,0,0,0.15)] p-2 relative group hover:-translate-y-2 transition-transform duration-700">
+               <div className="bg-white rounded-[1.8rem] overflow-hidden border border-slate-200">
+                  <div className="p-8 bg-white aspect-[4/3] flex flex-col gap-8 relative">
+                    <div className="flex gap-6">
+                      <div className="flex-1 h-36 bg-slate-50 rounded-2xl border border-slate-100 p-6">
+                        <div className="w-1/3 h-2 bg-slate-200 rounded mb-6" />
+                        <div className="w-full h-4 bg-senralis-main/20 rounded animate-pulse" />
+                        <div className="w-2/3 h-2 bg-slate-100 rounded mt-4" />
+                      </div>
+                      <div className="flex-1 h-36 bg-slate-50 rounded-2xl border border-slate-100 p-6">
+                        <div className="w-1/3 h-2 bg-slate-200 rounded mb-6" />
+                        <div className="flex gap-2">
+                           <div className="w-2 h-8 bg-slate-200 rounded" />
+                           <div className="w-2 h-12 bg-senralis-main rounded" />
+                           <div className="w-2 h-6 bg-slate-200 rounded" />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex-1 bg-slate-50 rounded-2xl border border-slate-100 p-8 flex flex-col justify-center">
+                       <div className="flex items-center justify-between mb-8">
+                          <div className="w-1/4 h-3 bg-slate-200 rounded" />
+                          <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm text-senralis-main"><Users className="w-6 h-6" /></div>
+                       </div>
+                       <div className="space-y-4">
+                          {[1,2].map(i => (
+                            <div key={i} className="h-12 bg-white rounded-xl border border-slate-100 flex items-center justify-between px-4">
+                               <div className="w-1/3 h-2 bg-slate-50 rounded" />
+                               <div className="w-8 h-4 bg-teal-50 rounded" />
+                            </div>
+                          ))}
+                       </div>
+                    </div>
+                  </div>
                </div>
-               <img
-                 src="https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&q=80&w=2670"
-                 alt="Nutrixa Dashboard"
-                 className="w-full h-auto object-cover border-b border-white"
-               />
              </div>
           </div>
         </div>
       </section>
 
-      {/* ── CLIENTS / TRUST SIGNALS ── */}
-      <section className="border-y border-gray-100 bg-slate-50 py-12">
-         <div className="max-w-7xl mx-auto px-6">
-            <p className="text-center text-sm font-semibold text-slate-500 mb-8">Infraestructura confiable, integrada con los estándares del sector</p>
-            <div className="flex flex-wrap justify-center items-center gap-12 md:gap-20 opacity-60 grayscale">
-              <span className="text-xl font-black text-slate-700">MediCare</span>
-              <span className="text-xl font-black text-slate-700">NutriTech</span>
-              <span className="text-xl font-black text-slate-700">HealthData API</span>
-              <span className="text-xl font-black text-slate-700 hidden sm:block">BioSys</span>
-              <span className="text-xl font-black text-slate-700 hidden md:block">Clinical Hub</span>
-            </div>
-         </div>
-      </section>
-
-      {/* ── INFRASTRUCTURE GRID ── */}
-      <section id="infraestructura" className="py-24 md:py-32 bg-white border-b border-gray-100">
+      {/* ── CORE PILLARS section ── */}
+      <section id="soluciones" className="py-24 md:py-40 bg-white">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="max-w-3xl mb-16 md:mb-24">
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-[#0F172A] tracking-tighter leading-tight mb-6">
-              Arquitectura diseñada <br className="hidden md:block"/> para escalabilidad clínica.
-            </h2>
-            <p className="text-lg text-slate-600 font-medium leading-relaxed">
-              Herramientas de clase empresarial, empaquetadas en una interfaz austera y altamente funcional. Elimine procesos redundantes en su consultorio.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="bg-white border border-gray-200 rounded-2xl p-8 hover:border-emerald-500 hover:shadow-lg transition-all duration-300">
-              <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center border border-gray-100 mb-6">
-                <FileText className="w-6 h-6 text-emerald-600" />
-              </div>
-              <h3 className="text-xl font-bold text-[#0F172A] mb-3">Expediente Centralizado</h3>
-              <p className="text-slate-600 font-medium leading-relaxed">
-                Anamnesis completa, control de medicación y cuadros gráficos de evolución en una sola vista estructurada.
-              </p>
-            </div>
-
-            <div className="bg-white border border-gray-200 rounded-2xl p-8 hover:border-emerald-500 hover:shadow-lg transition-all duration-300">
-              <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center border border-gray-100 mb-6">
-                <Activity className="w-6 h-6 text-emerald-600" />
-              </div>
-              <h3 className="text-xl font-bold text-[#0F172A] mb-3">Dietoterapia Dinámica</h3>
-              <p className="text-slate-600 font-medium leading-relaxed">
-                Construcción paramétrica de planes en base a un repositorio central con macro-cálculos en vivo.
-              </p>
-            </div>
-
-            <div className="bg-white border border-gray-200 rounded-2xl p-8 hover:border-emerald-500 hover:shadow-lg transition-all duration-300">
-              <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center border border-gray-100 mb-6">
-                <Monitor className="w-6 h-6 text-emerald-600" />
-              </div>
-              <h3 className="text-xl font-bold text-[#0F172A] mb-3">Turnera Inteligente</h3>
-              <p className="text-slate-600 font-medium leading-relaxed">
-                Portal web para pacientes. Recordatorios automáticos por WhatsApp y correo para reducir ausentismo.
-              </p>
-            </div>
-            
-            <div className="lg:col-span-3 bg-slate-900 rounded-2xl p-8 md:p-12 flex flex-col md:flex-row gap-8 items-center justify-between border border-slate-800 relative overflow-hidden">
-               <div className="relative z-10 max-w-2xl">
-                 <h3 className="text-2xl md:text-3xl font-bold text-white mb-4">Auditoría financiera y proyecciones</h3>
-                 <p className="text-slate-400 font-medium text-lg leading-relaxed">
-                   Panel gerencial que monitorea retención, facturación y crecimiento global. Respaldado en bases de datos inmutables e interpretados visualmente para la toma de decisiones.
+           <div className="flex flex-col lg:flex-row gap-20">
+              <div className="lg:w-1/3 sticky top-32 h-fit">
+                 <h2 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight mb-8">
+                   Una Infraestructura <br /> <span className="text-senralis-main">Sin Costuras</span>.
+                 </h2>
+                 <p className="text-lg text-slate-500 font-medium leading-relaxed mb-10">
+                   Elimina la fragmentación de herramientas. Todo lo que tu práctica profesional necesita, integrado de forma nativa.
                  </p>
-               </div>
-               <button onClick={() => navigate('/login?signup=true')} className="relative z-10 w-full md:w-auto bg-white hover:bg-gray-100 text-[#0F172A] font-bold px-8 py-4 rounded-xl flex justify-center items-center gap-2 transition-colors shrink-0">
-                 Activar entorno de prueba <ArrowRight className="w-5 h-5"/>
-               </button>
-            </div>
-          </div>
+                 <div className="space-y-6">
+                    {[
+                      { icon: Calendar, label: "Agenda Centralizada" },
+                      { icon: FileText, label: "Epicrisis Digital" },
+                      { icon: CreditCard, label: "Gestión de Honorarios" }
+                    ].map((item, i) => (
+                      <div key={i} className="flex items-center gap-4 text-slate-900 font-bold">
+                        <div className="w-10 h-10 bg-teal-50 text-senralis-main rounded-xl flex items-center justify-center"><item.icon className="w-5 h-5" /></div>
+                        {item.label}
+                      </div>
+                    ))}
+                 </div>
+              </div>
+              
+              <div className="lg:w-2/3 grid sm:grid-cols-2 gap-8">
+                 <PillarCard 
+                    icon={CalendarClock} 
+                    title="Agendamiento Público" 
+                    desc="Tu propio micrositio de reservas vinculado en tu perfil de Instagram o Web. Reduce el intercambio de mensajes en un 90%."
+                 />
+                 <PillarCard 
+                    icon={ClipboardList} 
+                    title="Historial Evolutivo" 
+                    desc="Registra cada sesión con plantillas personalizables. Accede a la evolución cronológica del paciente en milisegundos."
+                 />
+                 <PillarCard 
+                    icon={Layers} 
+                    title="Ecosistema de Pagos" 
+                    desc="Monitorea tus ingresos mensuales, deudas de pacientes y cobros realizados sin usar planillas externas."
+                 />
+                 <PillarCard 
+                    icon={Headphones} 
+                    title="Recordatorios Automáticos" 
+                    desc="Sistema inteligente de alertas vía WhatsApp para confirmar asistencia y reducir el ausentismo clínico."
+                    tone="teal"
+                 />
+              </div>
+           </div>
         </div>
       </section>
 
-      {/* ── WORKFLOW STRUCTURE ── */}
-      <section id="flujos" className="py-24 md:py-32 bg-slate-50 border-b border-gray-100">
+      {/* ── ESPECIALIDADES section ── */}
+      <section id="especialidades" className="py-24 md:py-32 bg-slate-50">
+        <div className="max-w-7xl mx-auto px-6 text-center">
+           <h2 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tight mb-20 max-w-4xl mx-auto">
+             Diseñado para la <span className="text-senralis-main underline decoration-teal-500/20 underline-offset-8">Excelencia</span> en cualquier rama de la salud.
+           </h2>
+           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+             {[
+               { icon: Activity, name: "Nutrición" },
+               { icon: Stethoscope, name: "Medicina General" },
+               { icon: Zap, name: "Kinesiología" },
+               { icon: User, name: "Psicología" },
+               { icon: ClipboardList, name: "Odontología" },
+               { icon: Target, name: "Entrenamiento" },
+               { icon: Sparkles, name: "Estética" },
+               { icon: Globe, name: "Telemedicina" }
+             ].map((item, i) => (
+               <div key={i} className="bg-white p-8 rounded-2xl border border-slate-100 hover:border-senralis-main transition-all group hover:shadow-xl hover:-translate-y-1">
+                 <item.icon className="w-8 h-8 text-slate-200 mb-4 mx-auto group-hover:text-senralis-main transition-colors" />
+                 <p className="font-bold text-slate-900">{item.name}</p>
+               </div>
+             ))}
+           </div>
+        </div>
+      </section>
+
+      {/* ── TESTIMONIALS ── */}
+      <section className="py-24 md:py-32 bg-white">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-col lg:flex-row gap-16 lg:gap-24 items-center">
-            
-            <div className="flex-1 space-y-12">
-              <div>
-                <h2 className="text-sm font-bold text-emerald-600 tracking-widest uppercase mb-4">Flujos estructurados</h2>
-                <h3 className="text-3xl md:text-4xl lg:text-5xl font-black text-[#0F172A] tracking-tighter leading-tight mb-6">
-                  Interacciones trazables de punta a punta.
-                </h3>
-                <p className="text-lg text-slate-600 font-medium leading-relaxed">
-                  Automatice el ciclo completo de atención del paciente desde la agendación hasta la emisión del reporte nutricional.
-                </p>
-              </div>
-
-              <div className="space-y-8">
-                {[
-                   { num: "01", title: "Carga Pre-Clínica", desc: "El paciente completa formatos web estandarizados para ingresar a la base de datos." },
-                   { num: "02", title: "Sesión Terapéutica", desc: "Registro de variables clínicas en un entorno estructurado con autoguardado en tiempo real." },
-                   { num: "03", title: "Emisión y Alta", desc: "Exportación del plan y automatización retrospectiva de futuras citas." }
-                ].map((step, i) => (
-                  <div key={i} className="flex gap-6">
-                    <div className="text-emerald-600 font-black text-xl pt-1">
-                      {step.num}
-                    </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+            {[
+              { 
+                text: "Antes usaba Excel y WhatsApp. Senralis automatizó todo mi flujo de turnos y me devolvió 5 horas de mi semana.",
+                author: "Dr. Marcos Ruiz", role: "Cardiología"
+              },
+              { 
+                text: "La interfaz es impecable. Mis pacientes aman poder agendar solos y yo amo no tener que cobrar manualmente.",
+                author: "Lic. Clara Mendez", role: "Nutricionista"
+              },
+              { 
+                text: "Es el estándar que buscábamos. La seguridad de los datos y el historial evolutivo son los mejores del mercado.",
+                author: "Clínica Versal", role: "Institución"
+              }
+            ].map((t, i) => (
+              <div key={i} className="flex flex-col justify-between h-full space-y-8 animate-in fade-in slide-in-from-bottom duration-1000">
+                 <p className="text-xl font-medium text-slate-600 leading-relaxed italic">"{t.text}"</p>
+                 <div className="flex items-center gap-4 border-t border-slate-50 pt-6">
+                    <div className="w-12 h-12 bg-slate-100 rounded-xl" />
                     <div>
-                      <h4 className="text-xl font-bold text-[#0F172A] mb-2">{step.title}</h4>
-                      <p className="text-slate-600 font-medium leading-relaxed">{step.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex-1 w-full relative">
-               <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-2 overflow-hidden">
-                 <img 
-                   src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&q=80&w=1000" 
-                   alt="Labor Nutrixa" 
-                   className="w-full h-auto object-cover rounded-xl"
-                 />
-                 <div className="p-6 bg-white flex items-start gap-4">
-                    <Shield className="w-6 h-6 text-emerald-600 shrink-0 mt-1" />
-                    <div>
-                      <p className="font-bold text-[#0F172A] mb-1">Privacidad y Cumplimiento</p>
-                      <p className="text-sm font-medium text-slate-600">Base de datos encriptada en reposo, garantizando el absoluto secreto en la relación médico-paciente.</p>
+                       <p className="font-bold text-slate-900">{t.author}</p>
+                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.role}</p>
                     </div>
                  </div>
-               </div>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* ── B2B PRICING ── */}
-      <section id="licencias" className="py-24 md:py-32 bg-white border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="max-w-3xl mx-auto text-center mb-16 md:mb-24">
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-[#0F172A] tracking-tighter leading-tight mb-6">
-              Licenciamiento Corporativo
-            </h2>
-            <p className="text-lg text-slate-600 font-medium leading-relaxed">
-              Adquisición de software bajo modelos predecibles, orientados a la expansión de centros médicos y nutricionistas independientes.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-             
-            {/* Standard Tier */}
-            <div className="bg-white rounded-2xl border border-gray-200 p-10 flex flex-col hover:border-gray-300 transition-colors">
-              <h3 className="text-2xl font-bold text-[#0F172A] mb-2">Fundamental</h3>
-              <p className="text-slate-600 font-medium mb-8">Infraestructura limitada para entornos de prueba.</p>
-              <div className="flex items-baseline gap-2 mb-8">
-                <span className="text-5xl font-black text-[#0F172A] tracking-tighter">Gratis</span>
               </div>
-              <ul className="space-y-4 mb-10 flex-1">
-                {[
-                  'Base limitada a 5 pacientes activos',
-                  'Módulo clínico predeterminado',
-                  'Cálculo dietoterapéutico básico',
-                  'Soporte estándar por correo'
-                ].map((item, i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-slate-400 shrink-0 mt-0.5" />
-                    <span className="text-slate-700 font-medium">{item}</span>
-                  </li>
-                ))}
-              </ul>
-              <button
-                onClick={() => navigate('/login?signup=true')}
-                className="w-full bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200 font-bold py-4 rounded-xl transition-colors text-base"
-              >
-                Crear entorno
-              </button>
-            </div>
-
-            {/* Premium Tier */}
-            <div className="bg-slate-900 rounded-2xl border border-slate-800 p-10 flex flex-col relative shadow-xl">
-              <div className="absolute top-0 right-8 -translate-y-1/2 bg-emerald-500 text-white font-bold text-xs uppercase tracking-widest px-4 py-1.5 rounded-full">
-                Sugerido
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-2">Avanzado</h3>
-              <p className="text-slate-400 font-medium mb-8">Despliegue operativo íntegro para profesionales.</p>
-              <div className="flex items-baseline gap-2 mb-8">
-                <span className="text-5xl font-black text-white tracking-tighter">Consultar</span>
-              </div>
-              <ul className="space-y-4 mb-10 flex-1">
-                {[
-                  'Pacientes y expedientes ilimitados',
-                  'Turnera pública web integrada',
-                  'Suite dietoterapéutica proactiva',
-                  'Métricas gerenciales e historial',
-                  'Soporte técnico preferencial con SLA'
-                ].map((item, i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
-                    <span className="text-slate-300 font-medium">{item}</span>
-                  </li>
-                ))}
-              </ul>
-              <button
-                onClick={() => navigate('/login?signup=true')}
-                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-xl transition-colors text-base"
-              >
-                Solicitar Acceso
-              </button>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* ── MINIMAL FAQ ── */}
-      <section id="faq" className="py-24 md:py-32 bg-slate-50 border-b border-gray-100">
-        <div className="max-w-4xl mx-auto px-6">
-          <h2 className="text-3xl md:text-4xl font-black text-[#0F172A] tracking-tighter text-center mb-16">Transparencia Operativa</h2>
-          <div className="space-y-4">
-            {[
-              {
-                q: "¿Requiere instalación nativa en dispositivos?",
-                a: "No. Nutrixa System opera integralmente sobre la nube como una PWA. Puede acceder desde cualquier dispositivo con un navegador moderno, sin descargar ejecutables pesados."
-              },
-              {
-                q: "¿Cómo se auditan y controlan los datos clínicos?",
-                a: "La información es almacenada en servidores dedicados bajo protocolos de encriptación estándar internacional (AES-256), restringiendo el acceso exclusivamente al administrador del entorno."
-              },
-              {
-                q: "¿Cuáles son los límites de uso en la licencia gratuita?",
-                a: "El plan Fundamental provee acceso técnico al 100% de la arquitectura básica, limitando únicamente el volumen de registros a 5 pacientes para pruebas de estrés técnico."
-              }
-            ].map((faq, i) => (
-              <details key={i} className="group bg-white rounded-xl border border-gray-200 hover:border-gray-300 transition-colors [&_summary::-webkit-details-marker]:hidden">
-                <summary className="flex cursor-pointer items-center justify-between gap-6 p-6 font-bold text-[#0F172A] text-lg focus:outline-none select-none">
-                  <span>{faq.q}</span>
-                  <ChevronDown className="h-5 w-5 text-slate-400 group-open:text-emerald-600 group-open:-rotate-180 transition-transform" />
-                </summary>
-                <div className="px-6 pb-6 pt-0">
-                  <p className="text-slate-600 font-medium leading-relaxed border-t border-gray-100 pt-4">{faq.a}</p>
-                </div>
-              </details>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── B2B FOOTER ── */}
-      <footer className="bg-white py-16">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
-            <div className="col-span-1 md:col-span-2">
-              <img src="/logoNutrixa.png" alt="Nutrixa" className="h-8 w-auto mb-6 grayscale opacity-80" />
-              <p className="text-sm text-slate-500 font-medium leading-relaxed max-w-sm">
-                Infraestructura digital especializada de alto rendimiento. Construida para resolver asimetrías de información y acelerar rutinas operatorias en consultorios.
-              </p>
-            </div>
-            
-            <div>
-              <p className="text-xs font-black text-[#0F172A] mb-6 uppercase tracking-widest">Plataforma</p>
-              <ul className="space-y-4 text-sm font-medium text-slate-500">
-                <li><a href="#infraestructura" className="hover:text-emerald-600 transition-colors">Infraestructura</a></li>
-                <li><a href="#flujos" className="hover:text-emerald-600 transition-colors">Integraciones</a></li>
-                <li><a href="#licencias" className="hover:text-emerald-600 transition-colors">Auditoría y Licencias</a></li>
-              </ul>
-            </div>
+      {/* ── FINAL CTA ── */}
+      <section className="py-24 px-6">
+        <div className="max-w-5xl mx-auto bg-slate-900 rounded-[3rem] p-12 md:p-24 text-center relative overflow-hidden">
+           <div className="absolute top-0 right-0 w-64 h-64 bg-senralis-main/20 blur-[100px] pointer-events-none" />
+           <div className="relative z-10 space-y-10">
+              <h2 className="text-4xl md:text-6xl font-extrabold text-white tracking-tight leading-[1.1]">
+                La Profesionalización <br /> de tu Práctica comienza <span className="text-senralis-main">Hoy</span>.
+              </h2>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+                 <button onClick={handleOpenDemoModal} className="w-full sm:w-auto bg-senralis-main hover:bg-white hover:text-slate-900 text-white px-10 py-5 rounded-2xl font-bold text-lg transition-all shadow-xl">
+                   Solicitar Demo Gratis
+                 </button>
+                 <button onClick={() => navigate('/login')} className="w-full sm:w-auto text-white/60 hover:text-white font-bold transition-colors">
+                   Acceso para Profesionales
+                 </button>
+              </div>
+           </div>
+        </div>
+      </section>
 
-            <div>
-              <p className="text-xs font-black text-[#0F172A] mb-6 uppercase tracking-widest">Legal</p>
-              <ul className="space-y-4 text-sm font-medium text-slate-500">
-                <li><Link to="/privacy" className="hover:text-emerald-600 transition-colors">Aviso de Privacidad</Link></li>
-                <li><Link to="/terms" className="hover:text-emerald-600 transition-colors">Términos de Servicio</Link></li>
-                <li>
-                  <a href="https://wa.me/" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-600 transition-colors">
-                    Soporte Técnico
-                  </a>
-                </li>
-              </ul>
-            </div>
+      {/* ── FOOTER ── */}
+      <footer className="bg-white py-20 border-t border-slate-100">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-10">
+          <img src="/logoTexto.png" alt="Senralis" className="h-5 w-auto" />
+          <div className="flex gap-8 text-sm font-bold text-slate-400">
+             <a href="#" className="hover:text-slate-900 transition-colors">Privacidad</a>
+             <a href="#" className="hover:text-slate-900 transition-colors">Términos</a>
+             <a href="#" className="hover:text-slate-900 transition-colors">Consultas</a>
           </div>
-
-          <div className="border-t border-gray-200 pt-8 flex flex-col md:flex-row justify-between items-center gap-6">
-            <p className="text-sm text-slate-400 font-medium">
-              © {new Date().getFullYear()} Nutrixa System. Todos los derechos reservados.
-            </p>
-            <div className="flex items-center gap-2 text-slate-500 font-medium text-sm">
-               <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-               Sistemas Operativos en Línea
-            </div>
-          </div>
+          <p className="text-sm font-bold text-slate-300">© 2026 Senralis Infrastructure.</p>
         </div>
       </footer>
 
-      {/* Floating Scroll Top Button */}
-      <button
-        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-        className={`fixed bottom-6 right-6 md:bottom-10 md:right-10 z-50 p-3 rounded-xl bg-slate-900 border border-slate-700 text-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:bg-slate-800 ${showScrollTop ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0 pointer-events-none'}`}
-        aria-label="Volver arriba"
-      >
-        <ArrowUp className="w-5 h-5" />
-      </button>
-
+      {/* ── REFINED DEMO MODAL ── */}
+      {isDemoModalOpen && typeof document !== 'undefined' && createPortal(
+        <div className="fixed top-0 left-0 w-screen h-[100dvh] z-[9999] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setIsDemoModalOpen(false)}></div>
+          <div className="relative z-10 bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col md:flex-row min-h-[600px] max-h-[90dvh]">
+            <button onClick={() => setIsDemoModalOpen(false)} className="absolute top-6 right-6 text-slate-400 hover:text-slate-600 transition-colors z-[50]">
+              <X className="w-6 h-6" />
+            </button>
+            <div className="hidden md:flex md:w-[40%] bg-slate-900 p-12 flex-col justify-between text-white">
+               <div>
+                  <img src="/logoTexto.png" alt="Senralis" className="h-5 w-auto brightness-0 invert mb-20" />
+                  <h3 className="text-4xl font-extrabold mb-6 leading-tight">Agenda una Demo Privada</h3>
+                  <p className="text-slate-400 font-medium leading-relaxed">Mostramos como Senralis puede automatizar tu consultorio en 15 minutos.</p>
+               </div>
+               <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2 font-mono">
+                 <Database className="w-3 h-3" /> Data Architecture: Cluster-01
+               </div>
+            </div>
+            <div className="flex-1 p-8 md:p-12 bg-white overflow-y-auto no-scrollbar">
+               {/* Modal content same as before but styled cleaner... */}
+               {demoStep === 1 && (
+                <div className="animate-in slide-in-from-right-4 fade-in duration-300">
+                  <h3 className="text-2xl font-bold text-slate-900 mb-8">Selecciona un horario disponible</h3>
+                  <div className="border border-slate-200 rounded-2xl overflow-hidden mb-8 shadow-sm">
+                    <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center text-slate-900 font-bold font-mono text-sm">
+                       <span>{months[selectedMonthIndex]}</span>
+                       <div className="flex gap-2">
+                         <button onClick={handlePrevMonth} disabled={selectedMonthIndex === 0} className="p-2 bg-white rounded-lg shadow-sm border border-slate-200 hover:bg-slate-50 disabled:opacity-20"><ChevronDown className="w-4 h-4 rotate-90" /></button>
+                         <button onClick={handleNextMonth} disabled={selectedMonthIndex === 2} className="p-2 bg-white rounded-lg shadow-sm border border-slate-200 hover:bg-slate-50 disabled:opacity-20"><ChevronDown className="w-4 h-4 -rotate-90" /></button>
+                       </div>
+                    </div>
+                    <div className="p-6 grid grid-cols-7 gap-2">
+                      {['L','M','X','J','V','S','D'].map(d => <div key={d} className="text-center text-[10px] font-bold text-slate-400 uppercase mb-4">{d}</div>)}
+                      {[...Array(30)].map((_, i) => (
+                        <button key={i} onClick={() => setSelectedDateIndex(i + 1)} className={cn("h-10 rounded-xl text-xs font-bold transition-all", selectedDateIndex === i + 1 ? 'bg-senralis-main text-white shadow-xl' : 'hover:bg-slate-100 text-slate-600')}>{i + 1}</button>
+                      ))}
+                    </div>
+                  </div>
+                  {selectedDateIndex && (
+                     <div className="animate-in fade-in duration-300 space-y-6">
+                        <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar">
+                           {['09:00', '11:00', '15:30', '17:00'].map(t => (
+                             <button key={t} onClick={() => setSelectedTimeSlot(t)} className={cn("px-6 py-3 rounded-xl border font-bold text-sm transition-all shrink-0", selectedTimeSlot === t ? 'bg-slate-900 text-white border-slate-900 shadow-xl' : 'bg-white border-slate-200 text-slate-600 hover:border-slate-900')}>{t}</button>
+                           ))}
+                        </div>
+                        <button onClick={() => setDemoStep(2)} disabled={!selectedTimeSlot} className="w-full bg-senralis-main text-white py-5 rounded-2xl font-bold shadow-2xl active:scale-[0.98] disabled:opacity-50">Continuar</button>
+                     </div>
+                  )}
+                </div>
+               )}
+               {demoStep === 2 && (
+                 <div className="animate-in slide-in-from-right-4 fade-in duration-300">
+                    <h3 className="text-2xl font-bold text-slate-900 mb-10">Tus datos institucionales</h3>
+                    <div className="space-y-6 mb-12">
+                       <input type="text" placeholder="Tu nombre" className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-6 py-5 outline-none focus:border-senralis-main font-medium transition-all" value={demoData.name} onChange={(e) => setDemoData({...demoData, name: e.target.value})} />
+                       <input type="email" placeholder="Email corporativo" className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-6 py-5 outline-none focus:border-senralis-main font-medium transition-all" value={demoData.email} onChange={(e) => setDemoData({...demoData, email: e.target.value})} />
+                    </div>
+                    <div className="flex gap-4">
+                       <button onClick={() => setDemoStep(1)} className="px-6 font-bold text-slate-400">Atrás</button>
+                       <button onClick={() => setDemoStep(3)} className="flex-1 bg-slate-900 text-white py-5 rounded-2xl font-bold shadow-xl">Confirmar Reserva</button>
+                    </div>
+                 </div>
+               )}
+               {demoStep === 3 && (
+                 <div className="h-full flex flex-col items-center justify-center text-center animate-in zoom-in-95 duration-500">
+                    <div className="w-20 h-20 bg-teal-50 text-senralis-main rounded-full flex items-center justify-center mb-8"><Check className="w-10 h-10" /></div>
+                    <h3 className="text-3xl font-bold text-slate-900 mb-4">¡Listo!</h3>
+                    <p className="text-slate-500 font-medium max-w-xs mx-auto mb-10">Te enviamos los detalles de la demo a tu correo electrónico.</p>
+                    <button onClick={() => setIsDemoModalOpen(false)} className="bg-slate-900 text-white px-10 py-4 rounded-xl font-bold">Cerrar</button>
+                 </div>
+               )}
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
+
+// ── HELPERS ──
+
+function PillarCard({ icon: Icon, title, desc, tone = 'slate' }: { icon: any, title: string, desc: string, tone?: 'slate' | 'teal' }) {
+  return (
+    <div className={cn(
+      "p-10 rounded-[2rem] border transition-all duration-500 group relative overflow-hidden h-full flex flex-col justify-between",
+      tone === 'teal' ? "bg-teal-50/20 border-teal-100 hover:bg-teal-50" : "bg-white border-slate-100 hover:border-senralis-main/20 hover:shadow-xl hover:-translate-y-2"
+    )}>
+       <div className="relative z-10">
+          <div className="w-14 h-14 bg-white shadow-sm border border-slate-50 rounded-2xl flex items-center justify-center text-slate-400 mb-10 group-hover:text-senralis-main transition-colors duration-500"><Icon className="w-7 h-7" /></div>
+          <h3 className="text-2xl font-extrabold text-slate-900 mb-4 tracking-tight leading-tight">{title}</h3>
+          <p className="text-[15px] font-medium text-slate-500 leading-relaxed">{desc}</p>
+       </div>
+       <div className="mt-8 relative z-10">
+          <button className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 group-hover:text-senralis-main transition-colors">
+            Explorar Módulo <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+       </div>
+    </div>
+  );
+}
+
+const CalendarClock = (props: any) => (
+  <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/><path d="M18 22a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/><path d="M18 16.5V18l1 1"/></svg>
+);
+
+const Target = (props: any) => (
+  <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+);

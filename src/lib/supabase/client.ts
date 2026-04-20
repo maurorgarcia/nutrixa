@@ -10,7 +10,7 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseKey, {
     persistSession: true,
     detectSessionInUrl: true,
     // Desactivamos el locking estricto que causa problemas en navegadores durante desarrollo local o con múltiples pestañas
-    storageKey: 'nutrixa-auth-token'
+    storageKey: 'senralis-auth-token'
   }
 });
 
@@ -25,8 +25,8 @@ export const handleSupabaseError = (error: any): string => {
   return 'Ha ocurrido un error inesperado';
 };
 
-// BYPASS DE SUPABASE NATIVO:
-// Previene el congelamiento ("lock") infinito del SDK JS local enviando solicitudes directamente a la API REST.
+// REST directo con el JWT del usuario (misma sesión que el SDK): RLS de PostgREST sigue aplicando.
+// Preferir `supabase.from(...)` cuando el SDK no presente problemas; ambos respetan políticas con anon key.
 export const supabaseRestGet = async (table: string, queryStr: string) => {
   const { data: { session } } = await supabase.auth.getSession();
   const token = session?.access_token;

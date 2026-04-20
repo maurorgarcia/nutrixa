@@ -7,17 +7,20 @@ import {
   TrendingUp, 
   Settings,
   User,
-  DollarSign
+  DollarSign,
+  LogOut,
+  ChevronRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuthStore } from '@/stores/authStore';
 
 const navigation = [
   { name: 'Dashboard',    href: '/dashboard',  icon: LayoutDashboard },
+  { name: 'Agenda',       href: '/turnera',    icon: Calendar },
   { name: 'Pacientes',    href: '/patients',   icon: Users },
-  { name: 'Recetario',    href: '/recipes',    icon: BookOpen },
-  { name: 'Planes',       href: '/meal-plans', icon: Calendar },
-  { name: 'Seguimiento',  href: '/follow-ups', icon: TrendingUp },
-  { name: 'Cobros',       href: '/payments',   icon: DollarSign },
+  { name: 'Prescripciones', href: '/recipes',   icon: BookOpen },
+  { name: 'Protocolos',   href: '/meal-plans', icon: TrendingUp },
+  { name: 'Honorarios',   href: '/payments',   icon: DollarSign },
 ];
 
 const secondaryNavigation = [
@@ -30,92 +33,84 @@ interface SidebarProps {
 }
 
 export function Sidebar({ onNavClick }: SidebarProps) {
+  const { signOut } = useAuthStore();
+
   return (
-    <div className="h-full w-64 bg-white border-r border-zinc-200/80 flex flex-col shadow-[1px_0_0_0_rgba(0,0,0,0.04)]">
-
-      {/* Logo */}
-      <div className="h-20 flex items-center px-6 border-b border-zinc-100 shrink-0">
-        <img
-          src="/logoNutrixa.png"
-          alt="Nutrixa"
-          className="h-9 w-auto object-contain hover:opacity-80 transition-opacity"
-        />
+    <aside className="flex h-full w-64 flex-col overflow-hidden border-r border-slate-200 bg-white text-slate-900 shadow-sm">
+      <div className="px-6 py-8">
+        <img src="/logoTexto.png" alt="Senralis" className="h-6 w-auto" />
       </div>
 
-      {/* Main nav */}
-      <nav className="flex-1 px-3 py-5 space-y-1 overflow-y-auto">
-        <p className="text-[10px] font-extrabold uppercase tracking-widest text-zinc-400 px-3 pb-2">
-          Clínica
-        </p>
-        {navigation.map((item) => (
-          <NavLink
-            key={item.name}
-            to={item.href}
-            onClick={onNavClick}
-            end={item.href === '/dashboard'}
-            className={({ isActive }) =>
-              cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 group',
-                isActive
-                  ? 'bg-emerald-50 text-nutri-forest border border-emerald-100/80'
-                  : 'text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900'
-              )
-            }
-          >
-            {({ isActive }) => (
-              <>
-                <div className={cn(
-                  'h-7 w-7 rounded-lg flex items-center justify-center shrink-0 transition-colors duration-200',
-                  isActive ? 'bg-nutri-emerald/10' : 'group-hover:bg-zinc-100'
-                )}>
-                  <item.icon className={cn(
-                    'h-4 w-4 transition-colors duration-200',
-                    isActive ? 'text-nutri-emerald' : 'text-zinc-400 group-hover:text-zinc-600'
-                  )} />
-                </div>
-                {item.name}
-              </>
-            )}
-          </NavLink>
-        ))}
-      </nav>
+      <div className="flex-1 space-y-8 overflow-y-auto px-4 py-4 no-scrollbar">
+        <div>
+          <p className="px-3 mb-3 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Administración</p>
+          <nav className="space-y-1">
+            {navigation.map((item) => (
+              <NavLink
+                key={item.name}
+                to={item.href}
+                onClick={onNavClick}
+                end={item.href === '/dashboard'}
+                className={({ isActive }) => cn(
+                  'group flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-bold transition-all duration-200',
+                  isActive ? 'bg-slate-900 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                )}
+              >
+                {({ isActive }) => (
+                  <>
+                    <div className="flex items-center gap-3">
+                      <item.icon className={cn("h-4 w-4", isActive ? "text-senralis-main" : "text-slate-400 group-hover:text-slate-900")} />
+                      <span>{item.name}</span>
+                    </div>
+                    {isActive && <ChevronRight className="h-4 w-4 text-slate-600" />}
+                  </>
+                )}
+              </NavLink>
+            ))}
+          </nav>
+        </div>
 
-      {/* Secondary nav */}
-      <div className="px-3 py-4 border-t border-zinc-100 space-y-1 shrink-0">
-        <p className="text-[10px] font-extrabold uppercase tracking-widest text-zinc-400 px-3 pb-2">
-          Cuenta
-        </p>
-        {secondaryNavigation.map((item) => (
-          <NavLink
-            key={item.name}
-            to={item.href}
-            onClick={onNavClick}
-            className={({ isActive }) =>
-              cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 group',
-                isActive
-                  ? 'bg-zinc-100 text-zinc-900 border border-zinc-200/80'
-                  : 'text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900'
-              )
-            }
-          >
-            {({ isActive }) => (
-              <>
-                <div className={cn(
-                  'h-7 w-7 rounded-lg flex items-center justify-center shrink-0 transition-colors duration-200',
-                  isActive ? 'bg-zinc-200' : 'group-hover:bg-zinc-100'
-                )}>
-                  <item.icon className={cn(
-                    'h-4 w-4 transition-colors duration-200',
-                    isActive ? 'text-zinc-700' : 'text-zinc-400 group-hover:text-zinc-600'
-                  )} />
-                </div>
-                {item.name}
-              </>
-            )}
-          </NavLink>
-        ))}
+        <div>
+          <p className="px-3 mb-3 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Sistema</p>
+          <nav className="space-y-1">
+            {secondaryNavigation.map((item) => (
+              <NavLink
+                key={item.name}
+                to={item.href}
+                onClick={onNavClick}
+                className={({ isActive }) => cn(
+                  'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold transition-all duration-200',
+                  isActive ? 'bg-slate-100 text-slate-900' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                )}
+              >
+                {({ isActive }) => (
+                  <>
+                    <item.icon className={cn("h-4 w-4", isActive ? "text-slate-900" : "text-slate-400 group-hover:text-slate-900")} />
+                    <span>{item.name}</span>
+                  </>
+                )}
+              </NavLink>
+            ))}
+          </nav>
+        </div>
       </div>
-    </div>
+
+      <div className="p-4 border-t border-slate-100">
+        <button
+          onClick={() => signOut()}
+          className="group flex w-full items-center justify-between rounded-xl p-3 text-left transition-all hover:bg-rose-50 border border-transparent hover:border-rose-100"
+        >
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-slate-100 p-2 group-hover:bg-rose-100 transition-colors">
+              <LogOut className="h-4 w-4 text-slate-400 group-hover:text-rose-600" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-slate-900">Cerrar Sesión</p>
+              <p className="text-[10px] font-medium text-slate-400">Finalizar Jornada</p>
+            </div>
+          </div>
+        </button>
+      </div>
+    </aside>
   );
 }
